@@ -24,6 +24,8 @@ service cloud.firestore {
                     && resource.data.editCount < 2
                     // Make sure shirt is not already ordered
                     && resource.data.is_shirt_ordered == false
+                    // Enforce the edit deadline: 2026-07-24 23:59:00 GMT+7 (Unix Millis: 1784912340000)
+                    && request.time.toMillis() < 1784912340000
                     // Prevent modification of restricted fields
                     && !request.resource.data.diff(resource.data).affectedKeys()
                         .hasAny(['line_uid', 'is_verified', 'is_shirt_ordered', 'createdAt', 'checkin_day1_morning', 'checkin_day1_afternoon', 'checkin_day2_morning', 'checkin_day2_afternoon', 'shirt_received_at'])
