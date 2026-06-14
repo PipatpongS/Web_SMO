@@ -1180,7 +1180,7 @@ const Register = () => {
           )}
 
           {/* Navigation Buttons */}
-          <div className="flex justify-between items-center mt-12 pt-8">
+          <div className="flex flex-col-reverse sm:flex-row sm:justify-between items-center gap-4 sm:gap-0 mt-8 pt-6 sm:mt-12 sm:pt-8">
             {step > 1 ? (
               <button
                 type="button"
@@ -1188,7 +1188,7 @@ const Register = () => {
                   if (readOnly) navigate('/profile');
                   else handlePrev();
                 }}
-                className="text-gray-500 hover:text-gray-800 font-medium px-2 sm:px-4 py-2 transition-colors text-sm whitespace-nowrap flex-shrink-0"
+                className="text-gray-500 hover:text-gray-800 font-medium px-4 py-3 sm:py-2 transition-colors text-sm w-full sm:w-auto border border-gray-200 sm:border-none rounded-xl sm:rounded-none"
               >{readOnly ? (lang === 'TH' ? 'ย้อนกลับ' : 'Back') : t.btnBack}</button>
             ) : (
               <button
@@ -1201,13 +1201,13 @@ const Register = () => {
                     navigate('/');
                   }
                 }}
-                className="text-gray-500 hover:text-gray-800 font-medium px-2 sm:px-4 py-2 transition-colors text-sm whitespace-nowrap flex-shrink-0"
+                className="text-gray-500 hover:text-gray-800 font-medium px-4 py-3 sm:py-2 transition-colors text-sm w-full sm:w-auto border border-gray-200 sm:border-none rounded-xl sm:rounded-none"
               >{isEditMode ? (lang === 'TH' ? 'ย้อนกลับ' : 'Back') : t.btnBackHome}</button>
             )}
 
-            <div className="flex items-center gap-3 sm:gap-6">
+            <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-6 w-full sm:w-auto">
               {step !== 5 && !isEditMode && (
-                <button onClick={handleClearData} type="button" className="text-gray-400 hover:text-red-500 text-xs sm:text-sm transition-colors cursor-pointer underline underline-offset-2 whitespace-nowrap">
+                <button onClick={handleClearData} type="button" className="text-gray-400 hover:text-red-500 text-sm transition-colors cursor-pointer underline underline-offset-2 order-2 sm:order-1 mt-2 sm:mt-0 pb-2 sm:pb-0">
                   {t.btnClear}
                 </button>
               )}
@@ -1217,7 +1217,7 @@ const Register = () => {
                   type="button"
                   disabled={submitting || !hasChanges}
                   onClick={handleGoToVerify}
-                  className={`px-6 sm:px-8 py-3 rounded-xl font-semibold transition-all shadow-md text-sm sm:text-base whitespace-nowrap ${!hasChanges ? "bg-gray-300 text-gray-500 cursor-not-allowed shadow-none" : "bg-emerald-600 hover:bg-emerald-700 text-white hover:shadow-lg cursor-pointer"}`}
+                  className={`w-full sm:w-auto px-6 sm:px-8 py-3 rounded-xl font-semibold transition-all shadow-md text-sm sm:text-base order-1 sm:order-2 ${!hasChanges ? "bg-gray-300 text-gray-500 cursor-not-allowed shadow-none" : "bg-emerald-600 hover:bg-emerald-700 text-white hover:shadow-lg cursor-pointer"}`}
                 >
                   {t.btnEditSubmit}
                 </button>
@@ -1228,7 +1228,7 @@ const Register = () => {
                   key="btn-next"
                   type="button"
                   onClick={handleNext}
-                  className="bg-[#1e3a5f] hover:bg-[#152b47] text-white px-8 sm:px-12 py-3 rounded-xl font-semibold transition-all shadow-md hover:shadow-lg text-sm sm:text-base whitespace-nowrap"
+                  className="w-full sm:w-auto bg-[#1e3a5f] hover:bg-[#152b47] text-white px-8 sm:px-12 py-3 rounded-xl font-semibold transition-all shadow-md hover:shadow-lg text-sm sm:text-base order-1 sm:order-2"
                 >{t.btnNext}</button>
               )}
 
@@ -1237,7 +1237,7 @@ const Register = () => {
                   key="btn-submit"
                   type="submit"
                   disabled={submitting || (isEditMode && !hasChanges)}
-                  className={`px-8 sm:px-12 py-3 rounded-xl font-semibold transition-all shadow-md hover:shadow-lg disabled:opacity-50 text-sm sm:text-base whitespace-nowrap ${isEditMode ? "bg-emerald-600 hover:bg-emerald-700 text-white" : "bg-[#1e3a5f] hover:bg-[#152b47] text-white"}`}
+                  className={`w-full sm:w-auto px-8 sm:px-12 py-3 rounded-xl font-semibold transition-all shadow-md hover:shadow-lg disabled:opacity-50 text-sm sm:text-base order-1 sm:order-2 ${isEditMode ? "bg-emerald-600 hover:bg-emerald-700 text-white" : "bg-[#1e3a5f] hover:bg-[#152b47] text-white"}`}
                 >
                   {submitting ? t.btnSubmitting : (isEditMode ? (lang === 'TH' ? 'ยืนยันการแก้ไขข้อมูล' : 'Confirm Edits') : t.btnSubmit)}
                 </button>
