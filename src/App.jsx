@@ -1,5 +1,13 @@
 import React, { useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+
+const ScrollToTop = () => {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+  return null;
+};
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { RegProvider, useRegistration } from './contexts/RegContext';
 import { doc, deleteDoc } from 'firebase/firestore';
@@ -107,6 +115,7 @@ function AppContent() {
 
   return (
     <Router>
+      <ScrollToTop />
       <Routes>
         <Route
           path="/"
