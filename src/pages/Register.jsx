@@ -1098,46 +1098,50 @@ const Register = () => {
               <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-6 sm:p-8 space-y-8 text-gray-700">
 
                 {/* General Info */}
-                <div>
-                  <div className="flex justify-between items-center border-b pb-2 mb-4">
-                    <h4 className="text-lg font-semibold text-[#1e3a5f]">{t.generalInfo}</h4>
-                    {!readOnly && <button type="button" onClick={() => { setStep(1); window.scrollTo(0, 0); }} className="text-sm text-[#1e3a5f] font-medium hover:text-blue-800 underline underline-offset-2">{t.editDataBtn}</button>}
+                <div className="bg-slate-50/70 rounded-xl p-5 sm:p-6 border border-slate-100">
+                  <div className="flex justify-between items-center border-b border-slate-200 pb-3 mb-5">
+                    <h4 className="text-lg font-bold text-[#1e3a5f]">{t.generalInfo}</h4>
+                    {!readOnly && <button type="button" onClick={() => { setStep(1); window.scrollTo(0, 0); }} className="text-sm bg-white hover:bg-slate-100 border border-slate-200 text-[#1e3a5f] px-3 py-1.5 rounded-lg font-medium transition-colors shadow-sm">{t.editDataBtn}</button>}
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-4 gap-x-6 text-sm">
-                    <div className="sm:col-span-2"><span className="text-gray-400 block mb-1">{t.nationality.replace(' *', '')}</span><p className="font-medium">{translateValue(formData.nationality)}</p></div>
-                    <div className="sm:col-span-2"><span className="text-gray-400 block mb-1">{lang === 'TH' ? 'ชื่อ-นามสกุล' : 'Full Name'}</span><p className="font-medium">{`${translateValue(formData.titlePrefix)} ${formData.firstName} ${formData.middleName ? formData.middleName + ' ' : ''}${formData.lastName}`}</p></div>
-                    <div><span className="text-gray-400 block mb-1">{t.email.replace(' *', '')}</span><p className="font-medium break-all">{formData.email}</p></div>
-                    <div><span className="text-gray-400 block mb-1">{t.phone.replace(' *', '')}</span><p className="font-medium">{formData.phone}</p></div>
-                    <div className="sm:col-span-2"><span className="text-gray-400 block mb-1">{t.studentId.replace(' *', '')}</span><p className="font-medium">{formData.studentIdStatus === 'ยังไม่ได้รับรหัสนักศึกษา' ? (lang === 'TH' ? 'ยังไม่ได้รับรหัสนักศึกษา' : 'Not yet received Student ID') : formData.studentId}</p></div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-5 gap-x-6 text-sm">
+                    <div className="sm:col-span-2"><span className="text-gray-400 block mb-1.5 text-xs uppercase tracking-wider">{t.nationality.replace(' *', '')}</span><p className="font-medium text-gray-800">{translateValue(formData.nationality)}</p></div>
+                    <div className="sm:col-span-2"><span className="text-gray-400 block mb-1.5 text-xs uppercase tracking-wider">{lang === 'TH' ? 'ชื่อ-นามสกุล' : 'Full Name'}</span><p className="font-medium text-gray-800">{`${translateValue(formData.titlePrefix)} ${formData.firstName} ${formData.middleName ? formData.middleName + ' ' : ''}${formData.lastName}`}</p></div>
+                    <div><span className="text-gray-400 block mb-1.5 text-xs uppercase tracking-wider">{t.email.replace(' *', '')}</span><p className="font-medium text-gray-800 break-all">{formData.email}</p></div>
+                    <div><span className="text-gray-400 block mb-1.5 text-xs uppercase tracking-wider">{t.phone.replace(' *', '')}</span><p className="font-medium text-gray-800">{formData.phone}</p></div>
+                    <div className="sm:col-span-2"><span className="text-gray-400 block mb-1.5 text-xs uppercase tracking-wider">
+                      {formData.nationality === 'ต่างชาติ' 
+                        ? (lang === 'TH' ? 'รหัสนักศึกษา' : 'Student ID') 
+                        : (lang === 'TH' ? 'รหัสนักศึกษา' : 'Student ID')}
+                    </span><p className="font-medium text-gray-800">{formData.studentIdStatus === 'ยังไม่ได้รับรหัสนักศึกษา' ? (lang === 'TH' ? 'ยังไม่ได้รับรหัสนักศึกษา' : 'Not yet received Student ID') : formData.studentId}</p></div>
                   </div>
                 </div>
 
                 {/* Education Info */}
-                <div>
-                  <div className="flex justify-between items-center border-b pb-2 mb-4">
-                    <h4 className="text-lg font-semibold text-[#1e3a5f]">{t.eduInfo}</h4>
-                    {!readOnly && <button type="button" onClick={() => { setStep(2); window.scrollTo(0, 0); }} className="text-sm text-[#1e3a5f] font-medium hover:text-blue-800 underline underline-offset-2">{t.editDataBtn}</button>}
+                <div className="bg-slate-50/70 rounded-xl p-5 sm:p-6 border border-slate-100">
+                  <div className="flex justify-between items-center border-b border-slate-200 pb-3 mb-5">
+                    <h4 className="text-lg font-bold text-[#1e3a5f]">{t.eduInfo}</h4>
+                    {!readOnly && <button type="button" onClick={() => { setStep(2); window.scrollTo(0, 0); }} className="text-sm bg-white hover:bg-slate-100 border border-slate-200 text-[#1e3a5f] px-3 py-1.5 rounded-lg font-medium transition-colors shadow-sm">{t.editDataBtn}</button>}
                   </div>
-                  <div className="grid grid-cols-1 gap-y-4 text-sm">
-                    <div><span className="text-gray-400 block mb-1">{t.program.replace(' *', '')}</span><p className="font-medium">{translateValue(formData.program)}</p></div>
-                    <div><span className="text-gray-400 block mb-1">{t.department.replace(' *', '')}</span><p className="font-medium">{translateValue(formData.department)}</p></div>
+                  <div className="grid grid-cols-1 gap-y-5 text-sm">
+                    <div><span className="text-gray-400 block mb-1.5 text-xs uppercase tracking-wider">{t.program.replace(' *', '')}</span><p className="font-medium text-gray-800">{translateValue(formData.program)}</p></div>
+                    <div><span className="text-gray-400 block mb-1.5 text-xs uppercase tracking-wider">{t.department.replace(' *', '')}</span><p className="font-medium text-gray-800">{translateValue(formData.department)}</p></div>
                   </div>
                 </div>
 
                 {/* Activity Info */}
-                <div>
-                  <div className="flex justify-between items-center border-b pb-2 mb-4">
-                    <h4 className="text-lg font-semibold text-[#1e3a5f]">{t.activityInfo}</h4>
-                    {!readOnly && <button type="button" onClick={() => { setStep(3); window.scrollTo(0, 0); }} className="text-sm text-[#1e3a5f] font-medium hover:text-blue-800 underline underline-offset-2">{t.editDataBtn}</button>}
+                <div className="bg-slate-50/70 rounded-xl p-5 sm:p-6 border border-slate-100">
+                  <div className="flex justify-between items-center border-b border-slate-200 pb-3 mb-5">
+                    <h4 className="text-lg font-bold text-[#1e3a5f]">{t.activityInfo}</h4>
+                    {!readOnly && <button type="button" onClick={() => { setStep(3); window.scrollTo(0, 0); }} className="text-sm bg-white hover:bg-slate-100 border border-slate-200 text-[#1e3a5f] px-3 py-1.5 rounded-lg font-medium transition-colors shadow-sm">{t.editDataBtn}</button>}
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-4 gap-x-6 text-sm">
-                    <div><span className="text-gray-400 block mb-1">{t.shirtSize.replace(' *', '')}</span><p className="font-medium">{formData.shirtSize}</p></div>
-                    <div><span className="text-gray-400 block mb-1">{t.join.replace(' *', '')}</span><p className="font-medium">{translateValue(formData.joinActivity)}</p></div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-5 gap-x-6 text-sm">
+                    <div><span className="text-gray-400 block mb-1.5 text-xs uppercase tracking-wider">{t.shirtSize.replace(' *', '')}</span><p className="font-medium text-gray-800">{formData.shirtSize}</p></div>
+                    <div><span className="text-gray-400 block mb-1.5 text-xs uppercase tracking-wider">{t.join.replace(' *', '')}</span><p className="font-medium text-gray-800">{translateValue(formData.joinActivity)}</p></div>
                     {formData.joinActivity === 'เข้าร่วม' && (
                       <>
                         <div className="sm:col-span-2">
-                          <span className="text-gray-400 block mb-1">{t.diet.replace(' *', '')}</span>
-                          <p className="font-medium leading-relaxed">
+                          <span className="text-gray-400 block mb-1.5 text-xs uppercase tracking-wider">{t.diet.replace(' *', '')}</span>
+                          <p className="font-medium text-gray-800 leading-relaxed">
                             {formData.hasDietaryRestriction === 'ไม่มี' ? t.dietNo : (
                               Array.isArray(formData.dietaryRestriction) ? formData.dietaryRestriction.map(d =>
                                 d === 'แพ้อาหารบางชนิด' ? (lang === 'TH' ? `แพ้อาหาร: ${formData.foodAllergyDetails}` : `Allergy: ${formData.foodAllergyDetails}`) :
@@ -1147,8 +1151,8 @@ const Register = () => {
                           </p>
                         </div>
                         <div className="sm:col-span-2">
-                          <span className="text-gray-400 block mb-1">{t.medical.replace(' *', '')}</span>
-                          <p className="font-medium">{formData.hasMedicalCondition === 'ไม่มี' ? t.medicalNo : formData.medicalConditionDetails}</p>
+                          <span className="text-gray-400 block mb-1.5 text-xs uppercase tracking-wider">{t.medical.replace(' *', '')}</span>
+                          <p className="font-medium text-gray-800">{formData.hasMedicalCondition === 'ไม่มี' ? t.medicalNo : formData.medicalConditionDetails}</p>
                         </div>
                       </>
                     )}
