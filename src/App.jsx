@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { RegProvider, useRegistration } from './contexts/RegContext';
@@ -23,6 +23,15 @@ const ProtectedRoute = ({ children }) => {
 function AppContent() {
   // BYPASS: Ignore authLoading and authError to allow viewing pages without checking LINE status
   const { loading: authLoading, error: authError } = useAuth();
+
+  // 💡 ตัวช่วยสำหรับนักพัฒนา: พิมพ์ ?reset=1 ต่อท้าย URL เพื่อล้าง Cache ทั้งหมดเวลาทดสอบ
+  useEffect(() => {
+    if (window.location.search.includes('reset=1')) {
+      localStorage.clear();
+      alert('ล้างข้อมูล LocalStorage สำเร็จแล้ว! (โหมดนักพัฒนา)');
+      window.location.href = '/';
+    }
+  }, []);
 
   return (
     <Router>
