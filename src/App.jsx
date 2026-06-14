@@ -9,6 +9,10 @@ import Register from './pages/Register';
 import Profile from './pages/Profile';
 
 import bgImg from './assets/bg.jpg';
+import logoImg from './assets/Logo.png';
+import textHeaderEng from './assets/text-header-eng.png';
+import textHeaderThai from './assets/text-header-thai.png';
+import LoadingScreen from './components/LoadingScreen';
 
 // Guard component to redirect if already registered (BYPASSED)
 const PublicRoute = ({ children }) => {
@@ -21,8 +25,9 @@ const ProtectedRoute = ({ children }) => {
 };
 
 function AppContent() {
-  // BYPASS: Ignore authLoading and authError to allow viewing pages without checking LINE status
-  const { loading: authLoading, error: authError } = useAuth();
+  const { loading: authLoading } = useAuth();
+  const { loading: regLoading } = useRegistration();
+  const [imagesLoaded, setImagesLoaded] = React.useState(false);
 
   // 💡 ตัวช่วยสำหรับนักพัฒนา: พิมพ์ ?reset=1 ต่อท้าย URL เพื่อล้าง Cache ทั้งหมดเวลาทดสอบ
   useEffect(() => {
@@ -32,6 +37,33 @@ function AppContent() {
       window.location.href = '/';
     }
   }, []);
+
+  useEffect(() => {
+    // Preload critical images
+    const imagesToPreload = [bgImg, logoImg, textHeaderEng, textHeaderThai, '/icon.png'];
+    let loadedCount = 0;
+
+    const checkAllLoaded = () => {
+      loadedCount++;
+      if (loadedCount === imagesToPreload.length) {
+        setImagesLoaded(true);
+      }
+    };
+
+    imagesToPreload.forEach(src => {
+      const img = new Image();
+      img.src = src;
+      img.onload = checkAllLoaded;
+      img.onerror = checkAllLoaded; // ถ้ารูปพังก็ให้ข้ามไปเลย ระบบจะได้ไม่ค้าง
+    });
+  }, []);
+
+  // Show Loading Screen until ALL images AND Auth AND Registration states are fully loaded
+  const isReady = imagesLoaded && !authLoading && !regLoading;
+
+  if (!isReady) {
+    return <LoadingScreen />;
+  }
 
   return (
     <Router>
