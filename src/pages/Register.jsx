@@ -1095,10 +1095,10 @@ const Register = () => {
             <div className="space-y-8 animate-fadeIn">
               <h3 className="text-xl sm:text-2xl font-medium text-center text-gray-800 mb-6">{readOnly ? (lang === 'TH' ? 'ข้อมูลส่วนตัว' : 'Personal Information') : t.verifyTitle}</h3>
 
-              <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-6 sm:p-8 space-y-8 text-gray-700">
+              <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-4 sm:p-8 space-y-4 sm:space-y-8 text-gray-700">
 
                 {/* General Info */}
-                <div className="bg-slate-50/70 rounded-xl p-5 sm:p-6 border border-slate-100">
+                <div className="bg-slate-50/70 rounded-xl p-4 sm:p-6 border border-slate-100">
                   <div className="flex justify-between items-center border-b border-slate-200 pb-3 mb-5">
                     <h4 className="text-lg font-bold text-[#1e3a5f]">{t.generalInfo}</h4>
                     {!readOnly && <button type="button" onClick={() => { setStep(1); window.scrollTo(0, 0); }} className="text-sm bg-white hover:bg-slate-100 border border-slate-200 text-[#1e3a5f] px-3 py-1.5 rounded-lg font-medium transition-colors shadow-sm">{t.editDataBtn}</button>}
@@ -1117,7 +1117,7 @@ const Register = () => {
                 </div>
 
                 {/* Education Info */}
-                <div className="bg-slate-50/70 rounded-xl p-5 sm:p-6 border border-slate-100">
+                <div className="bg-slate-50/70 rounded-xl p-4 sm:p-6 border border-slate-100">
                   <div className="flex justify-between items-center border-b border-slate-200 pb-3 mb-5">
                     <h4 className="text-lg font-bold text-[#1e3a5f]">{t.eduInfo}</h4>
                     {!readOnly && <button type="button" onClick={() => { setStep(2); window.scrollTo(0, 0); }} className="text-sm bg-white hover:bg-slate-100 border border-slate-200 text-[#1e3a5f] px-3 py-1.5 rounded-lg font-medium transition-colors shadow-sm">{t.editDataBtn}</button>}
@@ -1129,7 +1129,7 @@ const Register = () => {
                 </div>
 
                 {/* Activity Info */}
-                <div className="bg-slate-50/70 rounded-xl p-5 sm:p-6 border border-slate-100">
+                <div className="bg-slate-50/70 rounded-xl p-4 sm:p-6 border border-slate-100">
                   <div className="flex justify-between items-center border-b border-slate-200 pb-3 mb-5">
                     <h4 className="text-lg font-bold text-[#1e3a5f]">{t.activityInfo}</h4>
                     {!readOnly && <button type="button" onClick={() => { setStep(3); window.scrollTo(0, 0); }} className="text-sm bg-white hover:bg-slate-100 border border-slate-200 text-[#1e3a5f] px-3 py-1.5 rounded-lg font-medium transition-colors shadow-sm">{t.editDataBtn}</button>}
