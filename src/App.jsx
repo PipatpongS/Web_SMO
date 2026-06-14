@@ -25,18 +25,40 @@ const ProtectedRoute = ({ children }) => {
 };
 
 function AppContent() {
-  const { loading: authLoading } = useAuth();
+  const { loading: authLoading, userProfile } = useAuth();
   const { loading: regLoading } = useRegistration();
   const [imagesLoaded, setImagesLoaded] = React.useState(false);
+  const [isResetting, setIsResetting] = React.useState(false);
 
-  // 💡 ตัวช่วยสำหรับนักพัฒนา: พิมพ์ ?reset=1 ต่อท้าย URL เพื่อล้าง Cache ทั้งหมดเวลาทดสอบ
+  // 💡 ตัวช่วยสำหรับนักพัฒนา: พิมพ์ ?reset=1 ต่อท้าย URL เพื่อล้าง Cache + รีเซ็ต Rich Menu
   useEffect(() => {
-    if (window.location.search.includes('reset=1')) {
+    if (!window.location.search.includes('reset=1')) return;
+    if (authLoading) return; // รอ LIFF โหลดเสร็จก่อน
+
+    setIsResetting(true);
+
+    const doReset = async () => {
+      // 1. ถ้ามี userId ให้เรียก API ถอดผูก Rich Menu ด้วย
+      if (userProfile?.userId) {
+        try {
+          await fetch('/api/unlink-rich-menu', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: userProfile.userId })
+          });
+        } catch (e) {
+          console.error('Unlink rich menu error:', e);
+        }
+      }
+
+      // 2. ล้าง LocalStorage
       localStorage.clear();
-      alert('ล้างข้อมูล LocalStorage สำเร็จแล้ว! (โหมดนักพัฒนา)');
+      alert('ล้างข้อมูล LocalStorage + รีเซ็ต Rich Menu สำเร็จแล้ว!');
       window.location.href = '/';
-    }
-  }, []);
+    };
+
+    doReset();
+  }, [authLoading, userProfile]);
 
   useEffect(() => {
     // Preload critical images
@@ -59,7 +81,7 @@ function AppContent() {
   }, []);
 
   // Show Loading Screen until ALL images AND Auth AND Registration states are fully loaded
-  const isReady = imagesLoaded && !authLoading && !regLoading;
+  const isReady = imagesLoaded && !authLoading && !regLoading && !isResetting;
 
   if (!isReady) {
     return <LoadingScreen />;
