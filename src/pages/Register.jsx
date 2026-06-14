@@ -885,8 +885,25 @@ const Register = () => {
 
                   {formData.studentIdStatus === 'ได้รับรหัสนักศึกษาแล้ว' && (
                     <div>
-                      <label className={labelClass}>{t.studentId}</label>
-                      <input type="text" name="studentId" value={formData.studentId} onChange={handleChange} onFocus={() => { if (!formData.studentId) setFormData({ ...formData, studentId: '6907050' }) }} className={inputClass} placeholder={t.studentIdPlaceholder} />
+                      <label className={labelClass}>
+                        {formData.nationality === 'ต่างชาติ' 
+                          ? (lang === 'TH' ? 'รหัสนักศึกษา (เติมรหัส 9 ตัวท้าย) *' : 'Student ID (fill in the last 9 digits) *') 
+                          : (lang === 'TH' ? 'รหัสนักศึกษา (เติมรหัส 4 ตัวท้าย) *' : 'Student ID (fill in the last 4 digits) *')}
+                      </label>
+                      <input 
+                        type="text" 
+                        name="studentId" 
+                        value={formData.studentId} 
+                        onChange={handleChange} 
+                        onFocus={() => { 
+                          if (!formData.studentId) {
+                            const prefill = formData.nationality === 'ต่างชาติ' ? '69' : '6907050';
+                            setFormData({ ...formData, studentId: prefill });
+                          } 
+                        }} 
+                        className={inputClass} 
+                        placeholder={formData.nationality === 'ต่างชาติ' ? '69xxxxxxxxx' : '6907050xxxx'} 
+                      />
                     </div>
                   )}
                 </div>
