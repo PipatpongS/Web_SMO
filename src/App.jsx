@@ -2,6 +2,8 @@ import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { RegProvider, useRegistration } from './contexts/RegContext';
+import { doc, deleteDoc } from 'firebase/firestore';
+import { db } from './config/firebase';
 
 // Pages
 import Home from './pages/Home';
@@ -30,7 +32,8 @@ function AppContent() {
   const [imagesLoaded, setImagesLoaded] = React.useState(false);
   const [isResetting, setIsResetting] = React.useState(false);
 
-  // 💡 ตัวช่วยสำหรับนักพัฒนา: พิมพ์ ?reset=1 ต่อท้าย URL เพื่อล้าง Cache + รีเซ็ต Rich Menu
+  // 💡 ตัวช่วยสำหรับนักพัฒนา: พิมพ์ ?reset=1 ต่อท้าย URL
+  // จะทำ 3 อย่างพร้อมกัน: ลบข้อมูล Firebase + ล้าง LocalStorage + รีเซ็ต Rich Menu
   useEffect(() => {
     if (!window.location.search.includes('reset=1')) return;
     if (authLoading) return; // รอ LIFF โหลดเสร็จก่อน
@@ -38,22 +41,35 @@ function AppContent() {
     setIsResetting(true);
 
     const doReset = async () => {
-      // 1. ถ้ามี userId ให้เรียก API ถอดผูก Rich Menu ด้วย
-      if (userProfile?.userId) {
+      const userId = userProfile?.userId;
+
+      if (userId) {
+        // 1. ลบข้อมูลใน Firebase Firestore
+        try {
+          if (db) {
+            await deleteDoc(doc(db, 'users', userId));
+            console.log('✅ ลบข้อมูลใน Firebase สำเร็จ');
+          }
+        } catch (e) {
+          console.error('Firebase delete error:', e);
+        }
+
+        // 2. ถอดผูก Rich Menu กลับเป็นเมนูก่อนลงทะเบียน
         try {
           await fetch('/api/unlink-rich-menu', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ userId: userProfile.userId })
+            body: JSON.stringify({ userId })
           });
+          console.log('✅ รีเซ็ต Rich Menu สำเร็จ');
         } catch (e) {
           console.error('Unlink rich menu error:', e);
         }
       }
 
-      // 2. ล้าง LocalStorage
+      // 3. ล้าง LocalStorage
       localStorage.clear();
-      alert('ล้างข้อมูล LocalStorage + รีเซ็ต Rich Menu สำเร็จแล้ว!');
+      alert('รีเซ็ตทั้งหมดสำเร็จ!\n✅ ลบข้อมูล Firebase\n✅ ล้าง LocalStorage\n✅ รีเซ็ต Rich Menu');
       window.location.href = '/';
     };
 
