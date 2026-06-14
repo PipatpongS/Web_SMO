@@ -81,6 +81,7 @@ export const RegProvider = ({ children }) => {
     const registrationPayload = {
       ...data, // Save all fields from the form dynamically
       line_uid: userId,
+      line_displayName: userProfile.displayName || '',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       checkin_day1_morning: null,
@@ -157,6 +158,7 @@ export const RegProvider = ({ children }) => {
 
     const updatePayload = {
       ...sanitizedData,
+      line_displayName: userProfile.displayName || '',
       updatedAt: new Date().toISOString(),
       editCount: newEditCount
     };
