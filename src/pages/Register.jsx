@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useRegistration } from '../contexts/RegContext';
 
 const contentLang = {
@@ -69,7 +69,7 @@ const contentLang = {
     medicalNo: 'ไม่มี',
     medicalYes: 'มี',
     medicalPlaceholder: 'ระบุโรคประจำตัว *',
-    join: 'ความต้องการเข้าร่วมกิจกรรม *',
+    join: 'ความสะดวกเข้าร่วมกิจกรรม *',
     joinYes: 'เข้าร่วม',
     joinNo: 'ไม่เข้าร่วม',
     joinNoNote: '* สามารถรับเสื้อได้ในวันเวลาที่กำหนด หรือภายหลัง',
@@ -203,6 +203,8 @@ import LoadingScreen from '../components/LoadingScreen';
 
 const Register = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const readOnly = location.state?.readOnly || false;
   const { registerUser, updateUser, loading, isRegistered, regData } = useRegistration();
   const [lang, setLangState] = useState(() => localStorage.getItem('preferredLang') || 'TH');
   const setLang = (newLang) => {
@@ -275,8 +277,12 @@ const Register = () => {
       if (regData.nationality === 'ต่างชาติ') {
         setLang('EN');
       }
+      if (readOnly) {
+        setStep(4); // totalSteps for editMode is 4
+        setMaxStep(4);
+      }
     }
-  }, [isRegistered, regData, isSuccess, hasLoadedRegData]);
+  }, [isRegistered, regData, isSuccess, hasLoadedRegData, readOnly]);
 
   useEffect(() => {
     localStorage.setItem('registerFormData', JSON.stringify(formData));
@@ -427,8 +433,8 @@ const Register = () => {
       }
       const requiredPrefix = formData.nationality === 'ต่างชาติ' ? '69' : '6907050';
       if (formData.studentIdStatus === 'ได้รับรหัสนักศึกษาแล้ว' && (formData.studentId.length !== 11 || !formData.studentId.startsWith(requiredPrefix))) {
-        setError(lang === 'TH' 
-          ? `กรุณากรอกรหัสนักศึกษาให้ครบ 11 หลัก (ต้องขึ้นต้นด้วย ${requiredPrefix})` 
+        setError(lang === 'TH'
+          ? `กรุณากรอกรหัสนักศึกษาให้ครบ 11 หลัก (ต้องขึ้นต้นด้วย ${requiredPrefix})`
           : `Please enter an 11-digit Student ID starting with ${requiredPrefix}`);
         return;
       }
@@ -561,8 +567,8 @@ const Register = () => {
       }
       const requiredPrefix = formData.nationality === 'ต่างชาติ' ? '69' : '6907050';
       if (formData.studentIdStatus === 'ได้รับรหัสนักศึกษาแล้ว' && (formData.studentId.length !== 11 || !formData.studentId.startsWith(requiredPrefix))) {
-        setError(lang === 'TH' 
-          ? `กรุณากรอกรหัสนักศึกษาให้ครบ 11 หลัก (ต้องขึ้นต้นด้วย ${requiredPrefix})` 
+        setError(lang === 'TH'
+          ? `กรุณากรอกรหัสนักศึกษาให้ครบ 11 หลัก (ต้องขึ้นต้นด้วย ${requiredPrefix})`
           : `Please enter an 11-digit Student ID starting with ${requiredPrefix}`);
         setStep(1); return false;
       }
@@ -602,13 +608,13 @@ const Register = () => {
     return true;
   };
 
-    const handleGoToVerify = () => {
-      if (validateAll()) {
-        setStep(totalSteps);
-        if (totalSteps > maxStep) setMaxStep(totalSteps);
-        window.scrollTo(0, 0);
-      }
-    };
+  const handleGoToVerify = () => {
+    if (validateAll()) {
+      setStep(totalSteps);
+      if (totalSteps > maxStep) setMaxStep(totalSteps);
+      window.scrollTo(0, 0);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e?.preventDefault();
@@ -1069,22 +1075,22 @@ const Register = () => {
           {/* Step 5: Verification Phase */}
           {((step === 5 && !isEditMode) || (step === 4 && isEditMode)) && (
             <div className="space-y-8 animate-fadeIn">
-              <h3 className="text-xl sm:text-2xl font-medium text-center text-gray-800 mb-6">{t.verifyTitle}</h3>
-              
+              <h3 className="text-xl sm:text-2xl font-medium text-center text-gray-800 mb-6">{readOnly ? (lang === 'TH' ? 'ข้อมูลส่วนตัว' : 'Personal Information') : t.verifyTitle}</h3>
+
               <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-6 sm:p-8 space-y-8 text-gray-700">
-                
+
                 {/* General Info */}
                 <div>
                   <div className="flex justify-between items-center border-b pb-2 mb-4">
                     <h4 className="text-lg font-semibold text-[#1e3a5f]">{t.generalInfo}</h4>
-                    <button type="button" onClick={() => { setStep(1); window.scrollTo(0,0); }} className="text-sm text-[#1e3a5f] font-medium hover:text-blue-800 underline underline-offset-2">{t.editDataBtn}</button>
+                    {!readOnly && <button type="button" onClick={() => { setStep(1); window.scrollTo(0, 0); }} className="text-sm text-[#1e3a5f] font-medium hover:text-blue-800 underline underline-offset-2">{t.editDataBtn}</button>}
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-4 gap-x-6 text-sm">
-                    <div className="sm:col-span-2"><span className="text-gray-400 block mb-1">{t.nationality.replace(' *','')}</span><p className="font-medium">{translateValue(formData.nationality)}</p></div>
+                    <div className="sm:col-span-2"><span className="text-gray-400 block mb-1">{t.nationality.replace(' *', '')}</span><p className="font-medium">{translateValue(formData.nationality)}</p></div>
                     <div className="sm:col-span-2"><span className="text-gray-400 block mb-1">{lang === 'TH' ? 'ชื่อ-นามสกุล' : 'Full Name'}</span><p className="font-medium">{`${translateValue(formData.titlePrefix)} ${formData.firstName} ${formData.middleName ? formData.middleName + ' ' : ''}${formData.lastName}`}</p></div>
-                    <div><span className="text-gray-400 block mb-1">{t.email.replace(' *','')}</span><p className="font-medium break-all">{formData.email}</p></div>
-                    <div><span className="text-gray-400 block mb-1">{t.phone.replace(' *','')}</span><p className="font-medium">{formData.phone}</p></div>
-                    <div className="sm:col-span-2"><span className="text-gray-400 block mb-1">{t.studentId.replace(' *','')}</span><p className="font-medium">{formData.studentIdStatus === 'ยังไม่ได้รับรหัสนักศึกษา' ? (lang === 'TH' ? 'ยังไม่ได้รับรหัสนักศึกษา' : 'Not yet received Student ID') : formData.studentId}</p></div>
+                    <div><span className="text-gray-400 block mb-1">{t.email.replace(' *', '')}</span><p className="font-medium break-all">{formData.email}</p></div>
+                    <div><span className="text-gray-400 block mb-1">{t.phone.replace(' *', '')}</span><p className="font-medium">{formData.phone}</p></div>
+                    <div className="sm:col-span-2"><span className="text-gray-400 block mb-1">{t.studentId.replace(' *', '')}</span><p className="font-medium">{formData.studentIdStatus === 'ยังไม่ได้รับรหัสนักศึกษา' ? (lang === 'TH' ? 'ยังไม่ได้รับรหัสนักศึกษา' : 'Not yet received Student ID') : formData.studentId}</p></div>
                   </div>
                 </div>
 
@@ -1092,11 +1098,11 @@ const Register = () => {
                 <div>
                   <div className="flex justify-between items-center border-b pb-2 mb-4">
                     <h4 className="text-lg font-semibold text-[#1e3a5f]">{t.eduInfo}</h4>
-                    <button type="button" onClick={() => { setStep(2); window.scrollTo(0,0); }} className="text-sm text-[#1e3a5f] font-medium hover:text-blue-800 underline underline-offset-2">{t.editDataBtn}</button>
+                    {!readOnly && <button type="button" onClick={() => { setStep(2); window.scrollTo(0, 0); }} className="text-sm text-[#1e3a5f] font-medium hover:text-blue-800 underline underline-offset-2">{t.editDataBtn}</button>}
                   </div>
                   <div className="grid grid-cols-1 gap-y-4 text-sm">
-                    <div><span className="text-gray-400 block mb-1">{t.program.replace(' *','')}</span><p className="font-medium">{translateValue(formData.program)}</p></div>
-                    <div><span className="text-gray-400 block mb-1">{t.department.replace(' *','')}</span><p className="font-medium">{translateValue(formData.department)}</p></div>
+                    <div><span className="text-gray-400 block mb-1">{t.program.replace(' *', '')}</span><p className="font-medium">{translateValue(formData.program)}</p></div>
+                    <div><span className="text-gray-400 block mb-1">{t.department.replace(' *', '')}</span><p className="font-medium">{translateValue(formData.department)}</p></div>
                   </div>
                 </div>
 
@@ -1104,26 +1110,26 @@ const Register = () => {
                 <div>
                   <div className="flex justify-between items-center border-b pb-2 mb-4">
                     <h4 className="text-lg font-semibold text-[#1e3a5f]">{t.activityInfo}</h4>
-                    <button type="button" onClick={() => { setStep(3); window.scrollTo(0,0); }} className="text-sm text-[#1e3a5f] font-medium hover:text-blue-800 underline underline-offset-2">{t.editDataBtn}</button>
+                    {!readOnly && <button type="button" onClick={() => { setStep(3); window.scrollTo(0, 0); }} className="text-sm text-[#1e3a5f] font-medium hover:text-blue-800 underline underline-offset-2">{t.editDataBtn}</button>}
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-4 gap-x-6 text-sm">
-                    <div><span className="text-gray-400 block mb-1">{t.shirtSize.replace(' *','')}</span><p className="font-medium">{formData.shirtSize}</p></div>
-                    <div><span className="text-gray-400 block mb-1">{t.join.replace(' *','')}</span><p className="font-medium">{translateValue(formData.joinActivity)}</p></div>
+                    <div><span className="text-gray-400 block mb-1">{t.shirtSize.replace(' *', '')}</span><p className="font-medium">{formData.shirtSize}</p></div>
+                    <div><span className="text-gray-400 block mb-1">{t.join.replace(' *', '')}</span><p className="font-medium">{translateValue(formData.joinActivity)}</p></div>
                     {formData.joinActivity === 'เข้าร่วม' && (
                       <>
                         <div className="sm:col-span-2">
-                          <span className="text-gray-400 block mb-1">{t.diet.replace(' *','')}</span>
+                          <span className="text-gray-400 block mb-1">{t.diet.replace(' *', '')}</span>
                           <p className="font-medium leading-relaxed">
                             {formData.hasDietaryRestriction === 'ไม่มี' ? t.dietNo : (
-                              Array.isArray(formData.dietaryRestriction) ? formData.dietaryRestriction.map(d => 
-                                d === 'แพ้อาหารบางชนิด' ? (lang === 'TH' ? `แพ้อาหาร: ${formData.foodAllergyDetails}` : `Allergy: ${formData.foodAllergyDetails}`) : 
-                                d === 'อื่นๆ' ? (lang === 'TH' ? `อื่นๆ: ${formData.dietaryOther}` : `Other: ${formData.dietaryOther}`) : translateValue(d)
+                              Array.isArray(formData.dietaryRestriction) ? formData.dietaryRestriction.map(d =>
+                                d === 'แพ้อาหารบางชนิด' ? (lang === 'TH' ? `แพ้อาหาร: ${formData.foodAllergyDetails}` : `Allergy: ${formData.foodAllergyDetails}`) :
+                                  d === 'อื่นๆ' ? (lang === 'TH' ? `อื่นๆ: ${formData.dietaryOther}` : `Other: ${formData.dietaryOther}`) : translateValue(d)
                               ).join(', ') : ''
                             )}
                           </p>
                         </div>
                         <div className="sm:col-span-2">
-                          <span className="text-gray-400 block mb-1">{t.medical.replace(' *','')}</span>
+                          <span className="text-gray-400 block mb-1">{t.medical.replace(' *', '')}</span>
                           <p className="font-medium">{formData.hasMedicalCondition === 'ไม่มี' ? t.medicalNo : formData.medicalConditionDetails}</p>
                         </div>
                       </>
@@ -1145,9 +1151,12 @@ const Register = () => {
             {step > 1 ? (
               <button
                 type="button"
-                onClick={handlePrev}
+                onClick={() => {
+                  if (readOnly) navigate('/profile');
+                  else handlePrev();
+                }}
                 className="text-gray-500 hover:text-gray-800 font-medium px-4 py-2 transition-colors"
-              >{t.btnBack}</button>
+              >{readOnly ? (lang === 'TH' ? 'ย้อนกลับหน้าโปรไฟล์' : 'Back to Profile') : t.btnBack}</button>
             ) : (
               <button
                 type="button"
@@ -1170,7 +1179,7 @@ const Register = () => {
                 </button>
               )}
 
-              {isEditMode && step < totalSteps && (
+              {isEditMode && step < totalSteps && !readOnly && (
                 <button
                   type="button"
                   disabled={submitting || !hasChanges}
@@ -1181,7 +1190,7 @@ const Register = () => {
                 </button>
               )}
 
-              {step < totalSteps && (
+              {step < totalSteps && !readOnly && (
                 <button
                   key="btn-next"
                   type="button"
@@ -1189,8 +1198,8 @@ const Register = () => {
                   className="bg-[#1e3a5f] hover:bg-[#152b47] text-white px-8 sm:px-12 py-3 rounded-xl font-semibold transition-all shadow-md hover:shadow-lg text-sm sm:text-base whitespace-nowrap"
                 >{t.btnNext}</button>
               )}
-              
-              {step === totalSteps && (
+
+              {step === totalSteps && !readOnly && (
                 <button
                   key="btn-submit"
                   type="submit"
