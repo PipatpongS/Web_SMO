@@ -655,7 +655,6 @@ const Register = () => {
   };
 
   const processSubmit = async () => {
-    setShowConfirmModal(false);
     setSubmitting(true);
     setError('');
 
@@ -690,8 +689,10 @@ const Register = () => {
       setStep(1);
       setSuccessMode(currentMode);
       setIsSuccess(true);
+      setShowConfirmModal(false);
       window.scrollTo(0, 0);
     } else {
+      setShowConfirmModal(false);
       if (result.errorCode === 'permission_denied') {
         setError(t.errPermissionDenied);
       } else if (result.errorCode === 'register_failed') {
@@ -1272,7 +1273,7 @@ const Register = () => {
       {showConfirmModal && createPortal(
         <div 
           className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fadeIn"
-          onClick={() => setShowConfirmModal(false)}
+          onClick={() => !submitting && setShowConfirmModal(false)}
         >
           <div 
             className="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden animate-scaleIn"
@@ -1293,15 +1294,23 @@ const Register = () => {
               <div className="flex gap-3">
                 <button 
                   onClick={() => setShowConfirmModal(false)}
-                  className="flex-1 py-2.5 rounded-xl text-gray-600 bg-gray-100 hover:bg-gray-200 font-medium transition-colors"
+                  disabled={submitting}
+                  className={`flex-1 py-2.5 rounded-xl text-gray-600 font-medium transition-colors ${submitting ? 'bg-gray-100 opacity-50 cursor-not-allowed' : 'bg-gray-100 hover:bg-gray-200'}`}
                 >
                   {lang === 'TH' ? 'ยกเลิก' : 'Cancel'}
                 </button>
                 <button 
                   onClick={processSubmit}
-                  className="flex-1 py-2.5 rounded-xl text-white bg-[#1e3a5f] hover:bg-[#152c4a] font-medium transition-colors shadow-sm"
+                  disabled={submitting}
+                  className={`flex-1 py-2.5 rounded-xl text-white font-medium transition-colors shadow-sm ${submitting ? 'bg-[#1e3a5f] opacity-75 cursor-not-allowed flex justify-center items-center gap-2' : 'bg-[#1e3a5f] hover:bg-[#152c4a]'}`}
                 >
-                  {lang === 'TH' ? 'ตกลง' : 'Confirm'}
+                  {submitting && (
+                    <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  )}
+                  {submitting ? (lang === 'TH' ? 'กำลังดำเนินการ...' : 'Processing...') : (lang === 'TH' ? 'ตกลง' : 'Confirm')}
                 </button>
               </div>
             </div>
