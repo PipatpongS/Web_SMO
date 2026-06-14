@@ -851,9 +851,9 @@ const Register = () => {
                       <label className={labelClass}>{t.prefix}</label>
                       <select name="titlePrefix" value={formData.titlePrefix} onChange={handleChange} className={inputClass}>
                         <option value="">{t.selectPrefix}</option>
-                        <option value={formData.nationality === 'ต่างชาติ' ? 'Mr.' : 'นาย'}>{t.mr}</option>
-                        <option value={formData.nationality === 'ต่างชาติ' ? 'Ms.' : 'นางสาว'}>{t.ms}</option>
-                        <option value={formData.nationality === 'ต่างชาติ' ? 'Mrs.' : 'นาง'}>{t.mrs}</option>
+                        <option value={formData.nationality === 'ต่างชาติ' ? 'Mr.' : 'นาย'}>{formData.nationality === 'ต่างชาติ' ? 'Mr.' : t.mr}</option>
+                        <option value={formData.nationality === 'ต่างชาติ' ? 'Ms.' : 'นางสาว'}>{formData.nationality === 'ต่างชาติ' ? 'Ms.' : t.ms}</option>
+                        <option value={formData.nationality === 'ต่างชาติ' ? 'Mrs.' : 'นาง'}>{formData.nationality === 'ต่างชาติ' ? 'Mrs.' : t.mrs}</option>
                       </select>
                     </div>
                     <div>
