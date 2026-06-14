@@ -176,7 +176,7 @@ const Home = () => {
               </div>
               <div className="text-left min-w-0">
                 <div className="text-[9px] sm:text-[10px] text-white/50 uppercase tracking-wider mb-0.5">LINE Official</div>
-                <div className="text-[11px] sm:text-sm font-medium text-white/90 group-hover:text-white transition-colors whitespace-nowrap tracking-tight">SAMO VIDVA</div>
+                <div className="text-[11px] sm:text-sm font-medium text-white/90 group-hover:text-white transition-colors whitespace-nowrap tracking-tight">SMO VIDVA BANGMOD</div>
               </div>
             </div>
             <div className="text-[10px] sm:text-xs bg-white/10 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-white/80 group-hover:bg-[#00B900] group-hover:text-white transition-all shrink-0">{t.lineChat}</div>
