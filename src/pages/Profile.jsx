@@ -200,7 +200,6 @@ const Profile = () => {
                     : "bg-gray-300 text-gray-500 cursor-not-allowed shadow-none"
                     }`}
                 >
-                >
                   {t.editBtn}
                 </button>
                 <div className="text-center mt-3 text-xs text-gray-500 space-y-2">
