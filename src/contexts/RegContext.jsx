@@ -124,8 +124,23 @@ export const RegProvider = ({ children }) => {
     const userId = userProfile.userId;
     const newEditCount = (regData.editCount || 0) + 1;
     
+    // Whitelist allowed fields to prevent Mass Assignment vulnerabilities
+    const allowedFields = [
+      'titlePrefix', 'firstName', 'middleName', 'lastName', 'email', 'phone', 
+      'studentIdStatus', 'studentId', 'nationality', 'program', 'department', 
+      'shirtSize', 'hasDietaryRestriction', 'foodAllergyDetails', 'dietaryOther', 
+      'hasMedicalCondition', 'medicalConditionDetails', 'joinActivity'
+    ];
+
+    const sanitizedData = {};
+    allowedFields.forEach(field => {
+      if (data[field] !== undefined) {
+        sanitizedData[field] = data[field];
+      }
+    });
+
     const updatePayload = {
-      ...data,
+      ...sanitizedData,
       updatedAt: new Date().toISOString(),
       editCount: newEditCount
     };

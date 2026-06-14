@@ -1,5 +1,9 @@
 import fs from 'fs';
 import path from 'path';
+import dotenv from 'dotenv';
+
+// Load the backend environment variables
+dotenv.config({ path: '.env.backend' });
 
 // ==========================================
 // 1. ใส่ LINE Channel Access Token ของคุณที่นี่

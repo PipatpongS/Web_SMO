@@ -1,0 +1,37 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Function to check if user is authenticated and is the owner
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+
+    match /users/{userId} {
+      // Allow read if the user is requesting their own document
+      allow read: if isOwner(userId);
+      
+      // Allow creation of a new registration profile
+      allow create: if isOwner(userId)
+                    && request.resource.data.line_uid == userId
+                    && request.resource.data.editCount == 0
+                    && request.resource.data.is_verified == false
+                    && request.resource.data.is_shirt_ordered == false;
+      
+      // Allow updates only if the user is the owner, editCount < 2, and not changing restricted fields
+      allow update: if isOwner(userId)
+                    // Must not exceed edit limits (allowing it to hit exactly 2 on this update)
+                    && resource.data.editCount < 2
+                    // Make sure shirt is not already ordered
+                    && resource.data.is_shirt_ordered == false
+                    // Prevent modification of restricted fields
+                    && !request.resource.data.diff(resource.data).affectedKeys()
+                        .hasAny(['line_uid', 'is_verified', 'is_shirt_ordered', 'createdAt', 'checkin_day1_morning', 'checkin_day1_afternoon', 'checkin_day2_morning', 'checkin_day2_afternoon', 'shirt_received_at'])
+                    // Enforce that editCount increases by exactly 1
+                    && request.resource.data.editCount == resource.data.editCount + 1;
+                    
+      // Allow delete only if the owner wants to delete (or remove if only admins can delete)
+      allow delete: if false; // Typically, users shouldn't delete their registration, only admins
+    }
+  }
+}
