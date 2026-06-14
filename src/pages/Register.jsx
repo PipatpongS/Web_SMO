@@ -249,6 +249,7 @@ const Register = () => {
   const [step, setStep] = useState(1);
   const [maxStep, setMaxStep] = useState(1);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [successMode, setSuccessMode] = useState(null);
   const [isEditMode, setIsEditMode] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [hasLoadedRegData, setHasLoadedRegData] = useState(false);
@@ -658,6 +659,7 @@ const Register = () => {
     setSubmitting(true);
     setError('');
 
+    const currentMode = isEditMode ? 'edit' : 'register';
     const result = isEditMode ? await updateUser(formData) : await registerUser(formData);
 
     setSubmitting(false);
@@ -686,6 +688,7 @@ const Register = () => {
       });
       localStorage.removeItem('registerFormData');
       setStep(1);
+      setSuccessMode(currentMode);
       setIsSuccess(true);
       window.scrollTo(0, 0);
     } else {
@@ -745,7 +748,9 @@ const Register = () => {
       <div className="flex flex-col items-center justify-center min-h-screen p-4 text-white">
         <div className="text-center mb-6">
           <h1 className="text-2xl font-bold text-magical-gold text-glow">
-            {isEditMode ? 'แก้ไขข้อมูลสำเร็จ!' : 'ลงทะเบียนสำเร็จ!'}
+            {lang === 'TH' 
+              ? (successMode === 'edit' ? 'แก้ไขข้อมูลสำเร็จ!' : 'ลงทะเบียนสำเร็จ!') 
+              : (successMode === 'edit' ? 'Edit successful!' : 'Registration successful!')}
           </h1>
         </div>
         <div className="w-full mt-4 flex flex-col items-center">
