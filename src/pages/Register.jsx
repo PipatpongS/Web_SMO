@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useRegistration } from '../contexts/RegContext';
 
@@ -631,17 +632,14 @@ const Register = () => {
     e?.preventDefault();
     if (!validateAll()) return;
 
-    if (isEditMode) {
-      setShowConfirmModal(true);
-      return;
-    } else {
+    if (!isEditMode) {
       if (!formData.pdpaConsent) {
         setError(lang === 'TH' ? 'กรุณายอมรับเงื่อนไขก่อนดำเนินการต่อ' : 'Please accept the terms before proceeding');
         return;
       }
     }
     
-    await processSubmit();
+    setShowConfirmModal(true);
   };
 
   const processSubmit = async () => {
@@ -1255,8 +1253,8 @@ const Register = () => {
         </form>
       </div>
       {/* Custom Confirm Modal */}
-      {showConfirmModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fadeIn">
+      {showConfirmModal && createPortal(
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fadeIn">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden animate-scaleIn">
             <div className="p-6 text-center">
               <div className="w-16 h-16 bg-blue-50 text-[#1e3a5f] rounded-full flex items-center justify-center mx-auto mb-4">
@@ -1265,10 +1263,10 @@ const Register = () => {
                 </svg>
               </div>
               <h3 className="text-xl font-bold text-gray-800 mb-2">
-                {lang === 'TH' ? 'ยืนยันการแก้ไขข้อมูล' : 'Confirm changes'}
+                {lang === 'TH' ? (isEditMode ? 'ยืนยันการแก้ไขข้อมูล' : 'ยืนยันการลงทะเบียน') : (isEditMode ? 'Confirm changes' : 'Confirm registration')}
               </h3>
               <p className="text-gray-500 text-sm mb-6">
-                {lang === 'TH' ? 'คุณต้องการยืนยันการแก้ไขข้อมูลใช่หรือไม่?' : 'Are you sure you want to save these changes?'}
+                {lang === 'TH' ? (isEditMode ? 'คุณต้องการยืนยันการแก้ไขข้อมูลใช่หรือไม่?' : 'คุณต้องการยืนยันการลงทะเบียนใช่หรือไม่?') : (isEditMode ? 'Are you sure you want to save these changes?' : 'Are you sure you want to submit this registration?')}
               </p>
               <div className="flex gap-3">
                 <button 
@@ -1286,7 +1284,8 @@ const Register = () => {
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
