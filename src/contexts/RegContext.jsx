@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { useAuth } from './AuthContext';
 
@@ -66,13 +66,18 @@ export const RegProvider = ({ children }) => {
     
     const userId = userProfile.userId;
     const registrationPayload = {
-      name: data.name,
-      age: parseInt(data.age, 10),
-      shirtSize: data.shirtSize,
-      is_morning_checked: false,
-      is_afternoon_checked: false,
-      is_shirt_received: false,
-      createdAt: new Date().toISOString()
+      ...data, // Save all fields from the form dynamically
+      line_uid: userId,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      checkin_day1_morning: null,
+      checkin_day1_afternoon: null,
+      checkin_day2_morning: null,
+      checkin_day2_afternoon: null,
+      shirt_received_at: null,
+      is_shirt_ordered: false,
+      is_verified: false,
+      editCount: 0
     };
 
     try {
@@ -90,8 +95,50 @@ export const RegProvider = ({ children }) => {
     }
   };
 
+  const updateUser = async (data) => {
+    if (!userProfile) return { success: false, error: "Not authenticated" };
+    if (!isRegistered || !regData) return { success: false, error: "No existing registration found" };
+    
+    // Check local edit count limit just to be safe
+    if (regData.editCount >= 2) {
+      return { success: false, error: "You have reached the maximum number of edits allowed." };
+    }
+
+    // Check if shirt is already ordered
+    if (regData.is_shirt_ordered === true) {
+      return { success: false, error: "Cannot edit because your shirt has already been ordered." };
+    }
+
+    const userId = userProfile.userId;
+    const newEditCount = (regData.editCount || 0) + 1;
+    
+    const updatePayload = {
+      ...data,
+      updatedAt: new Date().toISOString(),
+      editCount: newEditCount
+    };
+
+    try {
+      if (db) {
+        await updateDoc(doc(db, "users", userId), updatePayload);
+      }
+      
+      const newRegData = { ...regData, ...updatePayload };
+      localStorage.setItem(`reg_${userId}`, JSON.stringify(newRegData));
+      setRegData(newRegData);
+      
+      return { success: true };
+    } catch (err) {
+      console.error("Update error detailed:", err);
+      if (err.code === 'permission-denied') {
+        return { success: false, errorCode: 'permission_denied' };
+      }
+      return { success: false, errorCode: 'unknown_error', errorMsg: err.message };
+    }
+  };
+
   return (
-    <RegContext.Provider value={{ isRegistered, regData, loading: loading || authLoading, registerUser }}>
+    <RegContext.Provider value={{ isRegistered, regData, loading: loading || authLoading, registerUser, updateUser }}>
       {children}
     </RegContext.Provider>
   );

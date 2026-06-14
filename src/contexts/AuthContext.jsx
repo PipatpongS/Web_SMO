@@ -13,33 +13,18 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const initLiff = async () => {
       try {
-        // TODO: Replace with actual LIFF ID from env
-        await liff.init({ liffId: import.meta.env.VITE_LIFF_ID || "MOCK_LIFF_ID" });
+        const liffId = import.meta.env.VITE_LIFF_ID || "2010390110-fPHy5j81";
+        await liff.init({ liffId });
+        
         if (liff.isLoggedIn()) {
           const profile = await liff.getProfile();
           setUserProfile(profile);
         } else {
-          // For local development testing, mock the user
-          if (import.meta.env.DEV) {
-             setUserProfile({
-               userId: "mock_user_12345",
-               displayName: "Mock User",
-             });
-          } else {
-            liff.login();
-          }
+          liff.login();
         }
       } catch (err) {
         console.error("LIFF Init Error:", err);
-        setError("Failed to initialize LINE LIFF");
-        // Mock user for dev if liff init fails
-        if (import.meta.env.DEV) {
-           setUserProfile({
-             userId: "mock_user_12345",
-             displayName: "Mock User (Fallback)",
-           });
-           setError(null);
-        }
+        setError("Failed to initialize LINE LIFF: " + err.message);
       } finally {
         setLoading(false);
       }

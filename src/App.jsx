@@ -6,7 +6,7 @@ import { RegProvider, useRegistration } from './contexts/RegContext';
 // Pages
 import Home from './pages/Home';
 import Register from './pages/Register';
-import Ticket from './pages/Ticket';
+import Profile from './pages/Profile';
 
 import bgImg from './assets/bg.png';
 
@@ -27,29 +27,29 @@ function AppContent() {
   return (
     <Router>
       <Routes>
-        <Route 
-          path="/" 
+        <Route
+          path="/"
           element={
             <PublicRoute>
               <Home />
             </PublicRoute>
-          } 
+          }
         />
-        <Route 
-          path="/register" 
+        <Route
+          path="/register"
           element={
             <PublicRoute>
               <Register />
             </PublicRoute>
-          } 
+          }
         />
-        <Route 
-          path="/ticket" 
+        <Route
+          path="/profile"
           element={
             <ProtectedRoute>
-              <Ticket />
+              <Profile />
             </ProtectedRoute>
-          } 
+          }
         />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
@@ -61,10 +61,7 @@ function App() {
   return (
     <AuthProvider>
       <RegProvider>
-        <div 
-          className="min-h-screen font-sans text-white bg-cover bg-center bg-fixed bg-no-repeat"
-          style={{ backgroundImage: `url(${bgImg})` }}
-        >
+        <div className="min-h-screen font-sans text-white">
           <div className="min-h-screen bg-black/40 backdrop-blur-[2px]">
             <AppContent />
           </div>

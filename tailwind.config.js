@@ -16,7 +16,7 @@ export default {
         }
       },
       fontFamily: {
-        sans: ['Noto Sans Thai', 'Prompt', 'sans-serif'],
+        sans: ['Prompt', 'sans-serif'],
       },
       backgroundImage: {
         'magical-gradient': 'linear-gradient(to bottom, #1a0b2e, #3b0764, #1a0b2e)',

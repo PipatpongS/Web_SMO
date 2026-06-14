@@ -6,13 +6,26 @@
   .glass-panel {
     @apply bg-black/30 backdrop-blur-md border border-white/20 shadow-lg rounded-2xl;
   }
-  
+
   .glass-button {
-    @apply bg-gradient-to-r from-magical-purple to-magical-light 
-           hover:from-magical-light hover:to-magical-purple 
-           text-white font-semibold py-3 px-6 rounded-full 
-           shadow-[0_0_15px_rgba(139,92,246,0.5)] hover:shadow-[0_0_25px_rgba(139,92,246,0.8)]
-           transition-all duration-300 border border-white/20;
+    @apply bg-gradient-to-r from-magical-purple to-magical-light text-white font-semibold py-3 px-6 rounded-full outline outline-2 outline-transparent hover:outline-white outline-offset-2 transition-colors duration-300;
+    animation: glowPulse 2s infinite ease-in-out;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    transform-style: preserve-3d;
+    -webkit-transform-style: preserve-3d;
+    will-change: transform, box-shadow;
+  }
+
+  @keyframes glowPulse {
+    0%, 100% {
+      box-shadow: 0 0 15px rgba(139, 92, 246, 0.5);
+      transform: scale3d(1, 1, 1);
+    }
+    50% {
+      box-shadow: 0 0 30px rgba(139, 92, 246, 0.9), 0 0 15px rgba(255, 255, 255, 0.4);
+      transform: scale3d(1.05, 1.05, 1);
+    }
   }
 
   .text-glow {
@@ -20,13 +33,21 @@
   }
 }
 
+html {
+  background-color: #1a0b2e;
+}
+
 body {
   margin: 0;
   min-height: 100vh;
-  /* We will use a fallback background gradient, and load the image in App component */
-  background: linear-gradient(to bottom, #1a0b2e, #3b0764, #1a0b2e);
+  background-image: url('./assets/bg.png');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+  background-color: #1a0b2e;
   color: white;
-  font-family: 'Noto Sans Thai', 'Prompt', sans-serif;
+  font-family: 'Prompt', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
