@@ -289,6 +289,17 @@ const Register = () => {
     localStorage.setItem('registerFormData', JSON.stringify(formData));
   }, [formData]);
 
+  useEffect(() => {
+    if (showConfirmModal) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [showConfirmModal]);
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
 
@@ -1254,8 +1265,14 @@ const Register = () => {
       </div>
       {/* Custom Confirm Modal */}
       {showConfirmModal && createPortal(
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fadeIn">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden animate-scaleIn">
+        <div 
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fadeIn"
+          onClick={() => setShowConfirmModal(false)}
+        >
+          <div 
+            className="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden animate-scaleIn"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="p-6 text-center">
               <div className="w-16 h-16 bg-blue-50 text-[#1e3a5f] rounded-full flex items-center justify-center mx-auto mb-4">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
