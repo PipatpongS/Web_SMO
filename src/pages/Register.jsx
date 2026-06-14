@@ -1063,7 +1063,8 @@ const Register = () => {
                   name="pdpaConsent"
                   checked={formData.pdpaConsent}
                   onChange={handleChange}
-                  className={`${radioInputClass} mt-1 rounded`}
+                  disabled={readOnly}
+                  className={`${radioInputClass} mt-1 rounded ${readOnly ? 'cursor-not-allowed opacity-60' : ''}`}
                 />
                 <span className="text-sm text-gray-700">
                   {t.pdpaConsent}
