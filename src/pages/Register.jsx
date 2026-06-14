@@ -416,7 +416,7 @@ const Register = () => {
         setError(t.errRequired);
         return;
       }
-      if (formData.studentIdStatus === 'received' && !formData.studentId) {
+      if (formData.studentIdStatus === 'ได้รับรหัสนักศึกษาแล้ว' && !formData.studentId) {
         setError(t.errRequired);
         return;
       }
@@ -425,8 +425,11 @@ const Register = () => {
         setError(t.errEmailFormat);
         return;
       }
-      if (formData.studentIdStatus === 'received' && (formData.studentId.length !== 11 || !formData.studentId.startsWith('6907050'))) {
-        setError(t.errStudentIdFormat);
+      const requiredPrefix = formData.nationality === 'ต่างชาติ' ? '69' : '6907050';
+      if (formData.studentIdStatus === 'ได้รับรหัสนักศึกษาแล้ว' && (formData.studentId.length !== 11 || !formData.studentId.startsWith(requiredPrefix))) {
+        setError(lang === 'TH' 
+          ? `กรุณากรอกรหัสนักศึกษาให้ครบ 11 หลัก (ต้องขึ้นต้นด้วย ${requiredPrefix})` 
+          : `Please enter an 11-digit Student ID starting with ${requiredPrefix}`);
         return;
       }
       if (formData.phone.length !== 10 || formData.phone[0] !== '0' || formData.phone[1] === '0') {
