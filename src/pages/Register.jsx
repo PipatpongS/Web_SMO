@@ -205,7 +205,7 @@ const Register = () => {
   const location = useLocation();
   const readOnly = location.state?.readOnly || false;
   const { registerUser, updateUser, loading, isRegistered, regData } = useRegistration();
-  const [lang, setLangState] = useState(() => localStorage.getItem('preferredLang') || 'EN');
+  const [lang, setLangState] = useState(() => localStorage.getItem('preferredLang') || 'TH');
   const setLang = (newLang) => {
     localStorage.setItem('preferredLang', newLang);
     setLangState(newLang);

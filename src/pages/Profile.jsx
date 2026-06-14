@@ -59,7 +59,7 @@ const Profile = () => {
   const navigate = useNavigate();
   const { userProfile } = useAuth();
   const { isRegistered, regData, loading } = useRegistration();
-  const [lang, setLangState] = useState(() => localStorage.getItem('preferredLang') || 'EN');
+  const [lang, setLangState] = useState(() => localStorage.getItem('preferredLang') || 'TH');
   const setLang = (newLang) => {
     localStorage.setItem('preferredLang', newLang);
     setLangState(newLang);
