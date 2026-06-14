@@ -249,6 +249,7 @@ const Register = () => {
   const [maxStep, setMaxStep] = useState(1);
   const [isSuccess, setIsSuccess] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [hasLoadedRegData, setHasLoadedRegData] = useState(false);
 
   const totalSteps = isEditMode ? 4 : 5;
@@ -631,14 +632,20 @@ const Register = () => {
     if (!validateAll()) return;
 
     if (isEditMode) {
-      if (!window.confirm(lang === 'TH' ? 'คุณต้องการยืนยันการแก้ไขข้อมูลใช่หรือไม่?' : 'Are you sure you want to save these changes?')) return;
+      setShowConfirmModal(true);
+      return;
     } else {
       if (!formData.pdpaConsent) {
         setError(lang === 'TH' ? 'กรุณายอมรับเงื่อนไขก่อนดำเนินการต่อ' : 'Please accept the terms before proceeding');
         return;
       }
     }
+    
+    await processSubmit();
+  };
 
+  const processSubmit = async () => {
+    setShowConfirmModal(false);
     setSubmitting(true);
     setError('');
 
@@ -1247,6 +1254,40 @@ const Register = () => {
           </div>
         </form>
       </div>
+      {/* Custom Confirm Modal */}
+      {showConfirmModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fadeIn">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden animate-scaleIn">
+            <div className="p-6 text-center">
+              <div className="w-16 h-16 bg-blue-50 text-[#1e3a5f] rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold text-gray-800 mb-2">
+                {lang === 'TH' ? 'ยืนยันการแก้ไขข้อมูล' : 'Confirm changes'}
+              </h3>
+              <p className="text-gray-500 text-sm mb-6">
+                {lang === 'TH' ? 'คุณต้องการยืนยันการแก้ไขข้อมูลใช่หรือไม่?' : 'Are you sure you want to save these changes?'}
+              </p>
+              <div className="flex gap-3">
+                <button 
+                  onClick={() => setShowConfirmModal(false)}
+                  className="flex-1 py-2.5 rounded-xl text-gray-600 bg-gray-100 hover:bg-gray-200 font-medium transition-colors"
+                >
+                  {lang === 'TH' ? 'ยกเลิก' : 'Cancel'}
+                </button>
+                <button 
+                  onClick={processSubmit}
+                  className="flex-1 py-2.5 rounded-xl text-white bg-[#1e3a5f] hover:bg-[#152c4a] font-medium transition-colors shadow-sm"
+                >
+                  {lang === 'TH' ? 'ตกลง' : 'Confirm'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
