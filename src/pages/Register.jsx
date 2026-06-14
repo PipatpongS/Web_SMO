@@ -307,6 +307,17 @@ const Register = () => {
 
     let newValue = type === 'checkbox' ? checked : value;
 
+    // Prevent typing specific Thai vowels/tone marks as the first character globally
+    if (typeof newValue === 'string' && newValue.length > 0) {
+      const invalidFirstChars = /^[ุึัี้่ิืูํ๊็๋์ะา]+/;
+      if (invalidFirstChars.test(newValue)) {
+        newValue = newValue.replace(invalidFirstChars, '');
+        if (e.target.value !== newValue) {
+          e.target.value = newValue;
+        }
+      }
+    }
+
     // Disallow spaces in Step 1 fields
     const step1Fields = ['firstName', 'middleName', 'lastName', 'email', 'phone', 'studentId'];
     if (step1Fields.includes(name) && typeof newValue === 'string') {
