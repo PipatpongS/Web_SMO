@@ -21,7 +21,7 @@ service cloud.firestore {
                     && request.resource.data.editCount == 0
                     && request.resource.data.is_verified == false
                     && request.resource.data.is_shirt_ordered == false
-                    && request.time.toMillis() >= 1781542800000
+                    && request.time.toMillis() >= 1781456400000
                     && request.time.toMillis() <= 1782838799000;
       
       // Allow updates only if the user is the owner, editCount < 2, and not changing restricted fields
