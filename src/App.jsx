@@ -37,11 +37,13 @@ function AppContent() {
   useEffect(() => {
     if (!window.location.search.includes('reset=1')) return;
     if (authLoading) return; // รอ LIFF โหลดเสร็จก่อน
+    if (!userProfile) return; // ต้องรอให้ได้ข้อมูล Profile (userId) ก่อนถึงจะลบ Firebase ได้
+    if (isResetting) return; // ป้องกันการรันซ้ำ
 
     setIsResetting(true);
 
     const doReset = async () => {
-      const userId = userProfile?.userId;
+      const userId = userProfile.userId;
 
       if (userId) {
         // 1. ลบข้อมูลใน Firebase Firestore
