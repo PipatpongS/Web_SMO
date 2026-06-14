@@ -6,6 +6,8 @@ import logoImg from '../assets/Logo.png';
 import textHeaderImgThai from '../assets/text-header-thai.png';
 import textHeaderImgEng from '../assets/text-header-eng.png';
 import bImg from '../assets/b.png';
+import LoadingScreen from '../components/LoadingScreen';
+import { isBeforeRegistration, isAfterRegistration, REGISTRATION_START_DATE } from '../config/timeConfig';
 import { useRegistration } from '../contexts/RegContext';
 
 const content = {
@@ -110,14 +112,32 @@ const Home = () => {
 
         <div className="w-full flex flex-col items-center">
           <button
-            onClick={() => navigate(isRegistered ? '/profile' : '/register')}
-            className="glass-button w-full max-w-[200px] mx-auto text-[14px] py-2 flex justify-center items-center space-x-2 mb-12 min-h-[40px]"
-            disabled={regLoading}
+            onClick={() => {
+              if (isRegistered) {
+                navigate('/profile');
+              } else if (!isBeforeRegistration() && !isAfterRegistration()) {
+                navigate('/register');
+              }
+            }}
+            className={`w-full max-w-[250px] mx-auto text-[14px] py-2 flex justify-center items-center space-x-2 mb-12 min-h-[40px] ${
+              (!isRegistered && (isBeforeRegistration() || isAfterRegistration()))
+                ? 'bg-gray-500/50 cursor-not-allowed rounded-full border border-white/20'
+                : 'glass-button'
+            }`}
+            disabled={regLoading || (!isRegistered && (isBeforeRegistration() || isAfterRegistration()))}
           >
             {regLoading ? (
               <span className="w-4 h-4 border-2 border-white/50 border-t-white rounded-full animate-spin"></span>
             ) : (
-              <span>{isRegistered ? t.profileBtn : t.registerBtn}</span>
+              <span>
+                {isRegistered 
+                  ? t.profileBtn 
+                  : isBeforeRegistration()
+                    ? (lang === 'TH' ? `เปิดรับสมัคร ${new Date(REGISTRATION_START_DATE).toLocaleDateString('th-TH', {day: 'numeric', month: 'short'})}` : `Opens ${new Date(REGISTRATION_START_DATE).toLocaleDateString('en-GB', {day: 'numeric', month: 'short'})}`)
+                    : isAfterRegistration()
+                      ? (lang === 'TH' ? 'ปิดรับลงทะเบียนแล้ว' : 'Registration Closed')
+                      : t.registerBtn}
+              </span>
             )}
           </button>
         </div>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { isBeforeRegistration, isAfterRegistration } from '../config/timeConfig';
 import { useRegistration } from '../contexts/RegContext';
 
 const contentLang = {
@@ -270,6 +271,13 @@ const Register = () => {
     if (sortedFormDiet.some((val, i) => val !== sortedRegDiet[i])) return true;
     return false;
   }, [formData, regData, isEditMode]);
+
+  useEffect(() => {
+    // Redirect if they try to access registration when it's closed (and they aren't registered yet)
+    if (!loading && !isRegistered && (isBeforeRegistration() || isAfterRegistration())) {
+      navigate('/', { replace: true });
+    }
+  }, [loading, isRegistered, navigate]);
 
   useEffect(() => {
     if (isRegistered && regData && !isSuccess && !hasLoadedRegData) {

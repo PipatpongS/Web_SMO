@@ -14,12 +14,15 @@ service cloud.firestore {
       // Allow read for everyone
       allow read: if true;
       
-      // Allow creation of a new registration profile
+      // Allow creation of a new registration profile within the registration window: 
+      // 2026-06-10 00:00:00 GMT+7 (1781024400000) to 2026-07-24 23:59:00 GMT+7 (1784912340000)
       allow create: if isOwner(userId)
                     && request.resource.data.line_uid == userId
                     && request.resource.data.editCount == 0
                     && request.resource.data.is_verified == false
-                    && request.resource.data.is_shirt_ordered == false;
+                    && request.resource.data.is_shirt_ordered == false
+                    && request.time.toMillis() >= 1781024400000
+                    && request.time.toMillis() <= 1784912340000;
       
       // Allow updates only if the user is the owner, editCount < 2, and not changing restricted fields
       allow update: if isOwner(userId)
