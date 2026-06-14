@@ -675,8 +675,10 @@ const Register = () => {
     } else {
       if (result.errorCode === 'permission_denied') {
         setError(t.errPermissionDenied);
+      } else if (result.errorCode === 'register_failed') {
+        setError(t.errRegister);
       } else if (result.errorCode === 'unknown_error') {
-        setError(t.errUnknown + result.errorMsg);
+        setError(t.errUnknown + (result.errorMsg ? ` (${result.errorMsg})` : ''));
       } else {
         setError(result.error || t.errRegister);
       }

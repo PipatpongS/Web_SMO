@@ -103,7 +103,10 @@ export const RegProvider = ({ children }) => {
       return { success: true };
     } catch (err) {
       console.error("Registration error:", err);
-      return { success: false, error: "Failed to register. Please try again." };
+      if (err.code === 'permission-denied') {
+        return { success: false, errorCode: 'permission_denied' };
+      }
+      return { success: false, errorCode: 'register_failed', errorMsg: err.message };
     }
   };
 
