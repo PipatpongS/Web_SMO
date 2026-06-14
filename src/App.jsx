@@ -8,7 +8,7 @@ import Home from './pages/Home';
 import Register from './pages/Register';
 import Profile from './pages/Profile';
 
-import bgImg from './assets/bg.png';
+import bgImg from './assets/bg.jpg';
 
 // Guard component to redirect if already registered (BYPASSED)
 const PublicRoute = ({ children }) => {
