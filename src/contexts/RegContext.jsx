@@ -88,6 +88,18 @@ export const RegProvider = ({ children }) => {
       localStorage.setItem(`reg_${userId}`, JSON.stringify(registrationPayload));
       setRegData(registrationPayload);
       setIsRegistered(true);
+
+      // Call API to link Rich Menu (Fire and forget, or handle silently)
+      try {
+        fetch('/api/link-rich-menu', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId })
+        }).catch(e => console.error("Rich menu link fetch error:", e));
+      } catch (e) {
+        console.error("Rich menu link error:", e);
+      }
+
       return { success: true };
     } catch (err) {
       console.error("Registration error:", err);
