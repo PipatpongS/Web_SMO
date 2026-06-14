@@ -1,6 +1,8 @@
 import React from 'react';
 
 const LoadingScreen = () => {
+  const lang = localStorage.getItem('preferredLang') || 'EN';
+  
   return (
     <div className="min-h-screen flex flex-col items-center justify-center fixed inset-0 z-[100] bg-black/40 backdrop-blur-[2px]">
       <div className="relative flex items-center justify-center w-44 h-44 mb-6">
@@ -37,7 +39,7 @@ const LoadingScreen = () => {
       </div>
       
       <h2 className="text-xl sm:text-2xl font-medium text-white tracking-wider drop-shadow-lg animate-pulse font-sans">
-        โปรดรอสักครู่...
+        {lang === 'TH' ? 'โปรดรอสักครู่...' : 'Please wait...'}
       </h2>
     </div>
   );

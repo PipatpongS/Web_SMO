@@ -50,7 +50,7 @@ const content = {
 const Home = () => {
   const navigate = useNavigate();
   const { isRegistered, loading: regLoading } = useRegistration();
-  const [lang, setLangState] = useState(() => localStorage.getItem('preferredLang') || 'TH');
+  const [lang, setLangState] = useState(() => localStorage.getItem('preferredLang') || 'EN');
   const setLang = (newLang) => {
     localStorage.setItem('preferredLang', newLang);
     setLangState(newLang);
