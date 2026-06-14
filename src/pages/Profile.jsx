@@ -7,7 +7,7 @@ import { FaArrowLeft } from 'react-icons/fa';
 import LoadingScreen from '../components/LoadingScreen';
 
 import bImg from '../assets/b.png';
-import logoImg from '../assets/logo.png';
+import logoImg from '../assets/Logo.png';
 
 const contentLang = {
   TH: {
