@@ -1156,8 +1156,8 @@ const Register = () => {
                   if (readOnly) navigate('/profile');
                   else handlePrev();
                 }}
-                className="text-gray-500 hover:text-gray-800 font-medium px-4 py-2 transition-colors"
-              >{readOnly ? (lang === 'TH' ? 'ย้อนกลับหน้าโปรไฟล์' : 'Back to Profile') : t.btnBack}</button>
+                className="text-gray-500 hover:text-gray-800 font-medium px-2 sm:px-4 py-2 transition-colors text-sm whitespace-nowrap flex-shrink-0"
+              >{readOnly ? (lang === 'TH' ? 'ย้อนกลับ' : 'Back') : t.btnBack}</button>
             ) : (
               <button
                 type="button"
@@ -1169,8 +1169,8 @@ const Register = () => {
                     navigate('/');
                   }
                 }}
-                className="text-gray-500 hover:text-gray-800 font-medium px-4 py-2 transition-colors"
-              >{isEditMode ? "ย้อนกลับหน้าโปรไฟล์" : t.btnBackHome}</button>
+                className="text-gray-500 hover:text-gray-800 font-medium px-2 sm:px-4 py-2 transition-colors text-sm whitespace-nowrap flex-shrink-0"
+              >{isEditMode ? (lang === 'TH' ? 'ย้อนกลับ' : 'Back') : t.btnBackHome}</button>
             )}
 
             <div className="flex items-center gap-3 sm:gap-6">
