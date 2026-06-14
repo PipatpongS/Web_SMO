@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
-import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, onSnapshot } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { useAuth } from './AuthContext';
 
@@ -14,6 +14,8 @@ export const RegProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let unsubscribe = null;
+
     const checkRegistration = async () => {
       if (authLoading || !userProfile) {
         if (!authLoading) setLoading(false);
@@ -28,37 +30,48 @@ export const RegProvider = ({ children }) => {
         setRegData(JSON.parse(cachedReg));
         setIsRegistered(true);
         setLoading(false);
-        return;
+        // We do NOT return here, we proceed to set up the snapshot listener
+        // to get realtime updates from Firebase.
       }
 
-      // 2. Check Firebase if not in cache
+      // 2. Listen to Firebase in realtime
       if (db) {
         try {
           const docRef = doc(db, "users", userId);
-          const docSnap = await getDoc(docRef);
-
-          if (docSnap.exists()) {
-            const data = docSnap.data();
-            // Cache to LocalStorage
-            localStorage.setItem(`reg_${userId}`, JSON.stringify(data));
-            setRegData(data);
-            setIsRegistered(true);
-          } else {
-            setIsRegistered(false);
-          }
+          unsubscribe = onSnapshot(docRef, (docSnap) => {
+            if (docSnap.exists()) {
+              const data = docSnap.data();
+              // Update Cache
+              localStorage.setItem(`reg_${userId}`, JSON.stringify(data));
+              setRegData(data);
+              setIsRegistered(true);
+            } else {
+              localStorage.removeItem(`reg_${userId}`);
+              setIsRegistered(false);
+            }
+            setLoading(false);
+          }, (err) => {
+            console.error("Error fetching registration data:", err);
+            if (!cachedReg) setIsRegistered(false);
+            setLoading(false);
+          });
         } catch (err) {
-          console.error("Error fetching registration data:", err);
-          setIsRegistered(false); // Default to not registered on error
+          console.error("Setup listener error:", err);
+          if (!cachedReg) setIsRegistered(false);
+          setLoading(false);
         }
       } else {
         // Fallback for dev mode without Firebase
-        setIsRegistered(false);
+        if (!cachedReg) setIsRegistered(false);
+        setLoading(false);
       }
-      
-      setLoading(false);
     };
 
     checkRegistration();
+
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
   }, [userProfile, authLoading]);
 
   const registerUser = async (data) => {

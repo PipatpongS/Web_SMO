@@ -1,5 +1,5 @@
 import { initializeApp } from "firebase/app";
-import { getFirestore } from "firebase/firestore";
+import { getFirestore, enableMultiTabIndexedDbPersistence } from "firebase/firestore";
 import { initializeAppCheck, ReCaptchaV3Provider } from "firebase/app-check";
 
 // TODO: Replace with actual Firebase config from env
@@ -18,6 +18,15 @@ if (import.meta.env.VITE_FIREBASE_API_KEY) {
   try {
     app = initializeApp(firebaseConfig);
     db = getFirestore(app);
+    
+    // Enable Offline Persistence to prevent F5 spam from using read quota
+    enableMultiTabIndexedDbPersistence(db).catch((err) => {
+      if (err.code === 'failed-precondition') {
+        console.warn("Multiple tabs open, persistence failed.");
+      } else if (err.code === 'unimplemented') {
+        console.warn("Browser doesn't support persistence.");
+      }
+    });
     
     // Initialize App Check to prevent API spam
     if (import.meta.env.VITE_RECAPTCHA_SITE_KEY) {
