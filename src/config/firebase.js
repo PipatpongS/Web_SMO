@@ -1,6 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore, enableMultiTabIndexedDbPersistence } from "firebase/firestore";
-import { initializeAppCheck, ReCaptchaV3Provider } from "firebase/app-check";
+import { initializeAppCheck, ReCaptchaEnterpriseProvider } from "firebase/app-check";
 
 // TODO: Replace with actual Firebase config from env
 const firebaseConfig = {
@@ -30,11 +30,11 @@ if (import.meta.env.VITE_FIREBASE_API_KEY) {
     
     // Initialize App Check to prevent API spam
     if (import.meta.env.VITE_RECAPTCHA_SITE_KEY) {
-      // In development, you might need to use a debug token or whitelist localhost.
-      // Firebase automatically handles localhost in newer SDKs, but for strict mode,
-      // self.FIREBASE_APPCHECK_DEBUG_TOKEN = true; can be used here if needed.
+      if (import.meta.env.DEV) {
+        self.FIREBASE_APPCHECK_DEBUG_TOKEN = true;
+      }
       initializeAppCheck(app, {
-        provider: new ReCaptchaV3Provider(import.meta.env.VITE_RECAPTCHA_SITE_KEY),
+        provider: new ReCaptchaEnterpriseProvider(import.meta.env.VITE_RECAPTCHA_SITE_KEY),
         isTokenAutoRefreshEnabled: true
       });
     }
@@ -45,4 +45,7 @@ if (import.meta.env.VITE_FIREBASE_API_KEY) {
   console.warn("No Firebase API Key provided. Running in offline/mock mode.");
 }
 
-export { db };
+import { getAuth } from "firebase/auth";
+const auth = app ? getAuth(app) : null;
+
+export { db, auth };

@@ -18,6 +18,38 @@ export const AuthProvider = ({ children }) => {
         
         if (liff.isLoggedIn()) {
           const profile = await liff.getProfile();
+          const accessToken = liff.getAccessToken();
+
+          try {
+            // Check if we are running locally vs deployed for the API URL
+            const apiUrl = import.meta.env.DEV ? 'http://localhost:3000/api/auth' : '/api/auth';
+            
+            const authResponse = await fetch(apiUrl, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ accessToken })
+            });
+
+            if (!authResponse.ok) {
+              const errorData = await authResponse.json();
+              throw new Error(errorData.error || `Auth API returned ${authResponse.status}`);
+            }
+
+            const { customToken } = await authResponse.json();
+            
+            // Import auth dynamically to avoid circular dependencies if any
+            const { signInWithCustomToken } = await import('firebase/auth');
+            const { auth } = await import('../config/firebase');
+            
+            if (auth) {
+              await signInWithCustomToken(auth, customToken);
+              console.log("Firebase Auth Custom Sign-in Successful");
+            }
+          } catch (firebaseErr) {
+            console.error("Firebase Custom Auth Error:", firebaseErr);
+            // We set userProfile anyway so LIFF works, but Firebase writes will fail if unauthenticated
+          }
+
           setUserProfile(profile);
         } else {
           liff.login();

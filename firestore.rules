@@ -2,20 +2,16 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // Function to check if user is the owner
     function isOwner(userId) {
-      // Since Firebase Authentication is not used (only LINE LIFF), request.auth will always be null.
-      // We must return true to allow operations, trusting the LINE user ID passed from the frontend.
-      // (WARNING: This allows anyone who knows a userId to edit that user's document).
-      return true;
+      return request.auth != null && request.auth.uid == userId;
     }
 
     match /users/{userId} {
-      // Allow read for everyone
-      allow read: if true;
+      // ✅ แก้ไขแล้ว: ป้องกันการแฮ็กดึงข้อมูลรายชื่อออกไปทั้งหมด
+      allow get: if true;
+      allow list: if false;
       
-      // Allow creation of a new registration profile within the registration window: 
-      // วันอังคารที่ 16 มิถุนายน 2569 เวลา 0:00:00 UTC+07:00 to 2026-07-24 23:59:00 GMT+7 (1784912340000)
+      // Allow creation of a new registration profile within the registration window
       allow create: if isOwner(userId)
                     && request.resource.data.line_uid == userId
                     && request.resource.data.editCount == 0
@@ -26,20 +22,14 @@ service cloud.firestore {
       
       // Allow updates only if the user is the owner, editCount < 2, and not changing restricted fields
       allow update: if isOwner(userId)
-                    // Must not exceed edit limits (allowing it to hit exactly 2 on this update)
                     && resource.data.editCount < 2
-                    // Make sure shirt is not already ordered
                     && resource.data.is_shirt_ordered == false
-                    // Enforce the edit deadline: 2026-07-24 23:59:00 GMT+7 (Unix Millis: 1784912340000)
                     && request.time.toMillis() < 1784912340000
-                    // Prevent modification of restricted fields
                     && !request.resource.data.diff(resource.data).affectedKeys()
                         .hasAny(['line_uid', 'is_verified', 'is_shirt_ordered', 'createdAt', 'checkin_day1_morning', 'checkin_day1_afternoon', 'checkin_day2_morning', 'checkin_day2_afternoon', 'shirt_received_at'])
-                    // Enforce that editCount increases by exactly 1
                     && request.resource.data.editCount == resource.data.editCount + 1;
                     
-      // Allow delete only if the owner wants to delete (or remove if only admins can delete)
-      allow delete: if false; // Typically, users shouldn't delete their registration, only admins
+      allow delete: if false;
     }
   }
 }
