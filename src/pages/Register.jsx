@@ -871,7 +871,15 @@ const Register = () => {
             { num: 5, label: t.step5 }
           ]).filter(s => s.num <= totalSteps).map((s, index) => (
             <React.Fragment key={s.num}>
-              <div className="flex flex-col items-center relative z-10">
+              <div 
+                className={`flex flex-col items-center relative z-10 ${s.num <= maxStep && s.num !== step ? 'cursor-pointer hover:scale-110 transition-transform' : ''}`}
+                onClick={() => {
+                  if (s.num <= maxStep && s.num !== step) {
+                    setStep(s.num);
+                    window.scrollTo(0, 0);
+                  }
+                }}
+              >
                 <span className={`absolute -top-6 text-[10px] sm:text-xs font-bold tracking-wider whitespace-nowrap ${s.num <= maxStep ? 'text-[#1e3a5f]' : 'text-gray-400'}`}>
                   {s.label}
                 </span>
