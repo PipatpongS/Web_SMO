@@ -34,27 +34,22 @@ export const RegProvider = ({ children }) => {
         // to get realtime updates from Firebase.
       }
 
-      // 2. Listen to Firebase in realtime
+      // 2. Fetch from Firebase (Single Read, No Persistent Connection to save Free Tier limits)
       if (db) {
         try {
           const docRef = doc(db, "users", userId);
-          unsubscribe = onSnapshot(docRef, (docSnap) => {
-            if (docSnap.exists()) {
-              const data = docSnap.data();
-              // Update Cache
-              localStorage.setItem(`reg_${userId}`, JSON.stringify(data));
-              setRegData(data);
-              setIsRegistered(true);
-            } else {
-              localStorage.removeItem(`reg_${userId}`);
-              setIsRegistered(false);
-            }
-            setLoading(false);
-          }, (err) => {
-            console.error("Error fetching registration data:", err);
-            if (!cachedReg) setIsRegistered(false);
-            setLoading(false);
-          });
+          const docSnap = await getDoc(docRef);
+          if (docSnap.exists()) {
+            const data = docSnap.data();
+            // Update Cache
+            localStorage.setItem(`reg_${userId}`, JSON.stringify(data));
+            setRegData(data);
+            setIsRegistered(true);
+          } else {
+            localStorage.removeItem(`reg_${userId}`);
+            setIsRegistered(false);
+          }
+          setLoading(false);
         } catch (err) {
           console.error("Setup listener error:", err);
           if (!cachedReg) setIsRegistered(false);
