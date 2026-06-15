@@ -1062,6 +1062,9 @@ const Register = () => {
                     </option>
                   ))}
                 </select>
+                <p className="mt-2 text-sm text-gray-500">
+                  {lang === 'TH' ? 'หากมีข้อสงสัยเพิ่มเติมสามารถติดต่อ Line OA: SMO VIDVA BANGMOD' : 'If you have any further questions, please contact Line OA: SMO VIDVA BANGMOD'}
+                </p>
               </div>
 
               <div className="border-t border-gray-100 pt-6">
