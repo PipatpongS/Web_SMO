@@ -107,7 +107,7 @@ const Profile = () => {
       </div>
 
       {/* Back Button positioned nicely above the content */}
-      <div className="w-full max-w-sm mt-8 mb-2 flex justify-start z-10 relative">
+      <div className="w-full max-w-sm mt-8 mb-6 flex justify-start z-10 relative pl-2">
         <button
           onClick={() => navigate('/')}
           className="text-white/80 hover:text-white transition-colors flex items-center gap-2 cursor-pointer"
@@ -117,8 +117,8 @@ const Profile = () => {
         </button>
       </div>
 
-      <div className="text-center mb-6 z-10 relative">
-        <h1 className="text-2xl font-bold text-magical-gold text-glow">
+      <div className="text-center mb-8 mt-2 z-10 relative">
+        <h1 className="text-3xl font-bold text-magical-gold text-glow">
           {t.profile}
         </h1>
       </div>
