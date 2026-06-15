@@ -35,7 +35,7 @@ const content = {
     profileBtn: 'My Profile',
     detailsTitle: 'Event Details',
     targetTitle: 'For 1st Year Engineering Students \n(ID 69)',
-    dateText: 'July 25 - 26, 2026',
+    dateText: '25 - 26 July 2026',
     locationText: "King Mongkut's University of Technology Thonburi",
     footerSub1: 'Freshmen Orientation',
     footerSub2: 'Faculty of Engineering, Academic Year 2026',
