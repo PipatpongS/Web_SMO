@@ -842,7 +842,9 @@ const Register = () => {
       <div className="w-full max-w-2xl mt-8 mb-2 flex justify-start z-10 relative pl-2 sm:pl-4">
         <button
           onClick={() => {
-            if (step > 1) {
+            if (isEditMode) {
+              navigate('/profile');
+            } else if (step > 1) {
               handlePrev();
             } else {
               navigate('/');
@@ -851,7 +853,7 @@ const Register = () => {
           className="text-white/80 hover:text-white transition-colors flex items-center gap-2 cursor-pointer drop-shadow-md"
         >
           <FaArrowLeft />
-          <span>{step > 1 ? t.btnBack : (isEditMode ? t.btnBack : t.btnBackHome)}</span>
+          <span>{isEditMode ? (lang === 'TH' ? 'ย้อนกลับ' : 'Back') : (step > 1 ? t.btnBack : t.btnBackHome)}</span>
         </button>
       </div>
 
@@ -1275,11 +1277,11 @@ const Register = () => {
               <button
                 type="button"
                 onClick={() => {
-                  if (readOnly) navigate('/profile');
+                  if (isEditMode) navigate('/profile');
                   else handlePrev();
                 }}
                 className="text-gray-500 hover:text-gray-800 font-medium px-4 py-3 sm:py-2 transition-colors text-sm w-full sm:w-auto border border-gray-200 sm:border-none rounded-xl sm:rounded-none"
-              >{readOnly ? (lang === 'TH' ? 'ย้อนกลับ' : 'Back') : t.btnBack}</button>
+              >{isEditMode ? (lang === 'TH' ? 'ย้อนกลับ' : 'Back') : t.btnBack}</button>
             ) : (
               <button
                 type="button"
