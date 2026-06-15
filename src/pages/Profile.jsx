@@ -12,7 +12,7 @@ import logoImg from '../assets/Logo.png';
 const contentLang = {
   TH: {
     langBtn: 'TH',
-    back: 'กลับ',
+    back: 'กลับหน้าหลัก',
     profile: 'โปรไฟล์ของฉัน',
     fullName: 'ชื่อ-นามสกุล',
     studentId: 'รหัสนักศึกษา',
@@ -27,7 +27,7 @@ const contentLang = {
   },
   EN: {
     langBtn: 'EN',
-    back: 'Back',
+    back: 'Back to Home',
     profile: 'My Profile',
     fullName: 'Full Name',
     studentId: 'Student ID',
