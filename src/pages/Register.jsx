@@ -859,45 +859,47 @@ const Register = () => {
       <div className="bg-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-[2rem] p-6 sm:p-10 w-full max-w-2xl my-4 relative overflow-hidden text-gray-800">
 
         {/* Modern Stepper */}
-        <div className="flex items-center justify-between mb-12 mt-6 w-full max-w-sm mx-auto relative px-2">
-          {(isEditMode ? [
-            { num: 1, label: t.step1 },
-            { num: 2, label: t.step2 },
-            { num: 3, label: t.step3 },
-            { num: 4, label: t.step5 }
-          ] : [
-            { num: 1, label: t.step1 },
-            { num: 2, label: t.step2 },
-            { num: 3, label: t.step3 },
-            { num: 4, label: t.step4 },
-            { num: 5, label: t.step5 }
-          ]).filter(s => s.num <= totalSteps).map((s, index) => (
-            <React.Fragment key={s.num}>
-              <div 
-                className={`flex flex-col items-center relative z-10 ${s.num <= maxStep && s.num !== step ? 'cursor-pointer hover:scale-110 transition-transform' : ''}`}
-                onClick={() => {
-                  if (s.num <= maxStep && s.num !== step) {
-                    setStep(s.num);
-                    window.scrollTo(0, 0);
-                  }
-                }}
-              >
-                <span className={`absolute -top-6 text-[10px] sm:text-xs font-bold tracking-wider whitespace-nowrap ${s.num <= maxStep ? 'text-[#1e3a5f]' : 'text-gray-400'}`}>
-                  {s.label}
-                </span>
-                <div className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center border-2 transition-all duration-500 
-                  ${s.num < maxStep ? 'bg-[#1e3a5f] border-[#1e3a5f] text-white' : s.num === step ? 'bg-white border-[#1e3a5f] text-[#1e3a5f]' : 'bg-gray-100 border-gray-100 text-gray-400'}
-                  ${s.num === step ? 'ring-4 ring-[#1e3a5f]/20' : ''}
-                `}>
-                  {(s.num < maxStep || (s.num === step && maxStep > step)) && <FaCheck className="w-3 h-3 sm:w-4 sm:h-4" />}
+        {!readOnly && (
+          <div className="flex items-center justify-between mb-12 mt-6 w-full max-w-sm mx-auto relative px-2">
+            {(isEditMode ? [
+              { num: 1, label: t.step1 },
+              { num: 2, label: t.step2 },
+              { num: 3, label: t.step3 },
+              { num: 4, label: t.step5 }
+            ] : [
+              { num: 1, label: t.step1 },
+              { num: 2, label: t.step2 },
+              { num: 3, label: t.step3 },
+              { num: 4, label: t.step4 },
+              { num: 5, label: t.step5 }
+            ]).filter(s => s.num <= totalSteps).map((s, index) => (
+              <React.Fragment key={s.num}>
+                <div 
+                  className={`flex flex-col items-center relative z-10 ${s.num <= maxStep && s.num !== step ? 'cursor-pointer hover:scale-110 transition-transform' : ''}`}
+                  onClick={() => {
+                    if (s.num <= maxStep && s.num !== step) {
+                      setStep(s.num);
+                      window.scrollTo(0, 0);
+                    }
+                  }}
+                >
+                  <span className={`absolute -top-6 text-[10px] sm:text-xs font-bold tracking-wider whitespace-nowrap ${s.num <= maxStep ? 'text-[#1e3a5f]' : 'text-gray-400'}`}>
+                    {s.label}
+                  </span>
+                  <div className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center border-2 transition-all duration-500 
+                    ${s.num < maxStep ? 'bg-[#1e3a5f] border-[#1e3a5f] text-white' : s.num === step ? 'bg-white border-[#1e3a5f] text-[#1e3a5f]' : 'bg-gray-100 border-gray-100 text-gray-400'}
+                    ${s.num === step ? 'ring-4 ring-[#1e3a5f]/20' : ''}
+                  `}>
+                    {(s.num < maxStep || (s.num === step && maxStep > step)) && <FaCheck className="w-3 h-3 sm:w-4 sm:h-4" />}
+                  </div>
                 </div>
-              </div>
-              {index < totalSteps - 1 && (
-                <div className={`h-1.5 sm:h-2 flex-1 -mx-0.5 z-0 transition-colors duration-500 ${(index + 1) < maxStep || (index + 1) < step ? 'bg-[#1e3a5f]' : 'bg-gray-100'}`} />
-              )}
-            </React.Fragment>
-          ))}
-        </div>
+                {index < totalSteps - 1 && (
+                  <div className={`h-1.5 sm:h-2 flex-1 -mx-0.5 z-0 transition-colors duration-500 ${(index + 1) < maxStep || (index + 1) < step ? 'bg-[#1e3a5f]' : 'bg-gray-100'}`} />
+                )}
+              </React.Fragment>
+            ))}
+          </div>
+        )}
 
 
 
@@ -1168,7 +1170,7 @@ const Register = () => {
           )}
 
           {/* Step 4: PDPA */}
-          {step === 4 && (
+          {!isEditMode && step === 4 && (
             <div className="space-y-6 animate-fadeIn">
               <h3 className="text-xl sm:text-2xl font-medium text-center text-gray-800 mb-8">{t.pdpaTitle}</h3>
 
@@ -1261,6 +1263,31 @@ const Register = () => {
                   </div>
                 </div>
               </div>
+            </div>
+          )}
+
+          {/* Step 4: PDPA (Edit Mode Bottom) */}
+          {isEditMode && step === 4 && (
+            <div className="space-y-6 animate-fadeIn mt-8 pt-8 border-t border-gray-100">
+              <h3 className="text-xl sm:text-2xl font-medium text-center text-gray-800 mb-8">{t.pdpaTitle}</h3>
+
+              <div className="bg-gray-50 p-6 rounded-xl border border-gray-100 text-sm text-gray-600 leading-relaxed">
+                <p className="text-gray-600 mb-2">{t.pdpaText1}</p>
+              </div>
+
+              <label className="flex items-start space-x-4 cursor-pointer mt-6 p-4 rounded-xl border border-gray-200 hover:bg-gray-50 transition-colors">
+                <input
+                  type="checkbox"
+                  name="pdpaConsent"
+                  checked={formData.pdpaConsent}
+                  onChange={handleChange}
+                  disabled={readOnly}
+                  className={`${radioInputClass} mt-1 rounded ${readOnly ? 'cursor-not-allowed opacity-60' : ''}`}
+                />
+                <span className="text-sm text-gray-700">
+                  {t.pdpaConsent}
+                </span>
+              </label>
             </div>
           )}
 
