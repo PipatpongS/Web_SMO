@@ -449,6 +449,16 @@ const Register = () => {
       }
     }
 
+    // Auto-set program for specific departments
+    if (name === 'department') {
+      if (['วิศวกรรมเครื่องกล', 'วิศวกรรมอุตสาหการ', 'วิศวกรรมเครื่องมือและวัสดุ'].includes(newValue)) {
+        updates.program = 'โครงการภาษาไทย';
+      } else {
+        // Clear program to force re-selection if they switch to a department that requires choice
+        updates.program = '';
+      }
+    }
+
     setFormData({ ...formData, ...updates });
   };
 
@@ -987,19 +997,21 @@ const Register = () => {
                 </select>
               </div>
 
-              <div>
-                <label className={labelClass}>{t.program}</label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-1">
-                  <label className={radioLabelClass}>
-                    <input type="radio" name="program" value="โครงการภาษาไทย" onChange={handleChange} className={radioInputClass} checked={formData.program === "โครงการภาษาไทย"} />
-                    <span>{t.regular}</span>
-                  </label>
-                  <label className={radioLabelClass}>
-                    <input type="radio" name="program" value="โครงการนานาชาติ" onChange={handleChange} className={radioInputClass} checked={formData.program === "โครงการนานาชาติ"} />
-                    <span>{t.international}</span>
-                  </label>
+              {formData.department && !['วิศวกรรมเครื่องกล', 'วิศวกรรมอุตสาหการ', 'วิศวกรรมเครื่องมือและวัสดุ'].includes(formData.department) && (
+                <div>
+                  <label className={labelClass}>{t.program}</label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-1">
+                    <label className={radioLabelClass}>
+                      <input type="radio" name="program" value="โครงการภาษาไทย" onChange={handleChange} className={radioInputClass} checked={formData.program === "โครงการภาษาไทย"} />
+                      <span>{t.regular}</span>
+                    </label>
+                    <label className={radioLabelClass}>
+                      <input type="radio" name="program" value="โครงการนานาชาติ" onChange={handleChange} className={radioInputClass} checked={formData.program === "โครงการนานาชาติ"} />
+                      <span>{t.international}</span>
+                    </label>
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           )}
 
