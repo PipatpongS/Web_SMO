@@ -91,7 +91,7 @@ const Home = () => {
       <img src={bImg} alt="Bow" className="fixed top-0 left-0 m-0 p-0 w-20 md:w-28 z-50 pointer-events-none" />
 
       {/* Top Section Wrapper to push everything up */}
-      <div className="w-full max-w-md flex flex-col items-center">
+      <div className="w-full max-w-lg flex flex-col items-center">
 
         {/* Logos & Header Section */}
         <div className="w-full flex justify-center sm:justify-start items-center -mt-4 mb-4 relative z-10 min-h-[4rem]">
@@ -143,7 +143,7 @@ const Home = () => {
         </div>
 
         {/* Activity Details Card */}
-        <div className="glass-panel p-5 sm:p-6 w-full max-w-md mb-8">
+        <div className="glass-panel p-5 sm:p-6 w-full max-w-lg mb-8">
           <div className="flex justify-center mb-6">
             <div className="bg-white/10 border border-white/20 px-5 py-1.5 rounded-full text-[13px] sm:text-sm font-medium tracking-wide">
               {t.detailsTitle}
@@ -176,7 +176,7 @@ const Home = () => {
       </div>
 
       {/* Footer / Contact Section (Pushed to bottom by justify-between) */}
-      <div className="glass-panel p-6 sm:p-8 w-full max-w-md text-center">
+      <div className="glass-panel p-6 sm:p-8 w-full max-w-lg text-center">
         <h2 className="text-2xl font-extrabold mb-1 bg-gradient-to-r from-magical-gold to-yellow-200 bg-clip-text text-transparent drop-shadow-md">SMO VIDVA</h2>
         <p className="text-sm text-white/80 mb-8 font-light leading-relaxed">{t.footerSub1}<br />{t.footerSub2}</p>
 

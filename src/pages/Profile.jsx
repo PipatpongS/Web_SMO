@@ -92,7 +92,7 @@ const Profile = () => {
       <img src={bImg} alt="Bow" className="fixed top-0 left-0 m-0 p-0 w-20 md:w-28 z-50 pointer-events-none" />
 
       {/* Top Section Wrapper to push everything up */}
-      <div className="w-full max-w-sm flex flex-col items-center">
+      <div className="w-full max-w-lg flex flex-col items-center">
         {/* Logos & Header Section */}
         <div className="w-full flex justify-center lg:justify-start items-center -mt-8 -mb-5 relative z-10 min-h-[4rem] text-white">
           <div className="flex items-center z-10">
@@ -107,7 +107,7 @@ const Profile = () => {
       </div>
 
       {/* Back Button positioned nicely above the content */}
-      <div className="w-full max-w-sm mt-8 mb-6 flex justify-start z-10 relative pl-2">
+      <div className="w-full max-w-lg mt-8 mb-6 flex justify-start z-10 relative pl-2">
         <button
           onClick={() => navigate('/')}
           className="text-white/80 hover:text-white transition-colors flex items-center gap-2 cursor-pointer"
@@ -123,7 +123,7 @@ const Profile = () => {
         </h1>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-sm flex flex-col items-center relative overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-lg flex flex-col items-center relative overflow-hidden">
         {/* Top Decorative */}
         <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-magical-purple to-magical-light"></div>
 

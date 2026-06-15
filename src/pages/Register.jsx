@@ -823,7 +823,7 @@ const Register = () => {
       <img src={bImg} alt="Bow" className="fixed top-0 left-0 m-0 p-0 w-20 md:w-28 z-50 pointer-events-none" />
 
       {/* Top Section Wrapper to push everything up */}
-      <div className="w-full max-w-2xl flex flex-col items-center">
+      <div className="w-full max-w-lg flex flex-col items-center">
         {/* Logos & Header Section */}
         <div className="w-full flex justify-center lg:justify-start items-center -mt-8 -mb-5 relative z-10 min-h-[4rem] text-white">
           <div className="flex items-center z-10">
@@ -838,7 +838,7 @@ const Register = () => {
       </div>
 
       {/* Back Button positioned nicely above the content */}
-      <div className="w-full max-w-2xl mt-8 mb-2 flex justify-start z-10 relative pl-2 sm:pl-4">
+      <div className="w-full max-w-lg mt-8 mb-2 flex justify-start z-10 relative pl-2 sm:pl-4">
         <button
           onClick={() => {
             if (isEditMode) {
@@ -856,7 +856,7 @@ const Register = () => {
         </button>
       </div>
 
-      <div className="bg-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-[2rem] p-6 sm:p-10 w-full max-w-2xl my-4 relative overflow-hidden text-gray-800">
+      <div className="bg-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-[2rem] p-6 sm:p-10 w-full max-w-lg my-4 relative overflow-hidden text-gray-800">
 
         {/* Modern Stepper */}
         {!readOnly && (
