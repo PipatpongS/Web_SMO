@@ -842,7 +842,7 @@ const Register = () => {
         <button
           onClick={() => {
             if (step > 1) {
-              handleBack();
+              handlePrev();
             } else {
               navigate('/');
             }
