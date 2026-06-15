@@ -1062,20 +1062,17 @@ const Register = () => {
                     </option>
                   ))}
                 </select>
-                <div className="mt-2 text-sm text-gray-500 flex flex-wrap items-center gap-x-2 gap-y-1">
-                  <span>
-                    {lang === 'TH' ? 'หากมีข้อสงสัยเพิ่มเติมสามารถติดต่อ Line OA: SMO VIDVA BANGMOD' : 'If you have any further questions, please contact Line OA: SMO VIDVA BANGMOD'}
-                  </span>
+                <p className="mt-2 text-sm text-gray-500">
+                  {lang === 'TH' ? 'หากมีข้อสงสัยเพิ่มเติมสามารถติดต่อ ' : 'If you have any further questions, please contact '}
                   <a 
                     href="https://line.me/R/ti/p/@122ddost" 
                     target="_blank" 
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-[#00B900] hover:text-[#00a000] font-medium underline underline-offset-2 transition-colors"
+                    className="underline underline-offset-2 hover:text-gray-800 transition-colors"
                   >
-                    <FaLine className="text-base" />
-                    {lang === 'TH' ? 'ไปที่ช่องแชท' : 'Go to Chat'}
+                    Line OA: SMO VIDVA BANGMOD
                   </a>
-                </div>
+                </p>
               </div>
 
               <div className="border-t border-gray-100 pt-6">
