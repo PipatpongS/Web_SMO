@@ -195,7 +195,7 @@ const contentLang = {
   }
 };
 // from '../contexts/RegContext';
-import { FaCheck } from 'react-icons/fa';
+import { FaCheck, FaArrowLeft } from 'react-icons/fa';
 import logoImg from '../assets/Logo.png';
 import bImg from '../assets/b.png';
 import sizeChartImgThai from '../assets/Size_Chart_Thai.jpg';
@@ -835,6 +835,17 @@ const Register = () => {
             </button>
           </div>
         </div>
+      </div>
+
+      {/* Back Button positioned nicely above the content */}
+      <div className="w-full max-w-2xl mt-8 mb-2 flex justify-start z-10 relative pl-2 sm:pl-4">
+        <button
+          onClick={() => navigate('/')}
+          className="text-white/80 hover:text-white transition-colors flex items-center gap-2 cursor-pointer drop-shadow-md"
+        >
+          <FaArrowLeft />
+          <span>{isEditMode ? t.btnBack : t.btnBackHome}</span>
+        </button>
       </div>
 
       <div className="bg-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-[2rem] p-6 sm:p-10 w-full max-w-2xl my-4 relative overflow-hidden text-gray-800">
