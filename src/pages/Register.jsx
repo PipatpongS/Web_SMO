@@ -195,7 +195,7 @@ const contentLang = {
   }
 };
 // from '../contexts/RegContext';
-import { FaCheck, FaArrowLeft } from 'react-icons/fa';
+import { FaCheck, FaArrowLeft, FaLine } from 'react-icons/fa';
 import logoImg from '../assets/Logo.png';
 import bImg from '../assets/b.png';
 import sizeChartImgThai from '../assets/Size_Chart_Thai.jpg';
@@ -1062,9 +1062,20 @@ const Register = () => {
                     </option>
                   ))}
                 </select>
-                <p className="mt-2 text-sm text-gray-500">
-                  {lang === 'TH' ? 'หากมีข้อสงสัยเพิ่มเติมสามารถติดต่อ Line OA: SMO VIDVA BANGMOD' : 'If you have any further questions, please contact Line OA: SMO VIDVA BANGMOD'}
-                </p>
+                <div className="mt-2 text-sm text-gray-500">
+                  <p className="mb-2">
+                    {lang === 'TH' ? 'หากมีข้อสงสัยเพิ่มเติมสามารถติดต่อ Line OA: SMO VIDVA BANGMOD' : 'If you have any further questions, please contact Line OA: SMO VIDVA BANGMOD'}
+                  </p>
+                  <a 
+                    href="https://line.me/R/ti/p/@122ddost" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 bg-[#00B900] hover:bg-[#00a000] text-white text-xs font-semibold px-4 py-2 rounded-full shadow-sm transition-all"
+                  >
+                    <FaLine className="text-lg" />
+                    {lang === 'TH' ? 'ไปที่ช่องแชท' : 'Go to Chat'}
+                  </a>
+                </div>
               </div>
 
               <div className="border-t border-gray-100 pt-6">
