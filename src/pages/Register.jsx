@@ -1275,14 +1275,14 @@ const Register = () => {
                 <p className="text-gray-600 mb-2">{t.pdpaText1}</p>
               </div>
 
-              <label className="flex items-start space-x-4 cursor-pointer mt-6 p-4 rounded-xl border border-gray-200 hover:bg-gray-50 transition-colors">
+              <label className="flex items-start space-x-4 mt-6 p-4 rounded-xl border border-gray-200 bg-gray-50 opacity-80">
                 <input
                   type="checkbox"
                   name="pdpaConsent"
                   checked={formData.pdpaConsent}
-                  onChange={handleChange}
-                  disabled={readOnly}
-                  className={`${radioInputClass} mt-1 rounded ${readOnly ? 'cursor-not-allowed opacity-60' : ''}`}
+                  readOnly
+                  disabled={true}
+                  className={`${radioInputClass} mt-1 rounded cursor-not-allowed opacity-60`}
                 />
                 <span className="text-sm text-gray-700">
                   {t.pdpaConsent}
