@@ -45,7 +45,7 @@ const content = {
     tapToCall: 'Tap to',
     toCall: 'Call',
     contactName: '(Somchai)',
-    association: 'Engineering Student Association'
+    association: 'The Student Union of The Faculty of Engineering'
   }
 };
 
@@ -222,9 +222,13 @@ const Home = () => {
           <span className="text-sm font-medium tracking-wide text-white/90 text-center leading-snug">{t.association}</span>
         </div>
 
-        <div className="text-[10px] text-white/40 tracking-widest uppercase">
-          <div className="mb-1">Designed & Developed</div>
-          <div className="font-medium text-white/50">Pipatpong Saptharanon</div>
+        <div className="flex flex-col items-center mt-6 space-y-2 text-[10px] sm:text-[11px] text-white/40 tracking-wider pb-4">
+          <div className="text-center leading-relaxed">
+            © 2026 The Student Union of The Faculty of Engineering. All rights reserved.
+          </div>
+          <div className="flex items-center space-x-2">
+            <span>Version 1.0.0</span>
+          </div>
         </div>
       </div>
 
