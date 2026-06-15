@@ -193,15 +193,22 @@ const Profile = () => {
             return (
               <>
                 <button
-                  onClick={() => navigate('/register', { state: { readOnly: !canEdit } })}
+                  onClick={() => navigate('/register', { state: { readOnly: true } })}
+                  className="w-full max-w-[280px] py-3 rounded-xl font-bold text-sm transition-all shadow-md bg-white border-2 border-[#1e3a5f] text-[#1e3a5f] hover:bg-gray-50 cursor-pointer mb-3"
+                >
+                  {lang === 'TH' ? 'ดูข้อมูลส่วนตัวเพิ่มเติม' : 'View Personal Information'}
+                </button>
+                <button
+                  disabled={!canEdit}
+                  onClick={() => navigate('/register', { state: { readOnly: false } })}
                   className={`w-full max-w-[280px] py-3 rounded-xl font-bold text-sm transition-all shadow-md ${canEdit
                     ? "bg-[#1e3a5f] hover:bg-[#152b47] text-white cursor-pointer"
-                    : "bg-[#1e3a5f] hover:bg-[#152b47] text-white cursor-pointer"
+                    : "bg-gray-200 text-gray-500 cursor-not-allowed"
                     }`}
                 >
-                  {canEdit ? t.editBtn : (lang === 'TH' ? 'ดูข้อมูลส่วนตัวเพิ่มเติม' : 'View Personal Information')}
+                  {t.editBtn}
                 </button>
-                <div className="text-center mt-3 text-xs text-gray-500 space-y-2">
+                <div className="text-center mt-4 text-xs text-gray-500 space-y-2">
                   {!canEdit ? (
                     <>
                       <p className="text-gray-500 leading-relaxed">{t.contactMsg}</p>
