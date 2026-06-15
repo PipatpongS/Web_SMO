@@ -423,12 +423,14 @@ const Register = () => {
 
     let updates = { [name]: newValue };
 
-    // Handle studentIdStatus change
     if (name === 'studentIdStatus') {
-      if (newValue === 'not_received') {
+      if (newValue === 'ยังไม่ได้รับรหัสนักศึกษา') {
+        // ให้บันทึก 69070500000 หมดเลยตามที่ตกลงกันไว้
         updates.studentId = '69070500000';
       } else {
-        updates.studentId = '6907050';
+        // กรณีได้รับรหัสแล้ว คืนค่า prefix ให้ถูกต้องตามสัญชาติ
+        const isForeigner = formData.nationality === 'ต่างชาติ';
+        updates.studentId = isForeigner ? '69' : '6907050';
       }
     }
 
