@@ -674,7 +674,7 @@ const Register = () => {
         return;
       }
     }
-    
+
     setShowConfirmModal(true);
   };
 
@@ -773,8 +773,8 @@ const Register = () => {
       <div className="flex flex-col items-center justify-center min-h-screen p-4 text-white">
         <div className="text-center mb-6">
           <h1 className="text-2xl font-bold text-magical-gold text-glow">
-            {lang === 'TH' 
-              ? (successMode === 'edit' ? 'แก้ไขข้อมูลสำเร็จ!' : 'ลงทะเบียนสำเร็จ!') 
+            {lang === 'TH'
+              ? (successMode === 'edit' ? 'แก้ไขข้อมูลสำเร็จ!' : 'ลงทะเบียนสำเร็จ!')
               : (successMode === 'edit' ? 'Edit successful!' : 'Registration successful!')}
           </h1>
         </div>
@@ -874,7 +874,7 @@ const Register = () => {
               { num: 5, label: t.step5 }
             ]).filter(s => s.num <= totalSteps).map((s, index) => (
               <React.Fragment key={s.num}>
-                <div 
+                <div
                   className={`flex flex-col items-center relative z-10 ${s.num <= maxStep && s.num !== step ? 'cursor-pointer hover:scale-110 transition-transform' : ''}`}
                   onClick={() => {
                     if (s.num <= maxStep && s.num !== step) {
@@ -977,23 +977,23 @@ const Register = () => {
                   {formData.studentIdStatus === 'ได้รับรหัสนักศึกษาแล้ว' && (
                     <div>
                       <label className={labelClass}>
-                        {formData.nationality === 'ต่างชาติ' 
-                          ? (lang === 'TH' ? 'รหัสนักศึกษา (เติมรหัส 9 ตัวท้าย) *' : 'Student ID (fill in the last 9 digits) *') 
+                        {formData.nationality === 'ต่างชาติ'
+                          ? (lang === 'TH' ? 'รหัสนักศึกษา (เติมรหัส 9 ตัวท้าย) *' : 'Student ID (fill in the last 9 digits) *')
                           : (lang === 'TH' ? 'รหัสนักศึกษา (เติมรหัส 4 ตัวท้าย) *' : 'Student ID (fill in the last 4 digits) *')}
                       </label>
-                      <input 
-                        type="text" 
-                        name="studentId" 
-                        value={formData.studentId} 
-                        onChange={handleChange} 
-                        onFocus={() => { 
+                      <input
+                        type="text"
+                        name="studentId"
+                        value={formData.studentId}
+                        onChange={handleChange}
+                        onFocus={() => {
                           if (!formData.studentId) {
                             const prefill = formData.nationality === 'ต่างชาติ' ? '69' : '6907050';
                             setFormData({ ...formData, studentId: prefill });
-                          } 
-                        }} 
-                        className={inputClass} 
-                        placeholder={formData.nationality === 'ต่างชาติ' ? '69xxxxxxxxx' : '6907050xxxx'} 
+                          }
+                        }}
+                        className={inputClass}
+                        placeholder={formData.nationality === 'ต่างชาติ' ? '69xxxxxxxxx' : '6907050xxxx'}
                       />
                     </div>
                   )}
@@ -1076,9 +1076,9 @@ const Register = () => {
                 </select>
                 <p className="mt-2 text-sm text-gray-500">
                   {lang === 'TH' ? 'หากมีข้อสงสัยเพิ่มเติมสามารถติดต่อ ' : 'If you have any further questions, please contact '}
-                  <a 
-                    href="https://line.me/R/ti/p/@122ddost" 
-                    target="_blank" 
+                  <a
+                    href="https://line.me/R/ti/p/@122ddost"
+                    target="_blank"
                     rel="noopener noreferrer"
                     className="underline underline-offset-2 hover:text-gray-800 transition-colors"
                   >
@@ -1213,8 +1213,8 @@ const Register = () => {
                     <div><span className="text-gray-400 block mb-1.5 text-xs uppercase tracking-wider">{t.email.replace(' *', '')}</span><p className="font-medium text-gray-800 break-all">{formData.email}</p></div>
                     <div><span className="text-gray-400 block mb-1.5 text-xs uppercase tracking-wider">{t.phone.replace(' *', '')}</span><p className="font-medium text-gray-800">{formData.phone}</p></div>
                     <div className="sm:col-span-2"><span className="text-gray-400 block mb-1.5 text-xs uppercase tracking-wider">
-                      {formData.nationality === 'ต่างชาติ' 
-                        ? (lang === 'TH' ? 'รหัสนักศึกษา' : 'Student ID') 
+                      {formData.nationality === 'ต่างชาติ'
+                        ? (lang === 'TH' ? 'รหัสนักศึกษา' : 'Student ID')
                         : (lang === 'TH' ? 'รหัสนักศึกษา' : 'Student ID')}
                     </span><p className="font-medium text-gray-800">{formData.studentIdStatus === 'ยังไม่ได้รับรหัสนักศึกษา' ? (lang === 'TH' ? 'ยังไม่ได้รับรหัสนักศึกษา' : 'Not yet received Student ID') : formData.studentId}</p></div>
                   </div>
@@ -1366,11 +1366,11 @@ const Register = () => {
       </div>
       {/* Custom Confirm Modal */}
       {showConfirmModal && createPortal(
-        <div 
+        <div
           className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fadeIn"
           onClick={() => !submitting && setShowConfirmModal(false)}
         >
-          <div 
+          <div
             className="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden animate-scaleIn"
             onClick={(e) => e.stopPropagation()}
           >
@@ -1387,14 +1387,14 @@ const Register = () => {
                 {lang === 'TH' ? (isEditMode ? 'คุณต้องการยืนยันการแก้ไขข้อมูลใช่หรือไม่?' : 'คุณต้องการยืนยันการลงทะเบียนใช่หรือไม่?') : (isEditMode ? 'Are you sure you want to save these changes?' : 'Are you sure you want to submit this registration?')}
               </p>
               <div className="flex gap-3">
-                <button 
+                <button
                   onClick={() => setShowConfirmModal(false)}
                   disabled={submitting}
                   className={`flex-1 py-2.5 rounded-xl text-gray-600 font-medium transition-colors ${submitting ? 'bg-gray-100 opacity-50 cursor-not-allowed' : 'bg-gray-100 hover:bg-gray-200'}`}
                 >
                   {lang === 'TH' ? 'ยกเลิก' : 'Cancel'}
                 </button>
-                <button 
+                <button
                   onClick={processSubmit}
                   disabled={submitting}
                   className={`flex-1 py-2.5 rounded-xl text-white font-medium transition-colors shadow-sm ${submitting ? 'bg-[#1e3a5f] opacity-75 cursor-not-allowed flex justify-center items-center' : 'bg-[#1e3a5f] hover:bg-[#152c4a]'}`}

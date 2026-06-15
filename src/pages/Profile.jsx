@@ -160,7 +160,11 @@ const Profile = () => {
           </div>
           <div className="flex justify-between border-b border-gray-100 pb-2">
             <span className="text-gray-500 whitespace-nowrap">{t.studentId}</span>
-            <span className="font-semibold text-right ml-4">{displayRegData.studentId}</span>
+            <span className="font-semibold text-right ml-4">
+              {displayRegData.studentId === '69070500000'
+                ? (lang === 'TH' ? 'ยังไม่ได้รับรหัสนักศึกษา' : 'Not yet received') 
+                : displayRegData.studentId}
+            </span>
           </div>
           <div className="flex justify-between border-b border-gray-100 pb-2">
             <span className="text-gray-500 whitespace-nowrap">{t.department}</span>
