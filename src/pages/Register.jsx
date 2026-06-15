@@ -1266,8 +1266,8 @@ const Register = () => {
             </div>
           )}
 
-          {/* Step 4: PDPA (Edit Mode Bottom) */}
-          {isEditMode && step === 4 && (
+          {/* Step 4: PDPA (Bottom of Verification) */}
+          {((step === 5 && !isEditMode) || (step === 4 && isEditMode)) && (
             <div className="space-y-6 animate-fadeIn mt-8 pt-8 border-t border-gray-100">
               <h3 className="text-xl sm:text-2xl font-medium text-center text-gray-800 mb-8">{t.pdpaTitle}</h3>
 
