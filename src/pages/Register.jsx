@@ -39,7 +39,7 @@ const contentLang = {
     studentIdPlaceholder: '6907050xxxx',
     eduInfo: 'ข้อมูลการศึกษา',
     program: 'โครงการ *',
-    regular: 'โครงการปกติ (รูปแบบการเรียนการสอนภาษาไทย)',
+    regular: 'โครงการภาษาไทย',
     international: 'โครงการนานาชาติ',
     department: 'ภาควิชา *',
     selectDept: '-- กรุณาเลือกภาควิชา --',
@@ -133,7 +133,7 @@ const contentLang = {
     studentIdPlaceholder: '6907050xxxx',
     eduInfo: 'Education Information',
     program: 'Program *',
-    regular: 'Regular Program (Thai Medium of Instruction)',
+    regular: 'Thai Program',
     international: 'International Program',
     department: 'Department *',
     selectDept: '-- Please select department --',
@@ -282,7 +282,12 @@ const Register = () => {
   useEffect(() => {
     if (isRegistered && regData && !isSuccess && !hasLoadedRegData) {
       setIsEditMode(true);
-      setFormData(prev => ({ ...prev, ...regData }));
+      // Migrate old program name to new program name
+      const loadedData = { ...regData };
+      if (loadedData.program === 'โครงการปกติ (รูปแบบการเรียนการสอนภาษาไทย)') {
+        loadedData.program = 'โครงการภาษาไทย';
+      }
+      setFormData(prev => ({ ...prev, ...loadedData }));
       setHasLoadedRegData(true);
       if (regData.nationality === 'ต่างชาติ') {
         setLang('EN');
@@ -782,10 +787,15 @@ const Register = () => {
 
   const translateValue = (value) => {
     if (lang === 'TH' || !value) return value;
+    const valueMap = {
+      'โครงการภาษาไทย': t.regular, 'โครงการนานาชาติ': t.international,
+      'โครงการปกติ (รูปแบบการเรียนการสอนภาษาไทย)': t.regular,
+      'S': 'S', 'M': 'M', 'L': 'L', 'XL': 'XL', '2XL': '2XL', '3XL': '3XL'
+    };
     const dict = {
       'ไทย': t.thaiNat, 'ต่างชาติ': t.intNat,
       'นาย': t.mr, 'นางสาว': t.ms, 'นาง': t.mrs,
-      'โครงการปกติ (รูปแบบการเรียนการสอนภาษาไทย)': t.regular, 'โครงการนานาชาติ': t.international,
+      ...valueMap,
       'วิศวกรรมคอมพิวเตอร์': t.deptCPE, 'วิศวกรรมโยธา': t.deptCE, 'วิศวกรรมเคมี': t.deptChE,
       'วิศวกรรมไฟฟ้า': t.deptEE, 'วิศวกรรมอิเล็กทรอนิกส์และโทรคมนาคม': t.deptENE, 'วิศวกรรมสิ่งแวดล้อม': t.deptENV,
       'วิศวกรรมระบบควบคุมและเครื่องมือวัด': t.deptINC, 'วิศวกรรมเครื่องกล': t.deptME, 'วิศวกรรมอุตสาหการ': t.deptPE,
@@ -981,7 +991,7 @@ const Register = () => {
                 <label className={labelClass}>{t.program}</label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-1">
                   <label className={radioLabelClass}>
-                    <input type="radio" name="program" value="โครงการปกติ (รูปแบบการเรียนการสอนภาษาไทย)" onChange={handleChange} className={radioInputClass} checked={formData.program === "โครงการปกติ (รูปแบบการเรียนการสอนภาษาไทย)"} />
+                    <input type="radio" name="program" value="โครงการภาษาไทย" onChange={handleChange} className={radioInputClass} checked={formData.program === "โครงการภาษาไทย"} />
                     <span>{t.regular}</span>
                   </label>
                   <label className={radioLabelClass}>
