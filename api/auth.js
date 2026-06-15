@@ -1,7 +1,8 @@
-import admin from 'firebase-admin';
+import { getApps, initializeApp, cert } from 'firebase-admin/app';
+import { getAuth } from 'firebase-admin/auth';
 
 // Initialize Firebase Admin if not already initialized
-if (!admin.apps.length) {
+if (!getApps().length) {
   try {
     const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
     if (!serviceAccountJson) {
@@ -9,8 +10,8 @@ if (!admin.apps.length) {
     }
     const serviceAccount = JSON.parse(serviceAccountJson);
     
-    admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount)
+    initializeApp({
+      credential: cert(serviceAccount)
     });
   } catch (error) {
     console.error("Firebase Admin Initialization Error:", error);
@@ -75,7 +76,7 @@ export default async function handler(req, res) {
     const lineUserId = profileData.userId;
 
     // 3. Generate Firebase Custom Token
-    const customToken = await admin.auth().createCustomToken(lineUserId);
+    const customToken = await getAuth().createCustomToken(lineUserId);
 
     // 4. Return the token
     return res.status(200).json({ 
