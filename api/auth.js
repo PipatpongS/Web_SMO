@@ -1,23 +1,6 @@
 import { getApps, initializeApp, cert } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 
-// Initialize Firebase Admin if not already initialized
-if (!getApps().length) {
-  try {
-    const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
-    if (!serviceAccountJson) {
-      throw new Error("FIREBASE_SERVICE_ACCOUNT_KEY is not set in environment variables");
-    }
-    const serviceAccount = JSON.parse(serviceAccountJson);
-    
-    initializeApp({
-      credential: cert(serviceAccount)
-    });
-  } catch (error) {
-    console.error("Firebase Admin Initialization Error:", error);
-  }
-}
-
 export default async function handler(req, res) {
   // CORS headers
   res.setHeader('Access-Control-Allow-Credentials', true);
@@ -38,6 +21,25 @@ export default async function handler(req, res) {
   }
 
   try {
+    // Initialize Firebase Admin if not already initialized
+    if (!getApps().length) {
+      const serviceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
+      if (!serviceAccountJson) {
+        throw new Error("FIREBASE_SERVICE_ACCOUNT_KEY is missing in Vercel Environment Variables");
+      }
+      
+      let serviceAccount;
+      try {
+        serviceAccount = JSON.parse(serviceAccountJson);
+      } catch (e) {
+        throw new Error("FIREBASE_SERVICE_ACCOUNT_KEY is not a valid JSON. Make sure you copied the exact JSON content.");
+      }
+      
+      initializeApp({
+        credential: cert(serviceAccount)
+      });
+    }
+
     const { accessToken } = req.body;
 
     if (!accessToken) {

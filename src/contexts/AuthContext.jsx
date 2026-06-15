@@ -47,7 +47,9 @@ export const AuthProvider = ({ children }) => {
             }
           } catch (firebaseErr) {
             console.error("Firebase Custom Auth Error:", firebaseErr);
-            // We set userProfile anyway so LIFF works, but Firebase writes will fail if unauthenticated
+            setError("ระบบยืนยันตัวตนขัดข้อง กรุณาลองใหม่อีกครั้ง (" + firebaseErr.message + ")");
+            setLoading(false);
+            return;
           }
 
           setUserProfile(profile);
