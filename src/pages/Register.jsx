@@ -853,7 +853,7 @@ const Register = () => {
           className="text-white/80 hover:text-white transition-colors flex items-center gap-2 cursor-pointer drop-shadow-md"
         >
           <FaArrowLeft />
-          <span>{isEditMode ? (lang === 'TH' ? 'ย้อนกลับ' : 'Back') : (step > 1 ? t.btnBack : t.btnBackHome)}</span>
+          <span>{isEditMode ? (lang === 'TH' ? 'ย้อนกลับไปโปรไฟล์ของฉัน' : 'Back to My Profile') : (step > 1 ? t.btnBack : t.btnBackHome)}</span>
         </button>
       </div>
 
@@ -1281,7 +1281,7 @@ const Register = () => {
                   else handlePrev();
                 }}
                 className="text-gray-500 hover:text-gray-800 font-medium px-4 py-3 sm:py-2 transition-colors text-sm w-full sm:w-auto border border-gray-200 sm:border-none rounded-xl sm:rounded-none"
-              >{isEditMode ? (lang === 'TH' ? 'ย้อนกลับ' : 'Back') : t.btnBack}</button>
+              >{isEditMode ? (lang === 'TH' ? 'ย้อนกลับไปโปรไฟล์ของฉัน' : 'Back to My Profile') : t.btnBack}</button>
             ) : (
               <button
                 type="button"
@@ -1294,7 +1294,7 @@ const Register = () => {
                   }
                 }}
                 className="text-gray-500 hover:text-gray-800 font-medium px-4 py-3 sm:py-2 transition-colors text-sm w-full sm:w-auto border border-gray-200 sm:border-none rounded-xl sm:rounded-none"
-              >{isEditMode ? (lang === 'TH' ? 'ย้อนกลับ' : 'Back') : t.btnBackHome}</button>
+              >{isEditMode ? (lang === 'TH' ? 'ย้อนกลับไปโปรไฟล์ของฉัน' : 'Back to My Profile') : t.btnBackHome}</button>
             )}
 
             <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-6 w-full sm:w-auto">
