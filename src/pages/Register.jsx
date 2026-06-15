@@ -289,6 +289,7 @@ const Register = () => {
       }
       setFormData(prev => ({ ...prev, ...loadedData }));
       setHasLoadedRegData(true);
+      setMaxStep(4); // In edit mode, all steps are accessible
       if (regData.nationality === 'ต่างชาติ') {
         setLang('EN');
       }
