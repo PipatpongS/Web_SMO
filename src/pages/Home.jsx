@@ -232,7 +232,7 @@ const Home = () => {
             © 2026 The Student Union of The Faculty of Engineering. All rights reserved.
           </div>
           <div className="flex items-center space-x-2">
-            <span>Version 1.0.0</span>
+            <span>Version 1.0.1</span>
           </div>
         </div>
       </div>

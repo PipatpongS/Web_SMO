@@ -141,7 +141,7 @@ const contentLang = {
     deptCE: 'Civil Engineering',
     deptChE: 'Chemical Engineering',
     deptEE: 'Electrical Engineering',
-    deptENE: 'Electronics and Telecomm Engineering',
+    deptENE: 'Electronics and Telecommunication Engineering',
     deptENV: 'Environmental Engineering',
     deptINC: 'Control Systems and Instrumentation Engineering',
     deptME: 'Mechanical Engineering',
