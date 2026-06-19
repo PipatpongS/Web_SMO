@@ -24,7 +24,7 @@ service cloud.firestore {
       allow update: if isOwner(userId)
                     && resource.data.editCount < 2
                     && resource.data.is_shirt_ordered == false
-                    && request.time.toMillis() < 1784912340000
+                    && request.time.toMillis() <= 1782320399000
                     && !request.resource.data.diff(resource.data).affectedKeys()
                         .hasAny(['line_uid', 'is_verified', 'is_shirt_ordered', 'createdAt', 'checkin_day1_morning', 'checkin_day1_afternoon', 'checkin_day2_morning', 'checkin_day2_afternoon', 'shirt_received_at'])
                     && request.resource.data.editCount == resource.data.editCount + 1;
