@@ -119,21 +119,20 @@ const Home = () => {
                 navigate('/register');
               }
             }}
-            className={`w-full max-w-[250px] mx-auto text-[14px] py-2 flex justify-center items-center space-x-2 mb-12 min-h-[40px] ${
-              (!isRegistered && (isBeforeRegistration() || isAfterRegistration()))
+            className={`w-full max-w-[250px] mx-auto text-[14px] py-2 flex justify-center items-center space-x-2 mb-12 min-h-[40px] ${(!isRegistered && (isBeforeRegistration() || isAfterRegistration()))
                 ? 'bg-gray-500/50 cursor-not-allowed rounded-full border border-white/20'
                 : 'glass-button'
-            }`}
+              }`}
             disabled={regLoading || (!isRegistered && (isBeforeRegistration() || isAfterRegistration()))}
           >
             {regLoading ? (
               <span className="w-4 h-4 border-2 border-white/50 border-t-white rounded-full animate-spin"></span>
             ) : (
               <span>
-                {isRegistered 
-                  ? t.profileBtn 
+                {isRegistered
+                  ? t.profileBtn
                   : isBeforeRegistration()
-                    ? (lang === 'TH' ? `เปิดรับสมัคร ${new Date(REGISTRATION_START_DATE).toLocaleDateString('th-TH', {day: 'numeric', month: 'short'})}` : `Opens ${new Date(REGISTRATION_START_DATE).toLocaleDateString('en-GB', {day: 'numeric', month: 'short'})}`)
+                    ? (lang === 'TH' ? `เปิดรับสมัคร ${new Date(REGISTRATION_START_DATE).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' })}` : `Opens ${new Date(REGISTRATION_START_DATE).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`)
                     : isAfterRegistration()
                       ? (lang === 'TH' ? 'ปิดรับลงทะเบียนแล้ว' : 'Registration Closed')
                       : t.registerBtn}
@@ -232,7 +231,7 @@ const Home = () => {
             © 2026 The Student Union of The Faculty of Engineering. All rights reserved.
           </div>
           <div className="flex items-center space-x-2">
-            <span>Version 1.0.1</span>
+            <span>Version 1.1.0</span>
           </div>
         </div>
       </div>
