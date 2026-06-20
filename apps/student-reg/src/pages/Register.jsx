@@ -248,6 +248,7 @@ const Register = () => {
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [step, setStep] = useState(1);
+  const [showDiscardModal, setShowDiscardModal] = useState(false);
   const [maxStep, setMaxStep] = useState(1);
   const [isSuccess, setIsSuccess] = useState(false);
   const [successMode, setSuccessMode] = useState(null);
@@ -261,7 +262,18 @@ const Register = () => {
     if (!isEditMode || !regData) return true;
     const keysToCompare = ['titlePrefix', 'email', 'firstName', 'middleName', 'lastName', 'studentIdStatus', 'studentId', 'phone', 'nationality', 'program', 'department', 'shirtSize', 'hasDietaryRestriction', 'foodAllergyDetails', 'dietaryOther', 'hasMedicalCondition', 'medicalConditionDetails', 'joinActivity'];
     for (const key of keysToCompare) {
-      if (formData[key] !== regData[key]) return true;
+      let formVal = formData[key];
+      if (typeof formVal === 'string') formVal = formVal.trim();
+      
+      let regVal = regData[key];
+      if (key === 'program' && regVal === 'โครงการปกติ (รูปแบบการเรียนการสอนภาษาไทย)') {
+        regVal = 'โครงการภาษาไทย';
+      }
+      
+      formVal = formVal === undefined || formVal === null ? '' : formVal;
+      regVal = regVal === undefined || regVal === null ? '' : regVal;
+
+      if (formVal !== regVal) return true;
     }
     const formDiet = formData.dietaryRestriction || [];
     const regDiet = regData.dietaryRestriction || [];
@@ -305,7 +317,7 @@ const Register = () => {
   }, [formData]);
 
   useEffect(() => {
-    if (showConfirmModal) {
+    if (showConfirmModal || showDiscardModal) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = 'unset';
@@ -313,7 +325,7 @@ const Register = () => {
     return () => {
       document.body.style.overflow = 'unset';
     };
-  }, [showConfirmModal]);
+  }, [showConfirmModal, showDiscardModal]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -339,29 +351,38 @@ const Register = () => {
       const invalidFirstChars = /^[ุึัี้่ิืูํ๊็๋์ะา]+/;
       if (invalidFirstChars.test(newValue)) {
         newValue = newValue.replace(invalidFirstChars, '');
-        if (e.target.value !== newValue) {
-          e.target.value = newValue;
-        }
+      }
+      
+      // Aggressive replacement for double Sra E (เเ) -> Sra Ae (แ)
+      // Try both Unicode and literal string replacements to bypass any browser parsing quirks
+      newValue = newValue.replace(/\u0E40{2,}/g, '\u0E41');
+      newValue = newValue.replace(/เเ/g, 'แ');
+      while (newValue.indexOf('เเ') !== -1) {
+        newValue = newValue.replace('เเ', 'แ');
+      }
+
+      if (e.target.value !== newValue) {
+        e.target.value = newValue;
       }
     }
 
-    // Disallow spaces in Step 1 fields
-    const step1Fields = ['firstName', 'middleName', 'lastName', 'email', 'phone', 'studentId'];
-    if (step1Fields.includes(name) && typeof newValue === 'string') {
+    // Disallow spaces in specific Step 1 fields (except names)
+    const noSpaceFields = ['email', 'phone', 'studentId'];
+    if (noSpaceFields.includes(name) && typeof newValue === 'string') {
       newValue = newValue.replace(/\s/g, '');
     }
 
     // Filter First, Middle, Last names based on nationality
     if (['firstName', 'middleName', 'lastName'].includes(name) && typeof newValue === 'string') {
       if (formData.nationality === 'ต่างชาติ') {
-        // Only allow English letters, hyphens, and apostrophes
-        newValue = newValue.replace(/[^A-Za-z\-']/g, '');
+        // Only allow English letters, spaces, hyphens, and apostrophes
+        newValue = newValue.replace(/[^A-Za-z\s\-']/g, '');
         if (newValue.length > 0) {
           newValue = newValue.charAt(0).toUpperCase() + newValue.slice(1);
         }
       } else if (formData.nationality === 'ไทย') {
-        // Only allow Thai characters
-        newValue = newValue.replace(/[^ก-๙]/g, '');
+        // Only allow Thai characters and spaces
+        newValue = newValue.replace(/[^ก-๙\s]/g, '');
       }
       if (e.target.value !== newValue) {
         e.target.value = newValue; // Force DOM update for IME composition bypass
@@ -410,14 +431,14 @@ const Register = () => {
     const nameFields = ['firstName', 'middleName', 'lastName'];
     if (nameFields.includes(name) && typeof newValue === 'string') {
       if (formData.nationality === 'Thai national') {
-        // Allow ONLY Thai characters (no english, no numbers, no symbols)
-        newValue = newValue.replace(/[^\u0E00-\u0E7F]/g, '');
+        // Allow ONLY Thai characters and spaces (no english, no numbers, no symbols)
+        newValue = newValue.replace(/[^\u0E00-\u0E7F\s]/g, '');
       } else if (formData.nationality === 'International student') {
-        // Allow ONLY English characters (no thai, no numbers, no symbols)
-        newValue = newValue.replace(/[^a-zA-Z]/g, '');
+        // Allow ONLY English characters and spaces (no thai, no numbers, no symbols)
+        newValue = newValue.replace(/[^a-zA-Z\s]/g, '');
       } else {
-        // If not selected yet, allow both but no symbols/numbers
-        newValue = newValue.replace(/[^a-zA-Z\u0E00-\u0E7F]/g, '');
+        // If not selected yet, allow both and spaces but no symbols/numbers
+        newValue = newValue.replace(/[^a-zA-Z\u0E00-\u0E7F\s]/g, '');
       }
     }
 
@@ -468,7 +489,7 @@ const Register = () => {
   const handleNext = () => {
     setError('');
     if (step === 1) {
-      if (!formData.titlePrefix || !formData.email || !formData.firstName || !formData.lastName || !formData.phone || !formData.nationality || !formData.studentIdStatus) {
+      if (!formData.titlePrefix || !formData.email || !formData.firstName.trim() || !formData.lastName.trim() || !formData.phone || !formData.nationality || !formData.studentIdStatus) {
         setError(t.errRequired);
         return;
       }
@@ -544,6 +565,20 @@ const Register = () => {
     setError('');
     setStep(prev => prev - 1);
     window.scrollTo(0, 0);
+  };
+
+  const handleBackNavigation = () => {
+    if (isEditMode) {
+      if (hasChanges) {
+        setShowDiscardModal(true);
+        return;
+      }
+      navigate('/profile');
+    } else if (step > 1) {
+      handlePrev();
+    } else {
+      navigate('/');
+    }
   };
 
   const validateAll = () => {
@@ -684,8 +719,52 @@ const Register = () => {
     setSubmitting(true);
     setError('');
 
+    // Trim spaces before uploading to Database
+    const trimmedData = {
+      ...formData,
+      firstName: formData.firstName.trim(),
+      middleName: formData.middleName.trim(),
+      lastName: formData.lastName.trim(),
+    };
+
+    if (isEditMode && regData) {
+      const checkKeys = ['titlePrefix', 'firstName', 'middleName', 'lastName', 'email', 'phone', 'studentIdStatus', 'studentId', 'nationality', 'program', 'department', 'shirtSize', 'hasDietaryRestriction', 'foodAllergyDetails', 'dietaryOther', 'hasMedicalCondition', 'medicalConditionDetails', 'joinActivity'];
+      let isChanged = false;
+      for (const key of checkKeys) {
+        let oldVal = regData[key];
+        if (key === 'program' && oldVal === 'โครงการปกติ (รูปแบบการเรียนการสอนภาษาไทย)') {
+          oldVal = 'โครงการภาษาไทย';
+        }
+        oldVal = oldVal === undefined || oldVal === null ? '' : oldVal;
+        
+        let newVal = trimmedData[key];
+        newVal = newVal === undefined || newVal === null ? '' : newVal;
+
+        if (oldVal !== newVal) {
+          console.log("Field changed:", key, "from", oldVal, "to", newVal);
+          isChanged = true; break;
+        }
+      }
+      
+      const formDiet = trimmedData.dietaryRestriction || [];
+      const regDiet = regData.dietaryRestriction || [];
+      if (formDiet.length !== regDiet.length) isChanged = true;
+      else {
+        const sortedFormDiet = [...formDiet].sort();
+        const sortedRegDiet = [...regDiet].sort();
+        if (sortedFormDiet.some((val, i) => val !== sortedRegDiet[i])) isChanged = true;
+      }
+
+      if (!isChanged) {
+        setSubmitting(false);
+        setShowConfirmModal(false);
+        setError(lang === 'TH' ? 'ไม่พบการเปลี่ยนแปลงข้อมูล (หรือมีการพิมพ์แค่ช่องว่าง)' : 'No changes detected (or only spaces were added).');
+        return;
+      }
+    }
+
     const currentMode = isEditMode ? 'edit' : 'register';
-    const result = isEditMode ? await updateUser(formData) : await registerUser(formData);
+    const result = isEditMode ? await updateUser(trimmedData) : await registerUser(trimmedData);
 
     setSubmitting(false);
 
@@ -842,15 +921,7 @@ const Register = () => {
       {/* Back Button positioned nicely above the content */}
       <div className="w-full max-w-lg mt-8 mb-2 flex justify-start z-10 relative pl-2 sm:pl-4">
         <button
-          onClick={() => {
-            if (isEditMode) {
-              navigate('/profile');
-            } else if (step > 1) {
-              handlePrev();
-            } else {
-              navigate('/');
-            }
-          }}
+          onClick={handleBackNavigation}
           className="text-white/80 hover:text-white transition-colors flex items-center gap-2 cursor-pointer drop-shadow-md"
         >
           <FaArrowLeft />
@@ -1304,23 +1375,13 @@ const Register = () => {
             {step > 1 ? (
               <button
                 type="button"
-                onClick={() => {
-                  if (isEditMode) navigate('/profile');
-                  else handlePrev();
-                }}
+                onClick={handleBackNavigation}
                 className="text-gray-500 hover:text-gray-800 font-medium px-4 py-3 sm:py-2 transition-colors text-sm w-full sm:w-auto border border-gray-200 sm:border-none rounded-xl sm:rounded-none"
               >{isEditMode ? (lang === 'TH' ? 'ย้อนกลับไปโปรไฟล์ของฉัน' : 'Back to My Profile') : t.btnBack}</button>
             ) : (
               <button
                 type="button"
-                onClick={() => {
-                  window.scrollTo(0, 0);
-                  if (isEditMode) {
-                    navigate('/profile');
-                  } else {
-                    navigate('/');
-                  }
-                }}
+                onClick={handleBackNavigation}
                 className="text-gray-500 hover:text-gray-800 font-medium px-4 py-3 sm:py-2 transition-colors text-sm w-full sm:w-auto border border-gray-200 sm:border-none rounded-xl sm:rounded-none"
               >{isEditMode ? (lang === 'TH' ? 'ย้อนกลับไปโปรไฟล์ของฉัน' : 'Back to My Profile') : t.btnBackHome}</button>
             )}
@@ -1411,6 +1472,47 @@ const Register = () => {
                   )}
                 </button>
               </div>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Discard Changes Beautiful Modal */}
+      {showDiscardModal && createPortal(
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm transition-opacity" onClick={() => setShowDiscardModal(false)}>
+          <div className="bg-white rounded-2xl p-6 shadow-2xl flex flex-col items-center max-w-[320px] w-full transform transition-all scale-100 animate-fade-in-up" onClick={e => e.stopPropagation()}>
+            <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mb-4 ring-8 ring-red-50/50">
+              <svg className="w-8 h-8 text-red-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                <line x1="12" y1="9" x2="12" y2="13"></line>
+                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+              </svg>
+            </div>
+            <h3 className="text-xl font-extrabold text-gray-800 mb-2 text-center leading-tight">
+              {lang === 'TH' ? 'ละทิ้งการเปลี่ยนแปลง?' : 'Discard changes?'}
+            </h3>
+            <p className="text-gray-500 text-center text-sm mb-6 leading-relaxed">
+              {lang === 'TH' 
+                ? 'คุณมีการเปลี่ยนแปลงที่ยังไม่ได้บันทึก หากกดย้อนกลับ ข้อมูลที่แก้ไขไว้จะสูญหาย' 
+                : 'You have unsaved changes. If you go back, these changes will be lost.'}
+            </p>
+            <div className="flex w-full gap-3">
+              <button 
+                onClick={() => setShowDiscardModal(false)}
+                className="flex-1 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-xl shadow-sm transition-all active:scale-95"
+              >
+                {lang === 'TH' ? 'แก้ไขต่อ' : 'Keep editing'}
+              </button>
+              <button 
+                onClick={() => {
+                  setShowDiscardModal(false);
+                  navigate('/profile');
+                }}
+                className="flex-1 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl shadow-md transition-all active:scale-95"
+              >
+                {lang === 'TH' ? 'ละทิ้ง' : 'Discard'}
+              </button>
             </div>
           </div>
         </div>,

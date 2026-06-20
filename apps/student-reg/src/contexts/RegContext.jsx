@@ -9,9 +9,28 @@ export const useRegistration = () => useContext(RegContext);
 
 export const RegProvider = ({ children }) => {
   const { userProfile, loading: authLoading } = useAuth();
-  const [isRegistered, setIsRegistered] = useState(false);
-  const [regData, setRegData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  
+  const getCachedState = () => {
+    try {
+      if (userProfile && userProfile.userId) {
+        const cachedReg = localStorage.getItem(`reg_${userProfile.userId}`);
+        if (cachedReg) {
+          return { isReg: true, data: JSON.parse(cachedReg), load: false };
+        }
+        // Check if we previously confirmed they are NOT registered
+        const notRegistered = localStorage.getItem(`not_reg_${userProfile.userId}`);
+        if (notRegistered === 'true') {
+          return { isReg: false, data: null, load: false };
+        }
+      }
+    } catch (e) {}
+    return { isReg: false, data: null, load: true };
+  };
+
+  const initialState = getCachedState();
+  const [isRegistered, setIsRegistered] = useState(initialState.isReg);
+  const [regData, setRegData] = useState(initialState.data);
+  const [loading, setLoading] = useState(initialState.load);
 
   useEffect(() => {
     let unsubscribe = null;
@@ -41,12 +60,30 @@ export const RegProvider = ({ children }) => {
           const docSnap = await getDoc(docRef);
           if (docSnap.exists()) {
             const data = docSnap.data();
+            
+            // Sync LINE profile changes to Firebase silently
+            if (userProfile && (
+              data.line_displayName !== (userProfile.displayName || '') || 
+              data.line_pictureUrl !== (userProfile.pictureUrl || '')
+            )) {
+              const newProfileData = {
+                line_displayName: userProfile.displayName || '',
+                line_pictureUrl: userProfile.pictureUrl || ''
+              };
+              updateDoc(docRef, newProfileData).catch(err => {
+                console.error("Failed to sync LINE profile update:", err);
+              });
+              Object.assign(data, newProfileData);
+            }
+
             // Update Cache
             localStorage.setItem(`reg_${userId}`, JSON.stringify(data));
+            localStorage.removeItem(`not_reg_${userId}`);
             setRegData(data);
             setIsRegistered(true);
           } else {
             localStorage.removeItem(`reg_${userId}`);
+            localStorage.setItem(`not_reg_${userId}`, 'true');
             setIsRegistered(false);
           }
           setLoading(false);

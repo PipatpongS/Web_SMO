@@ -1,28 +1,54 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import liff from '@line/liff';
+import { signInWithCustomToken } from 'firebase/auth';
+import { auth } from '../config/firebase';
 
 const AuthContext = createContext();
 
 export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }) => {
-  const [userProfile, setUserProfile] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [userProfile, setUserProfile] = useState(() => {
+    try {
+      const cached = localStorage.getItem('line_user_profile');
+      return cached ? JSON.parse(cached) : null;
+    } catch (e) {
+      return null;
+    }
+  });
+  // If we have a cached profile, skip the initial loading screen for instant render!
+  const [loading, setLoading] = useState(() => !localStorage.getItem('line_user_profile'));
   const [error, setError] = useState(null);
 
   useEffect(() => {
     const initLiff = async () => {
       try {
         const liffId = import.meta.env.VITE_LIFF_ID || "2010390110-fPHy5j81";
+        
+        // Start Firebase Auth State initialization in parallel with LIFF init to save 200-300ms
+        const authReadyPromise = auth ? auth.authStateReady() : Promise.resolve();
+        
         await liff.init({ liffId });
         
         if (liff.isLoggedIn()) {
           const profile = await liff.getProfile();
+          
+          await authReadyPromise;
+          
+          if (auth && auth.currentUser && auth.currentUser.uid === profile.userId) {
+            // Fast Path: Already signed into Firebase! Skip the slow Vercel API call.
+            console.log("Fast Path: Using cached Firebase session");
+            setUserProfile(profile);
+            localStorage.setItem('line_user_profile', JSON.stringify(profile));
+            setLoading(false);
+            return;
+          }
+
           const accessToken = liff.getAccessToken();
 
           try {
-            // Check if we are running locally vs deployed for the API URL
-            const apiUrl = import.meta.env.DEV ? 'http://localhost:3000/api/auth' : '/api/auth';
+            // Point local dev to the deployed Vercel API to get the token
+            const apiUrl = import.meta.env.DEV ? 'https://orientation-vidva-bangmod-67-alpha.vercel.app/api/auth' : '/api/auth';
             
             const authResponse = await fetch(apiUrl, {
               method: 'POST',
@@ -37,10 +63,6 @@ export const AuthProvider = ({ children }) => {
 
             const { customToken } = await authResponse.json();
             
-            // Import auth dynamically to avoid circular dependencies if any
-            const { signInWithCustomToken } = await import('firebase/auth');
-            const { auth } = await import('../config/firebase');
-            
             if (auth) {
               await signInWithCustomToken(auth, customToken);
               console.log("Firebase Auth Custom Sign-in Successful");
@@ -53,12 +75,15 @@ export const AuthProvider = ({ children }) => {
           }
 
           setUserProfile(profile);
+          localStorage.setItem('line_user_profile', JSON.stringify(profile));
         } else {
-          liff.login();
+          localStorage.removeItem('line_user_profile');
+          liff.login({ redirectUri: window.location.href });
         }
       } catch (err) {
         console.error("LIFF Init Error:", err);
         setError("Failed to initialize LINE LIFF: " + err.message);
+        localStorage.removeItem('line_user_profile');
       } finally {
         setLoading(false);
       }

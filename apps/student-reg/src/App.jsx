@@ -60,8 +60,9 @@ function AppContent() {
     });
   }, []);
 
-  // Show Loading Screen until ALL images AND Auth AND Registration states are fully loaded
-  const isReady = imagesLoaded && !authLoading && !regLoading;
+  // Show Loading Screen until Auth, Registration states, AND critical images are fully loaded
+  // to prevent flashing of missing images when entering the site.
+  const isReady = !authLoading && !regLoading && imagesLoaded;
 
   if (!isReady) {
     return <LoadingScreen />;
