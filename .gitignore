@@ -29,3 +29,10 @@ dist-ssr
 !.env.example
 .env.backend
 .vercel
+
+# Firebase Service Account Keys
+*-firebase-adminsdk-*.json
+
+# Custom Ignored Folders
+docs/
+local-scripts/
