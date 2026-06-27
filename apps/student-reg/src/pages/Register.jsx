@@ -297,8 +297,8 @@ const Register = () => {
   }, [formData, regData, isEditMode]);
 
   useEffect(() => {
-    // Redirect if they try to access registration when it's closed (and they aren't registered yet)
-    if (!loading && !isRegistered && (isBeforeRegistration() || isAfterRegistration())) {
+    // Redirect if they try to access registration when it's closed
+    if (!loading && (isBeforeRegistration() || isAfterRegistration())) {
       navigate('/', { replace: true });
     }
   }, [loading, isRegistered, navigate]);
