@@ -205,8 +205,8 @@ import LoadingScreen from '../components/LoadingScreen';
 const Register = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const readOnly = location.state?.readOnly || isAfterRegistration();
   const { registerUser, updateUser, loading, isRegistered, regData } = useRegistration();
+  const readOnly = location.state?.readOnly || isAfterRegistration() || (regData?.editCount >= 2);
   const [lang, setLangState] = useState(() => localStorage.getItem('preferredLang') || 'TH');
   const setLang = (newLang) => {
     localStorage.setItem('preferredLang', newLang);
