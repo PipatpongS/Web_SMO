@@ -223,14 +223,12 @@ const Profile = () => {
 
             return (
               <>
-                {!isPastDeadline && (
-                  <button
-                    onClick={() => navigate('/register', { state: { readOnly: true } })}
-                    className="w-full max-w-[280px] py-3 rounded-xl font-bold text-sm transition-all shadow-md bg-white border-2 border-[#1e3a5f] text-[#1e3a5f] hover:bg-gray-50 cursor-pointer mb-3"
-                  >
-                    {lang === 'TH' ? 'ดูข้อมูลส่วนตัวเพิ่มเติม' : 'View Personal Information'}
-                  </button>
-                )}
+                <button
+                  onClick={() => navigate('/register', { state: { readOnly: true } })}
+                  className="w-full max-w-[280px] py-3 rounded-xl font-bold text-sm transition-all shadow-md bg-white border-2 border-[#1e3a5f] text-[#1e3a5f] hover:bg-gray-50 cursor-pointer mb-3"
+                >
+                  {lang === 'TH' ? 'ดูข้อมูลส่วนตัวเพิ่มเติม' : 'View Personal Information'}
+                </button>
                 <button
                   disabled={!canEdit}
                   onClick={() => navigate('/register', { state: { readOnly: false } })}
