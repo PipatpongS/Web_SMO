@@ -166,9 +166,21 @@ export const RegProvider = ({ children }) => {
       return { success: false, error: "You have reached the maximum number of edits allowed." };
     }
 
-    // Check if shirt is already ordered
+    // Enforce locks for verified users
+    if (regData.is_verified === true) {
+      const lockedFields = ['nationality', 'titlePrefix', 'firstName', 'middleName', 'lastName', 'studentIdStatus', 'studentId', 'program', 'department'];
+      for (const field of lockedFields) {
+        if (data[field] !== undefined && data[field] !== regData[field]) {
+          return { success: false, error: "ไม่สามารถแก้ไขข้อมูลดังกล่าวได้ หากต้องการแก้ไขข้อมูลดังกล่าว โปรดติดต่อผ่านทีมงาน (LINE OA: @122ddost)" };
+        }
+      }
+    }
+
+    // Enforce lock for shirt size
     if (regData.is_shirt_ordered === true) {
-      return { success: false, error: "Cannot edit because your shirt has already been ordered." };
+      if (data.shirtSize !== undefined && data.shirtSize !== regData.shirtSize) {
+        return { success: false, error: "ไม่สามารถแก้ไขข้อมูลดังกล่าวได้ หากต้องการแก้ไขข้อมูลดังกล่าว โปรดติดต่อผ่านทีมงาน (LINE OA: @122ddost)" };
+      }
     }
 
     const userId = userProfile.userId;
@@ -178,7 +190,7 @@ export const RegProvider = ({ children }) => {
     const allowedFields = [
       'titlePrefix', 'firstName', 'middleName', 'lastName', 'email', 'phone', 
       'studentIdStatus', 'studentId', 'nationality', 'program', 'department', 
-      'shirtSize', 'hasDietaryRestriction', 'foodAllergyDetails', 'dietaryOther', 
+      'shirtSize', 'hasDietaryRestriction', 'dietaryRestriction', 'foodAllergyDetails', 'dietaryOther', 
       'hasMedicalCondition', 'medicalConditionDetails', 'joinActivity'
     ];
 

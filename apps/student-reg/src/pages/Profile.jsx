@@ -6,6 +6,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useRegistration } from '../contexts/RegContext';
 import { FaArrowLeft } from 'react-icons/fa';
 import LoadingScreen from '../components/LoadingScreen';
+import { isAfterRegistration, REGISTRATION_END_DATE } from '../config/timeConfig';
 
 import bImg from '../assets/b.png';
 import logoImg from '../assets/Logo.png';
@@ -209,11 +210,11 @@ const Profile = () => {
           {(() => {
             const editCount = displayRegData.editCount || 0;
             const remainingEdits = 2 - editCount;
-            const deadlineIso = import.meta.env.VITE_EDIT_DEADLINE;
+            const deadlineIso = REGISTRATION_END_DATE;
             const deadline = deadlineIso ? new Date(deadlineIso) : null;
-            const isPastDeadline = deadline ? new Date() > deadline : false;
+            const isPastDeadline = isAfterRegistration();
             const isShirtOrdered = displayRegData.is_shirt_ordered === true;
-            const canEdit = remainingEdits > 0 && !isPastDeadline && !isShirtOrdered;
+            const canEdit = remainingEdits > 0 && !isPastDeadline;
 
             const deadlineDisplay = deadline ? new Intl.DateTimeFormat('th-TH', {
               day: 'numeric', month: 'long', year: 'numeric',

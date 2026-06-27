@@ -18,15 +18,16 @@ service cloud.firestore {
                     && request.resource.data.is_verified == false
                     && request.resource.data.is_shirt_ordered == false
                     && request.time.toMillis() >= 1781456400000
-                    && request.time.toMillis() <= 1782838799000;
+                    && request.time.toMillis() <= 1782925199000; // 1 July 2026 23:59:59 +07:00
       
       // Allow updates only if the user is the owner, editCount < 2, and not changing restricted fields
       allow update: if isOwner(userId)
                     && resource.data.editCount < 2
-                    && resource.data.is_shirt_ordered == false
-                    && request.time.toMillis() <= 1782320399000
+                    && request.time.toMillis() <= 1782925199000 // 1 July 2026 23:59:59 +07:00
                     && !request.resource.data.diff(resource.data).affectedKeys()
                         .hasAny(['line_uid', 'is_verified', 'is_shirt_ordered', 'createdAt', 'checkin_day1_morning', 'checkin_day1_afternoon', 'checkin_day2_morning', 'checkin_day2_afternoon', 'shirt_received_at'])
+                    && (resource.data.is_shirt_ordered == false || !request.resource.data.diff(resource.data).affectedKeys().hasAny(['shirtSize']))
+                    && (resource.data.is_verified == false || !request.resource.data.diff(resource.data).affectedKeys().hasAny(['nationality', 'titlePrefix', 'firstName', 'middleName', 'lastName', 'studentIdStatus', 'studentId', 'program', 'department']))
                     && request.resource.data.editCount == resource.data.editCount + 1;
                     
       allow delete: if false;

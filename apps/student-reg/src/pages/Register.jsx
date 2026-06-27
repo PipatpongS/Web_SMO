@@ -205,7 +205,7 @@ import LoadingScreen from '../components/LoadingScreen';
 const Register = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const readOnly = location.state?.readOnly || false;
+  const readOnly = location.state?.readOnly || isAfterRegistration();
   const { registerUser, updateUser, loading, isRegistered, regData } = useRegistration();
   const [lang, setLangState] = useState(() => localStorage.getItem('preferredLang') || 'TH');
   const setLang = (newLang) => {
@@ -255,6 +255,18 @@ const Register = () => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [hasLoadedRegData, setHasLoadedRegData] = useState(false);
+  const [showLockedModal, setShowLockedModal] = useState(false);
+
+  const isFieldLocked = (fieldName) => {
+    if (!isEditMode) return false;
+    if (regData?.is_verified && ['nationality', 'titlePrefix', 'firstName', 'middleName', 'lastName', 'studentIdStatus', 'studentId', 'program', 'department'].includes(fieldName)) {
+      return true;
+    }
+    if (regData?.is_shirt_ordered && ['shirtSize'].includes(fieldName)) {
+      return true;
+    }
+    return false;
+  };
 
   const totalSteps = isEditMode ? 4 : 5;
 
@@ -264,12 +276,12 @@ const Register = () => {
     for (const key of keysToCompare) {
       let formVal = formData[key];
       if (typeof formVal === 'string') formVal = formVal.trim();
-      
+
       let regVal = regData[key];
       if (key === 'program' && regVal === 'โครงการปกติ (รูปแบบการเรียนการสอนภาษาไทย)') {
         regVal = 'โครงการภาษาไทย';
       }
-      
+
       formVal = formVal === undefined || formVal === null ? '' : formVal;
       regVal = regVal === undefined || regVal === null ? '' : regVal;
 
@@ -352,7 +364,7 @@ const Register = () => {
       if (invalidFirstChars.test(newValue)) {
         newValue = newValue.replace(invalidFirstChars, '');
       }
-      
+
       // Aggressive replacement for double Sra E (เเ) -> Sra Ae (แ)
       // Try both Unicode and literal string replacements to bypass any browser parsing quirks
       newValue = newValue.replace(/\u0E40{2,}/g, '\u0E41');
@@ -453,6 +465,18 @@ const Register = () => {
         const isForeigner = formData.nationality === 'ต่างชาติ';
         updates.studentId = isForeigner ? '69' : '6907050';
       }
+    }
+
+    // Auto-clear dietary fields when 'ไม่มี' is selected
+    if (name === 'hasDietaryRestriction' && newValue === 'ไม่มี') {
+      updates.dietaryRestriction = [];
+      updates.foodAllergyDetails = '';
+      updates.dietaryOther = '';
+    }
+
+    // Auto-clear medical fields when 'ไม่มี' is selected
+    if (name === 'hasMedicalCondition' && newValue === 'ไม่มี') {
+      updates.medicalConditionDetails = '';
     }
 
     // Clear names if nationality changes to ensure language restriction consistency
@@ -727,6 +751,17 @@ const Register = () => {
       lastName: formData.lastName.trim(),
     };
 
+    // Clean up dirty data for dietary and medical conditions before saving
+    if (trimmedData.hasDietaryRestriction === 'ไม่มี') {
+      trimmedData.dietaryRestriction = [];
+      trimmedData.foodAllergyDetails = '';
+      trimmedData.dietaryOther = '';
+    }
+
+    if (trimmedData.hasMedicalCondition === 'ไม่มี') {
+      trimmedData.medicalConditionDetails = '';
+    }
+
     if (isEditMode && regData) {
       const checkKeys = ['titlePrefix', 'firstName', 'middleName', 'lastName', 'email', 'phone', 'studentIdStatus', 'studentId', 'nationality', 'program', 'department', 'shirtSize', 'hasDietaryRestriction', 'foodAllergyDetails', 'dietaryOther', 'hasMedicalCondition', 'medicalConditionDetails', 'joinActivity'];
       let isChanged = false;
@@ -736,7 +771,7 @@ const Register = () => {
           oldVal = 'โครงการภาษาไทย';
         }
         oldVal = oldVal === undefined || oldVal === null ? '' : oldVal;
-        
+
         let newVal = trimmedData[key];
         newVal = newVal === undefined || newVal === null ? '' : newVal;
 
@@ -745,7 +780,7 @@ const Register = () => {
           isChanged = true; break;
         }
       }
-      
+
       const formDiet = trimmedData.dietaryRestriction || [];
       const regDiet = regData.dietaryRestriction || [];
       if (formDiet.length !== regDiet.length) isChanged = true;
@@ -985,15 +1020,17 @@ const Register = () => {
 
               <div>
                 <label className={labelClass}>{t.nationality}</label>
-                <div className="flex flex-col sm:flex-row gap-4 w-full">
-                  <label className="flex items-center gap-2 cursor-pointer w-full sm:w-1/2 p-3 border border-gray-100 rounded-xl hover:bg-gray-50 transition-colors">
-                    <input type="radio" name="nationality" value="ไทย" onChange={handleChange} className={radioInputClass} checked={formData.nationality === "ไทย"} />
-                    <span className="text-gray-700">{t.thaiNat}</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer w-full sm:w-1/2 p-3 border border-gray-100 rounded-xl hover:bg-gray-50 transition-colors">
-                    <input type="radio" name="nationality" value="ต่างชาติ" onChange={handleChange} className={radioInputClass} checked={formData.nationality === "ต่างชาติ"} />
-                    <span className="text-gray-700">{t.intNat}</span>
-                  </label>
+                <div onClickCapture={(e) => { if (isFieldLocked('nationality')) { e.preventDefault(); e.stopPropagation(); setShowLockedModal(true); } }}>
+                  <div className="flex flex-col sm:flex-row gap-4 w-full">
+                    <label className={`flex items-center gap-2 cursor-pointer w-full sm:w-1/2 p-3 border border-gray-100 rounded-xl hover:bg-gray-50 transition-colors ${isFieldLocked('nationality') ? 'opacity-60 !bg-gray-100 !text-gray-500 cursor-not-allowed pointer-events-none bg-gray-100' : ''}`}>
+                      <input type="radio" name="nationality" value="ไทย" onChange={handleChange} className={radioInputClass} checked={formData.nationality === "ไทย"} />
+                      <span className="text-gray-700">{t.thaiNat}</span>
+                    </label>
+                    <label className={`flex items-center gap-2 cursor-pointer w-full sm:w-1/2 p-3 border border-gray-100 rounded-xl hover:bg-gray-50 transition-colors ${isFieldLocked('nationality') ? 'opacity-60 !bg-gray-100 !text-gray-500 cursor-not-allowed pointer-events-none bg-gray-100' : ''}`}>
+                      <input type="radio" name="nationality" value="ต่างชาติ" onChange={handleChange} className={radioInputClass} checked={formData.nationality === "ต่างชาติ"} />
+                      <span className="text-gray-700">{t.intNat}</span>
+                    </label>
+                  </div>
                 </div>
               </div>
 
@@ -1002,24 +1039,32 @@ const Register = () => {
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 items-end">
                     <div>
                       <label className={labelClass}>{t.prefix}</label>
-                      <select name="titlePrefix" value={formData.titlePrefix} onChange={handleChange} className={`${inputClass} pr-10 truncate cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%239CA3AF%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E')] bg-[length:12px_12px] bg-no-repeat bg-[position:right_1rem_center]`}>
-                        <option value="">{t.selectPrefix}</option>
-                        <option value={formData.nationality === 'ต่างชาติ' ? 'Mr.' : 'นาย'}>{formData.nationality === 'ต่างชาติ' ? 'Mr.' : 'นาย'}</option>
-                        <option value={formData.nationality === 'ต่างชาติ' ? 'Ms.' : 'นางสาว'}>{formData.nationality === 'ต่างชาติ' ? 'Ms.' : 'นางสาว'}</option>
-                        <option value={formData.nationality === 'ต่างชาติ' ? 'Mrs.' : 'นาง'}>{formData.nationality === 'ต่างชาติ' ? 'Mrs.' : 'นาง'}</option>
-                      </select>
+                      <div onClickCapture={(e) => { if (isFieldLocked('titlePrefix')) { e.preventDefault(); e.stopPropagation(); setShowLockedModal(true); } }}>
+                        <select name="titlePrefix" value={formData.titlePrefix} onChange={handleChange} className={`${inputClass} ${isFieldLocked('titlePrefix') ? '!bg-gray-100 !text-gray-500 cursor-not-allowed pointer-events-none' : ''} pr-10 truncate cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%239CA3AF%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E')] bg-[length:12px_12px] bg-no-repeat bg-[position:right_1rem_center]`}>
+                          <option value="">{t.selectPrefix}</option>
+                          <option value={formData.nationality === 'ต่างชาติ' ? 'Mr.' : 'นาย'}>{formData.nationality === 'ต่างชาติ' ? 'Mr.' : 'นาย'}</option>
+                          <option value={formData.nationality === 'ต่างชาติ' ? 'Ms.' : 'นางสาว'}>{formData.nationality === 'ต่างชาติ' ? 'Ms.' : 'นางสาว'}</option>
+                          <option value={formData.nationality === 'ต่างชาติ' ? 'Mrs.' : 'นาง'}>{formData.nationality === 'ต่างชาติ' ? 'Mrs.' : 'นาง'}</option>
+                        </select>
+                      </div>
                     </div>
                     <div>
                       <label className={labelClass}>{t.firstName}</label>
-                      <input type="text" name="firstName" value={formData.firstName} onChange={handleChange} className={inputClass} placeholder={t.firstNamePlaceholder} />
+                      <div onClickCapture={(e) => { if (isFieldLocked('firstName')) { e.preventDefault(); e.stopPropagation(); setShowLockedModal(true); } }}>
+                        <input type="text" name="firstName" value={formData.firstName} onChange={handleChange} className={`${inputClass} ${isFieldLocked('firstName') ? '!bg-gray-100 !text-gray-500 cursor-not-allowed pointer-events-none' : ''}`} placeholder={t.firstNamePlaceholder} />
+                      </div>
                     </div>
                     <div>
                       <label className={labelClass}>{t.middleName} <span className="text-gray-400 font-normal">{t.middleNameOpt}</span></label>
-                      <input type="text" name="middleName" value={formData.middleName} onChange={handleChange} className={inputClass} placeholder={t.middleNamePlaceholder} />
+                      <div onClickCapture={(e) => { if (isFieldLocked('middleName')) { e.preventDefault(); e.stopPropagation(); setShowLockedModal(true); } }}>
+                        <input type="text" name="middleName" value={formData.middleName} onChange={handleChange} className={`${inputClass} ${isFieldLocked('middleName') ? '!bg-gray-100 !text-gray-500 cursor-not-allowed pointer-events-none' : ''}`} placeholder={t.middleNamePlaceholder} />
+                      </div>
                     </div>
                     <div>
                       <label className={labelClass}>{t.lastName}</label>
-                      <input type="text" name="lastName" value={formData.lastName} onChange={handleChange} className={inputClass} placeholder={t.lastNamePlaceholder} />
+                      <div onClickCapture={(e) => { if (isFieldLocked('lastName')) { e.preventDefault(); e.stopPropagation(); setShowLockedModal(true); } }}>
+                        <input type="text" name="lastName" value={formData.lastName} onChange={handleChange} className={`${inputClass} ${isFieldLocked('lastName') ? '!bg-gray-100 !text-gray-500 cursor-not-allowed pointer-events-none' : ''}`} placeholder={t.lastNamePlaceholder} />
+                      </div>
                     </div>
                   </div>
 
@@ -1035,15 +1080,17 @@ const Register = () => {
 
                   <div>
                     <label className={labelClass}>{t.studentIdStatus}</label>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-1">
-                      <label className="flex items-center gap-2 cursor-pointer w-full p-3 border border-gray-100 rounded-xl hover:bg-gray-50 transition-colors">
-                        <input type="radio" name="studentIdStatus" value="ได้รับรหัสนักศึกษาแล้ว" onChange={handleChange} className="w-5 h-5 text-[#1e3a5f] bg-gray-100 border-gray-300 focus:ring-[#1e3a5f] focus:ring-2" checked={formData.studentIdStatus === "ได้รับรหัสนักศึกษาแล้ว"} />
-                        <span className="text-gray-700">{t.studentIdReceived}</span>
-                      </label>
-                      <label className="flex items-center gap-2 cursor-pointer w-full p-3 border border-gray-100 rounded-xl hover:bg-gray-50 transition-colors">
-                        <input type="radio" name="studentIdStatus" value="ยังไม่ได้รับรหัสนักศึกษา" onChange={handleChange} className="w-5 h-5 text-[#1e3a5f] bg-gray-100 border-gray-300 focus:ring-[#1e3a5f] focus:ring-2" checked={formData.studentIdStatus === "ยังไม่ได้รับรหัสนักศึกษา"} />
-                        <span className="text-gray-700">{t.studentIdNotReceived}</span>
-                      </label>
+                    <div onClickCapture={(e) => { if (isFieldLocked('studentIdStatus')) { e.preventDefault(); e.stopPropagation(); setShowLockedModal(true); } }}>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-1">
+                        <label className={`flex items-center gap-2 cursor-pointer w-full p-3 border border-gray-100 rounded-xl hover:bg-gray-50 transition-colors ${isFieldLocked('studentIdStatus') ? 'opacity-60 !bg-gray-100 !text-gray-500 cursor-not-allowed pointer-events-none bg-gray-100' : ''}`}>
+                          <input type="radio" name="studentIdStatus" value="ได้รับรหัสนักศึกษาแล้ว" onChange={handleChange} className="w-5 h-5 text-[#1e3a5f] bg-gray-100 border-gray-300 focus:ring-[#1e3a5f] focus:ring-2" checked={formData.studentIdStatus === "ได้รับรหัสนักศึกษาแล้ว"} />
+                          <span className="text-gray-700">{t.studentIdReceived}</span>
+                        </label>
+                        <label className={`flex items-center gap-2 cursor-pointer w-full p-3 border border-gray-100 rounded-xl hover:bg-gray-50 transition-colors ${isFieldLocked('studentIdStatus') ? 'opacity-60 !bg-gray-100 !text-gray-500 cursor-not-allowed pointer-events-none bg-gray-100' : ''}`}>
+                          <input type="radio" name="studentIdStatus" value="ยังไม่ได้รับรหัสนักศึกษา" onChange={handleChange} className="w-5 h-5 text-[#1e3a5f] bg-gray-100 border-gray-300 focus:ring-[#1e3a5f] focus:ring-2" checked={formData.studentIdStatus === "ยังไม่ได้รับรหัสนักศึกษา"} />
+                          <span className="text-gray-700">{t.studentIdNotReceived}</span>
+                        </label>
+                      </div>
                     </div>
                   </div>
 
@@ -1054,20 +1101,20 @@ const Register = () => {
                           ? (lang === 'TH' ? 'รหัสนักศึกษา (เติมรหัส 9 ตัวท้าย) *' : 'Student ID (fill in the last 9 digits) *')
                           : (lang === 'TH' ? 'รหัสนักศึกษา (เติมรหัส 4 ตัวท้าย) *' : 'Student ID (fill in the last 4 digits) *')}
                       </label>
-                      <input
-                        type="text"
-                        name="studentId"
-                        value={formData.studentId}
-                        onChange={handleChange}
-                        onFocus={() => {
-                          if (!formData.studentId) {
-                            const prefill = formData.nationality === 'ต่างชาติ' ? '69' : '6907050';
-                            setFormData({ ...formData, studentId: prefill });
-                          }
-                        }}
-                        className={inputClass}
-                        placeholder={formData.nationality === 'ต่างชาติ' ? '69xxxxxxxxx' : '6907050xxxx'}
-                      />
+                      <div onClickCapture={(e) => { if (isFieldLocked('studentId')) { e.preventDefault(); e.stopPropagation(); setShowLockedModal(true); } }}>
+                        <input type="text" name="studentId"
+                          value={formData.studentId}
+                          onChange={handleChange}
+                          onFocus={() => {
+                            if (!formData.studentId) {
+                              const prefill = formData.nationality === 'ต่างชาติ' ? '69' : '6907050';
+                              setFormData({ ...formData, studentId: prefill });
+                            }
+                          }}
+                          className={`${inputClass} ${isFieldLocked('studentId') ? '!bg-gray-100 !text-gray-500 cursor-not-allowed pointer-events-none' : ''}`}
+                          placeholder={formData.nationality === 'ต่างชาติ' ? '69xxxxxxxxx' : '6907050xxxx'}
+                        />
+                      </div>
                     </div>
                   )}
                 </div>
@@ -1084,33 +1131,42 @@ const Register = () => {
 
               <div>
                 <label className={labelClass}>{t.department}</label>
-                <select name="department" value={formData.department} onChange={handleChange} className={`${inputClass} pr-10 truncate cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%239CA3AF%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E')] bg-[length:12px_12px] bg-no-repeat bg-[position:right_1rem_center]`}>
-                  <option value="" disabled>{t.selectDept}</option>
-                  <option value="วิศวกรรมคอมพิวเตอร์">{t.deptCPE}</option>
-                  <option value="วิศวกรรมโยธา">{t.deptCE}</option>
-                  <option value="วิศวกรรมเคมี">{t.deptChE}</option>
-                  <option value="วิศวกรรมไฟฟ้า">{t.deptEE}</option>
-                  <option value="วิศวกรรมอิเล็กทรอนิกส์และโทรคมนาคม">{t.deptENE}</option>
-                  <option value="วิศวกรรมสิ่งแวดล้อม">{t.deptENV}</option>
-                  <option value="วิศวกรรมระบบควบคุมและเครื่องมือวัด">{t.deptINC}</option>
-                  <option value="วิศวกรรมเครื่องกล">{t.deptME}</option>
-                  <option value="วิศวกรรมอุตสาหการ">{t.deptPE}</option>
-                  <option value="วิศวกรรมเครื่องมือและวัสดุ">{t.deptTME}</option>
-                </select>
+                <div onClickCapture={(e) => { if (isFieldLocked('department')) { e.preventDefault(); e.stopPropagation(); setShowLockedModal(true); } }}>
+                  <select name="department" value={formData.department} onChange={handleChange} className={`${inputClass} ${isFieldLocked('department') ? '!bg-gray-100 !text-gray-500 cursor-not-allowed pointer-events-none' : ''} pr-10 truncate cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%239CA3AF%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E')] bg-[length:12px_12px] bg-no-repeat bg-[position:right_1rem_center]`}>
+                    <option value="" disabled>{t.selectDept}</option>
+                    <option value="วิศวกรรมคอมพิวเตอร์">{t.deptCPE}</option>
+                    <option value="วิศวกรรมโยธา">{t.deptCE}</option>
+                    <option value="วิศวกรรมเคมี">{t.deptChE}</option>
+                    <option value="วิศวกรรมไฟฟ้า">{t.deptEE}</option>
+                    <option value="วิศวกรรมอิเล็กทรอนิกส์และโทรคมนาคม">{t.deptENE}</option>
+                    <option value="วิศวกรรมสิ่งแวดล้อม">{t.deptENV}</option>
+                    <option value="วิศวกรรมระบบควบคุมและเครื่องมือวัด">{t.deptINC}</option>
+                    <option value="วิศวกรรมเครื่องกล">{t.deptME}</option>
+                    <option value="วิศวกรรมอุตสาหการ">{t.deptPE}</option>
+                    <option value="วิศวกรรมเครื่องมือและวัสดุ">{t.deptTME}</option>
+                  </select>
+                </div>
               </div>
 
               {formData.department && !['วิศวกรรมเครื่องกล', 'วิศวกรรมอุตสาหการ', 'วิศวกรรมเครื่องมือและวัสดุ'].includes(formData.department) && (
                 <div>
                   <label className={labelClass}>{t.program}</label>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-1">
-                    <label className={radioLabelClass}>
-                      <input type="radio" name="program" value="โครงการภาษาไทย" onChange={handleChange} className={radioInputClass} checked={formData.program === "โครงการภาษาไทย"} />
-                      <span>{t.regular}</span>
-                    </label>
-                    <label className={radioLabelClass}>
-                      <input type="radio" name="program" value="โครงการนานาชาติ" onChange={handleChange} className={radioInputClass} checked={formData.program === "โครงการนานาชาติ"} />
-                      <span>{t.international}</span>
-                    </label>
+                  <div onClickCapture={(e) => { if (isFieldLocked('program')) { e.preventDefault(); e.stopPropagation(); setShowLockedModal(true); } }}>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-1">
+                      <label className={`${radioLabelClass} ${isFieldLocked('program') ? 'opacity-60 !bg-gray-100 !text-gray-500 cursor-not-allowed pointer-events-none bg-gray-100' : ''}`}>
+
+                        <input type="radio" name="program" value="โครงการภาษาไทย" onChange={handleChange} className={radioInputClass} checked={formData.program === "โครงการภาษาไทย"} />
+                        <span>{t.regular}</span>
+
+                      </label>
+                      <label className={`${radioLabelClass} ${isFieldLocked('program') ? 'opacity-60 !bg-gray-100 !text-gray-500 cursor-not-allowed pointer-events-none bg-gray-100' : ''}`}>
+
+                        <input type="radio" name="program" value="โครงการนานาชาติ" onChange={handleChange} className={radioInputClass} checked={formData.program === "โครงการนานาชาติ"} />
+                        <span>{t.international}</span>
+
+                      </label>
+                    </div>
                   </div>
                 </div>
               )}
@@ -1127,26 +1183,28 @@ const Register = () => {
                 <div className="mb-4">
                   <img src={lang === 'TH' ? sizeChartImgThai : sizeChartImgEng} alt="T-Shirt Size Chart" className="w-full max-w-md mx-auto rounded-lg shadow-sm border border-gray-100" />
                 </div>
-                <select name="shirtSize" value={formData.shirtSize} onChange={handleChange} className={`${inputClass} mt-1 pr-10 truncate cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%239CA3AF%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E')] bg-[length:12px_12px] bg-no-repeat bg-[position:right_1rem_center]`}>
-                  <option value="" disabled>{t.selectShirtSize}</option>
-                  {[
-                    { size: 'SS', chest: 36, length: 25 },
-                    { size: 'S', chest: 38, length: 26 },
-                    { size: 'M', chest: 40, length: 28 },
-                    { size: 'L', chest: 42, length: 28 },
-                    { size: 'XL', chest: 44, length: 29 },
-                    { size: '2XL', chest: 46, length: 30 },
-                    { size: '3XL', chest: 48, length: 30 },
-                    { size: '4XL', chest: 50, length: 30 },
-                    { size: '5XL', chest: 52, length: 31 },
-                    { size: '6XL', chest: 54, length: 32 },
-                    { size: '7XL', chest: 56, length: 33 },
-                  ].map(s => (
-                    <option key={s.size} value={s.size}>
-                      {s.size} ({lang === 'TH' ? `รอบอก ${s.chest}" / ความยาว ${s.length}"` : `Chest ${s.chest}" / Length ${s.length}"`})
-                    </option>
-                  ))}
-                </select>
+                <div onClickCapture={(e) => { if (isFieldLocked('shirtSize')) { e.preventDefault(); e.stopPropagation(); setShowLockedModal(true); } }}>
+                  <select name="shirtSize" value={formData.shirtSize} onChange={handleChange} className={`${inputClass} ${isFieldLocked('shirtSize') ? '!bg-gray-100 !text-gray-500 cursor-not-allowed pointer-events-none' : ''} mt-1 pr-10 truncate cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%239CA3AF%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E')] bg-[length:12px_12px] bg-no-repeat bg-[position:right_1rem_center]`}>
+                    <option value="" disabled>{t.selectShirtSize}</option>
+                    {[
+                      { size: 'SS', chest: 36, length: 25 },
+                      { size: 'S', chest: 38, length: 26 },
+                      { size: 'M', chest: 40, length: 28 },
+                      { size: 'L', chest: 42, length: 28 },
+                      { size: 'XL', chest: 44, length: 29 },
+                      { size: '2XL', chest: 46, length: 30 },
+                      { size: '3XL', chest: 48, length: 30 },
+                      { size: '4XL', chest: 50, length: 30 },
+                      { size: '5XL', chest: 52, length: 31 },
+                      { size: '6XL', chest: 54, length: 32 },
+                      { size: '7XL', chest: 56, length: 33 },
+                    ].map(s => (
+                      <option key={s.size} value={s.size}>
+                        {s.size} ({lang === 'TH' ? `รอบอก ${s.chest}" / ความยาว ${s.length}"` : `Chest ${s.chest}" / Length ${s.length}"`})
+                      </option>
+                    ))}
+                  </select>
+                </div>
                 <p className="mt-2 text-sm text-gray-500">
                   {lang === 'TH' ? 'หากมีข้อสงสัยเพิ่มเติมสามารถติดต่อ ' : 'If you have any further questions, please contact '}
                   <a
@@ -1283,8 +1341,8 @@ const Register = () => {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-5 gap-x-6 text-sm">
                     <div className="sm:col-span-2"><span className="text-gray-400 block mb-1.5 text-xs uppercase tracking-wider">{t.nationality.replace(' *', '')}</span><p className="font-medium text-gray-800">{translateValue(formData.nationality)}</p></div>
                     <div className="sm:col-span-2"><span className="text-gray-400 block mb-1.5 text-xs uppercase tracking-wider">{lang === 'TH' ? 'ชื่อ-นามสกุล' : 'Full Name'}</span><p className="font-medium text-gray-800">{`${translateValue(formData.titlePrefix)} ${formData.firstName} ${formData.middleName ? formData.middleName + ' ' : ''}${formData.lastName}`}</p></div>
-                    <div><span className="text-gray-400 block mb-1.5 text-xs uppercase tracking-wider">{t.email.replace(' *', '')}</span><p className="font-medium text-gray-800 break-all">{formData.email}</p></div>
-                    <div><span className="text-gray-400 block mb-1.5 text-xs uppercase tracking-wider">{t.phone.replace(' *', '')}</span><p className="font-medium text-gray-800">{formData.phone}</p></div>
+                    <div className="sm:col-span-2"><span className="text-gray-400 block mb-1.5 text-xs uppercase tracking-wider">{t.email.replace(' *', '')}</span><p className="font-medium text-gray-800 break-all">{formData.email}</p></div>
+                    <div className="sm:col-span-2"><span className="text-gray-400 block mb-1.5 text-xs uppercase tracking-wider">{t.phone.replace(' *', '')}</span><p className="font-medium text-gray-800">{formData.phone}</p></div>
                     <div className="sm:col-span-2"><span className="text-gray-400 block mb-1.5 text-xs uppercase tracking-wider">
                       {formData.nationality === 'ต่างชาติ'
                         ? (lang === 'TH' ? 'รหัสนักศึกษา' : 'Student ID')
@@ -1375,9 +1433,9 @@ const Register = () => {
             {step > 1 ? (
               <button
                 type="button"
-                onClick={handleBackNavigation}
+                onClick={() => handlePrev()}
                 className="text-gray-500 hover:text-gray-800 font-medium px-4 py-3 sm:py-2 transition-colors text-sm w-full sm:w-auto border border-gray-200 sm:border-none rounded-xl sm:rounded-none"
-              >{isEditMode ? (lang === 'TH' ? 'ย้อนกลับไปโปรไฟล์ของฉัน' : 'Back to My Profile') : t.btnBack}</button>
+              >{t.btnBack}</button>
             ) : (
               <button
                 type="button"
@@ -1427,6 +1485,49 @@ const Register = () => {
           </div>
         </form>
       </div>
+      {/* Locked Field Modal */}
+      {showLockedModal && createPortal(
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-fadeIn"
+          onClick={() => setShowLockedModal(false)}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden animate-scaleIn"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="p-6 text-center">
+              <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 ring-8 ring-red-50/50">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold text-gray-800 mb-6">
+                {lang === 'TH' ? 'คุณไม่สามารถแก้ไขข้อมูลดังกล่าวได้' : 'Cannot edit this field'}
+              </h3>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowLockedModal(false)}
+                  className="flex-1 py-2.5 rounded-xl text-gray-600 font-medium bg-gray-100 hover:bg-gray-200 transition-colors"
+                >
+                  {lang === 'TH' ? 'ยกเลิก' : 'Cancel'}
+                </button>
+                <a
+                  href="https://line.me/R/ti/p/@122ddost"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex-1 py-2.5 rounded-xl text-white font-medium bg-[#00B900] hover:bg-[#00a000] transition-colors shadow-sm flex items-center justify-center gap-2"
+                >
+                  <FaLine className="w-5 h-5" />
+                  {lang === 'TH' ? 'ติดต่อทีมงาน' : 'Contact Us'}
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
+
       {/* Custom Confirm Modal */}
       {showConfirmModal && createPortal(
         <div
@@ -1493,18 +1594,18 @@ const Register = () => {
               {lang === 'TH' ? 'ละทิ้งการเปลี่ยนแปลง?' : 'Discard changes?'}
             </h3>
             <p className="text-gray-500 text-center text-sm mb-6 leading-relaxed">
-              {lang === 'TH' 
-                ? 'คุณมีการเปลี่ยนแปลงที่ยังไม่ได้บันทึก หากกดย้อนกลับ ข้อมูลที่แก้ไขไว้จะสูญหาย' 
+              {lang === 'TH'
+                ? 'คุณมีการเปลี่ยนแปลงที่ยังไม่ได้บันทึก หากกดย้อนกลับ ข้อมูลที่แก้ไขไว้จะสูญหาย'
                 : 'You have unsaved changes. If you go back, these changes will be lost.'}
             </p>
             <div className="flex w-full gap-3">
-              <button 
+              <button
                 onClick={() => setShowDiscardModal(false)}
                 className="flex-1 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-xl shadow-sm transition-all active:scale-95"
               >
                 {lang === 'TH' ? 'แก้ไขต่อ' : 'Keep editing'}
               </button>
-              <button 
+              <button
                 onClick={() => {
                   setShowDiscardModal(false);
                   navigate('/profile');

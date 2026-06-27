@@ -120,8 +120,8 @@ const Home = () => {
               }
             }}
             className={`w-full max-w-[250px] mx-auto text-[14px] py-2 flex justify-center items-center space-x-2 mb-12 min-h-[40px] ${(!isRegistered && (isBeforeRegistration() || isAfterRegistration()))
-                ? 'bg-gray-500/50 cursor-not-allowed rounded-full border border-white/20'
-                : 'glass-button'
+              ? 'bg-gray-500/50 cursor-not-allowed rounded-full border border-white/20'
+              : 'glass-button'
               }`}
             disabled={regLoading || (!isRegistered && (isBeforeRegistration() || isAfterRegistration()))}
           >
@@ -231,7 +231,7 @@ const Home = () => {
             © 2026 The Student Union of The Faculty of Engineering. All rights reserved.
           </div>
           <div className="flex items-center space-x-2">
-            <span>Version 1.1.0</span>
+            <span>Version 1.2.0</span>
           </div>
         </div>
       </div>
