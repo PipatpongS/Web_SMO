@@ -82,7 +82,11 @@ export const AuthProvider = ({ children }) => {
         }
       } catch (err) {
         console.error("LIFF Init Error:", err);
-        setError("Failed to initialize LINE LIFF: " + err.message);
+        if (err.message === "Load failed") {
+          setError("ไม่สามารถเชื่อมต่อกับระบบ LINE ได้ กรุณาปิด AdBlocker, ปิดโหมดลดการติดตาม (Safari Hide IP) หรือสลับไปใช้เน็ตมือถือ (4G/5G) แล้วลองเปิดใหม่อีกครั้ง");
+        } else {
+          setError("เกิดข้อผิดพลาดในการเชื่อมต่อ LINE: " + err.message);
+        }
         localStorage.removeItem('line_user_profile');
       } finally {
         setLoading(false);
