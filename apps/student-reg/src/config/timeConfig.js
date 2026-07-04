@@ -2,7 +2,8 @@
 // รูปแบบเวลา: YYYY-MM-DDTHH:mm:ss+07:00 (เวลาไทย)
 
 export const REGISTRATION_START_DATE = import.meta.env.VITE_REGISTRATION_START_DATE || '2026-06-15T00:00:00+07:00';
-export const REGISTRATION_END_DATE = import.meta.env.VITE_EDIT_DEADLINE || '2026-07-01T23:59:59+07:00';
+export const REGISTRATION_END_DATE = import.meta.env.VITE_REGISTRATION_END_DATE || '2026-07-01T23:59:59+07:00';
+export const EDIT_DEADLINE = import.meta.env.VITE_EDIT_DEADLINE || '2026-07-01T23:59:59+07:00';
 
 // ฟังก์ชันสำหรับเช็คว่าตอนนี้เปิดรับสมัครหรือยัง
 export const isRegistrationOpen = () => {
@@ -23,5 +24,12 @@ export const isBeforeRegistration = () => {
 export const isAfterRegistration = () => {
   const now = new Date().getTime();
   const end = new Date(REGISTRATION_END_DATE).getTime();
+  return now > end;
+};
+
+// ฟังก์ชันสำหรับเช็คว่าหมดเขตแก้ไขข้อมูลหรือยัง
+export const isEditClosed = () => {
+  const now = new Date().getTime();
+  const end = new Date(EDIT_DEADLINE).getTime();
   return now > end;
 };

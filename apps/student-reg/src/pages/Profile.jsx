@@ -6,7 +6,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useRegistration } from '../contexts/RegContext';
 import { FaArrowLeft } from 'react-icons/fa';
 import LoadingScreen from '../components/LoadingScreen';
-import { isAfterRegistration, REGISTRATION_END_DATE } from '../config/timeConfig';
+import { isEditClosed, EDIT_DEADLINE } from '../config/timeConfig';
 
 import bImg from '../assets/b.png';
 import logoImg from '../assets/Logo.png';
@@ -210,9 +210,9 @@ const Profile = () => {
           {(() => {
             const editCount = displayRegData.editCount || 0;
             const remainingEdits = 2 - editCount;
-            const deadlineIso = REGISTRATION_END_DATE;
+            const deadlineIso = EDIT_DEADLINE;
             const deadline = deadlineIso ? new Date(deadlineIso) : null;
-            const isPastDeadline = isAfterRegistration();
+            const isPastDeadline = isEditClosed();
             const isShirtOrdered = displayRegData.is_shirt_ordered === true;
             const canEdit = remainingEdits > 0 && !isPastDeadline;
 

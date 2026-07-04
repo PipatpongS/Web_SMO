@@ -9,7 +9,7 @@ export const useRegistration = () => useContext(RegContext);
 
 export const RegProvider = ({ children }) => {
   const { userProfile, loading: authLoading } = useAuth();
-  
+
   const getCachedState = () => {
     try {
       if (userProfile && userProfile.userId) {
@@ -23,7 +23,7 @@ export const RegProvider = ({ children }) => {
           return { isReg: false, data: null, load: false };
         }
       }
-    } catch (e) {}
+    } catch (e) { }
     return { isReg: false, data: null, load: true };
   };
 
@@ -42,7 +42,7 @@ export const RegProvider = ({ children }) => {
       }
 
       const userId = userProfile.userId;
-      
+
       // 1. Check LocalStorage (Fast Path)
       const cachedReg = localStorage.getItem(`reg_${userId}`);
       if (cachedReg) {
@@ -60,10 +60,10 @@ export const RegProvider = ({ children }) => {
           const docSnap = await getDoc(docRef);
           if (docSnap.exists()) {
             const data = docSnap.data();
-            
+
             // Sync LINE profile changes to Firebase silently
             if (userProfile && (
-              data.line_displayName !== (userProfile.displayName || '') || 
+              data.line_displayName !== (userProfile.displayName || '') ||
               data.line_pictureUrl !== (userProfile.pictureUrl || '')
             )) {
               const newProfileData = {
@@ -108,7 +108,7 @@ export const RegProvider = ({ children }) => {
 
   const registerUser = async (data) => {
     if (!userProfile) return { success: false, error: "Not authenticated" };
-    
+
     const userId = userProfile.userId;
     const registrationPayload = {
       ...data, // Save all fields from the form dynamically
@@ -160,7 +160,7 @@ export const RegProvider = ({ children }) => {
   const updateUser = async (data) => {
     if (!userProfile) return { success: false, error: "Not authenticated" };
     if (!isRegistered || !regData) return { success: false, error: "No existing registration found" };
-    
+
     // Check local edit count limit just to be safe
     if (regData.editCount >= 2) {
       return { success: false, error: "You have reached the maximum number of edits allowed." };
@@ -185,12 +185,12 @@ export const RegProvider = ({ children }) => {
 
     const userId = userProfile.userId;
     const newEditCount = (regData.editCount || 0) + 1;
-    
+
     // Whitelist allowed fields to prevent Mass Assignment vulnerabilities
     const allowedFields = [
-      'titlePrefix', 'firstName', 'middleName', 'lastName', 'email', 'phone', 
-      'studentIdStatus', 'studentId', 'nationality', 'program', 'department', 
-      'shirtSize', 'hasDietaryRestriction', 'dietaryRestriction', 'foodAllergyDetails', 'dietaryOther', 
+      'titlePrefix', 'firstName', 'middleName', 'lastName', 'email', 'phone',
+      'studentIdStatus', 'studentId', 'nationality', 'program', 'department',
+      'shirtSize', 'hasDietaryRestriction', 'dietaryRestriction', 'foodAllergyDetails', 'dietaryOther',
       'hasMedicalCondition', 'medicalConditionDetails', 'joinActivity'
     ];
 
@@ -213,11 +213,11 @@ export const RegProvider = ({ children }) => {
       if (db) {
         await updateDoc(doc(db, "users", userId), updatePayload);
       }
-      
+
       const newRegData = { ...regData, ...updatePayload };
       localStorage.setItem(`reg_${userId}`, JSON.stringify(newRegData));
       setRegData(newRegData);
-      
+
       return { success: true };
     } catch (err) {
       console.error("Update error detailed:", err);

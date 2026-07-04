@@ -259,10 +259,20 @@ const Register = () => {
 
   const isFieldLocked = (fieldName) => {
     if (!isEditMode) return false;
-    if (regData?.is_verified && ['nationality', 'titlePrefix', 'firstName', 'middleName', 'lastName', 'studentIdStatus', 'studentId', 'program', 'department'].includes(fieldName)) {
-      return true;
+    
+    if (regData?.is_verified) {
+      let verifiedLockedFields = ['nationality', 'titlePrefix', 'firstName', 'middleName', 'lastName', 'studentIdStatus', 'studentId', 'program', 'department'];
+      
+      // หากยังไม่ได้รับรหัสนักศึกษา ให้ปลดล็อค 2 ฟิลด์นี้ให้แก้ไขได้ (แม้จะ Verify แล้ว)
+      if (regData?.studentIdStatus === 'ยังไม่ได้รับรหัสนักศึกษา' || regData?.studentId === '69070500000') {
+        verifiedLockedFields = verifiedLockedFields.filter(f => f !== 'studentIdStatus' && f !== 'studentId');
+      }
+
+      if (verifiedLockedFields.includes(fieldName)) {
+        return true;
+      }
     }
-    if (regData?.is_shirt_ordered && ['shirtSize'].includes(fieldName)) {
+    if (['shirtSize'].includes(fieldName)) {
       return true;
     }
     return false;
