@@ -201,12 +201,15 @@ import bImg from '../assets/b.png';
 import sizeChartImgThai from '../assets/Size_Chart_Thai.jpg';
 import sizeChartImgEng from '../assets/Size_Chart_Eng.jpg';
 import LoadingScreen from '../components/LoadingScreen';
+import { isEditClosed } from '../config/timeConfig';
 
 const Register = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { registerUser, updateUser, loading, isRegistered, regData } = useRegistration();
-  const readOnly = location.state?.readOnly || isAfterRegistration() || (regData?.editCount >= 2);
+  // ถ้าลงทะเบียนแล้ว ให้ใช้วันหมดเขตแก้ไข, ถ้ายัง ให้ใช้วันหมดเขตลงทะเบียน
+  const isPastDeadline = isRegistered ? isEditClosed() : isAfterRegistration();
+  const readOnly = location.state?.readOnly || isPastDeadline || (regData?.editCount >= 2);
   const [lang, setLangState] = useState(() => localStorage.getItem('preferredLang') || 'TH');
   const setLang = (newLang) => {
     localStorage.setItem('preferredLang', newLang);
