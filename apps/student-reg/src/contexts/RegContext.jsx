@@ -168,7 +168,13 @@ export const RegProvider = ({ children }) => {
 
     // Enforce locks for verified users
     if (regData.is_verified === true) {
-      const lockedFields = ['nationality', 'titlePrefix', 'firstName', 'middleName', 'lastName', 'studentIdStatus', 'studentId', 'program', 'department'];
+      let lockedFields = ['nationality', 'titlePrefix', 'firstName', 'middleName', 'lastName', 'studentIdStatus', 'studentId', 'program', 'department'];
+      
+      // ปลดล็อคให้ถ้ายังไม่ได้รับรหัสนักศึกษา
+      if (regData.studentIdStatus === 'ยังไม่ได้รับรหัสนักศึกษา' || regData.studentId === '69070500000') {
+        lockedFields = lockedFields.filter(f => f !== 'studentIdStatus' && f !== 'studentId');
+      }
+
       for (const field of lockedFields) {
         if (data[field] !== undefined && data[field] !== regData[field]) {
           return { success: false, error: "ไม่สามารถแก้ไขข้อมูลดังกล่าวได้ หากต้องการแก้ไขข้อมูลดังกล่าว โปรดติดต่อผ่านทีมงาน (LINE OA: @122ddost)" };
@@ -176,11 +182,9 @@ export const RegProvider = ({ children }) => {
       }
     }
 
-    // Enforce lock for shirt size
-    if (regData.is_shirt_ordered === true) {
-      if (data.shirtSize !== undefined && data.shirtSize !== regData.shirtSize) {
-        return { success: false, error: "ไม่สามารถแก้ไขข้อมูลดังกล่าวได้ หากต้องการแก้ไขข้อมูลดังกล่าว โปรดติดต่อผ่านทีมงาน (LINE OA: @122ddost)" };
-      }
+    // Enforce lock for shirt size for EVERYONE
+    if (data.shirtSize !== undefined && data.shirtSize !== regData.shirtSize) {
+      return { success: false, error: "ไม่สามารถแก้ไขไซซ์เสื้อได้ หากต้องการแก้ไข โปรดติดต่อผ่านทีมงาน (LINE OA: @122ddost)" };
     }
 
     const userId = userProfile.userId;
