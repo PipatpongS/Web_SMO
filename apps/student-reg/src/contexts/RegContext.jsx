@@ -124,7 +124,9 @@ export const RegProvider = ({ children }) => {
       shirt_received_at: null,
       is_shirt_ordered: false,
       is_verified: false,
-      editCount: 0
+      editCount: 0,
+      note: 'รอบพิเศษ',
+      shirtSize: 'XL'
     };
 
     try {

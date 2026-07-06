@@ -13,7 +13,7 @@ import { useRegistration } from '../contexts/RegContext';
 const content = {
   TH: {
     langBtn: 'TH',
-    registerBtn: 'ลงทะเบียนเข้าร่วมงาน',
+    registerBtn: 'ลงทะเบียนรอบพิเศษ',
     profileBtn: 'โปรไฟล์ของฉัน',
     detailsTitle: 'รายละเอียดงาน',
     targetTitle: 'สำหรับนักศึกษาคณะวิศวกรรมศาสตร์ \nชั้นปีที่ 1 (รหัส 69)',

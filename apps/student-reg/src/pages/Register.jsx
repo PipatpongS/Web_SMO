@@ -556,7 +556,7 @@ const Register = () => {
         return;
       }
     } else if (step === 3) {
-      if (!formData.shirtSize || !formData.joinActivity) {
+      if (!formData.joinActivity) {
         setError(t.errRequired);
         return;
       }
@@ -705,7 +705,7 @@ const Register = () => {
     }
 
     // Step 3 Validation
-    if (!formData.shirtSize || !formData.joinActivity) {
+    if (!formData.joinActivity) {
       setError(t.errRequired); setStep(3); return false;
     }
     if (formData.joinActivity === 'เข้าร่วม') {
@@ -1191,45 +1191,7 @@ const Register = () => {
             <div className="space-y-6 animate-fadeIn">
               <h3 className="text-xl sm:text-2xl font-medium text-center text-gray-800 mb-8">{t.activityInfo}</h3>
 
-              <div>
-                <label className={labelClass}>{t.shirtSize}</label>
-                <div className="mb-4">
-                  <img src={lang === 'TH' ? sizeChartImgThai : sizeChartImgEng} alt="T-Shirt Size Chart" className="w-full max-w-md mx-auto rounded-lg shadow-sm border border-gray-100" />
-                </div>
-                <div onClickCapture={(e) => { if (isFieldLocked('shirtSize')) { e.preventDefault(); e.stopPropagation(); setShowLockedModal(true); } }}>
-                  <select name="shirtSize" value={formData.shirtSize} onChange={handleChange} className={`${inputClass} ${isFieldLocked('shirtSize') ? '!bg-gray-100 !text-gray-500 cursor-not-allowed pointer-events-none' : ''} mt-1 pr-10 truncate cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%239CA3AF%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E')] bg-[length:12px_12px] bg-no-repeat bg-[position:right_1rem_center]`}>
-                    <option value="" disabled>{t.selectShirtSize}</option>
-                    {[
-                      { size: 'SS', chest: 36, length: 25 },
-                      { size: 'S', chest: 38, length: 26 },
-                      { size: 'M', chest: 40, length: 28 },
-                      { size: 'L', chest: 42, length: 28 },
-                      { size: 'XL', chest: 44, length: 29 },
-                      { size: '2XL', chest: 46, length: 30 },
-                      { size: '3XL', chest: 48, length: 30 },
-                      { size: '4XL', chest: 50, length: 30 },
-                      { size: '5XL', chest: 52, length: 31 },
-                      { size: '6XL', chest: 54, length: 32 },
-                      { size: '7XL', chest: 56, length: 33 },
-                    ].map(s => (
-                      <option key={s.size} value={s.size}>
-                        {s.size} ({lang === 'TH' ? `รอบอก ${s.chest}" / ความยาว ${s.length}"` : `Chest ${s.chest}" / Length ${s.length}"`})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <p className="mt-2 text-sm text-gray-500">
-                  {lang === 'TH' ? 'หากมีข้อสงสัยเพิ่มเติมสามารถติดต่อ ' : 'If you have any further questions, please contact '}
-                  <a
-                    href="https://line.me/R/ti/p/@122ddost"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="underline underline-offset-2 hover:text-gray-800 transition-colors"
-                  >
-                    Line OA: SMO VIDVA BANGMOD
-                  </a>
-                </p>
-              </div>
+              <div className="bg-white/60 p-4 sm:p-6 rounded-2xl border border-gray-100 shadow-sm animate-fadeIn" style={{ animationDelay: '0.1s' }}>
 
               <div className="border-t border-gray-100 pt-6">
                 <label className={labelClass}>{t.join}</label>
@@ -1310,6 +1272,7 @@ const Register = () => {
                   </div>
                 </div>
               )}
+              </div>
             </div>
           )}
 
@@ -1383,7 +1346,6 @@ const Register = () => {
                     {!readOnly && <button type="button" onClick={() => { setStep(3); window.scrollTo(0, 0); }} className="text-sm bg-white hover:bg-slate-100 border border-slate-200 text-[#1e3a5f] px-3 py-1.5 rounded-lg font-medium transition-colors shadow-sm">{t.editDataBtn}</button>}
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-5 gap-x-6 text-sm">
-                    <div><span className="text-gray-400 block mb-1.5 text-xs uppercase tracking-wider">{t.shirtSize.replace(' *', '')}</span><p className="font-medium text-gray-800">{formData.shirtSize}</p></div>
                     <div><span className="text-gray-400 block mb-1.5 text-xs uppercase tracking-wider">{t.join.replace(' *', '')}</span><p className="font-medium text-gray-800">{translateValue(formData.joinActivity)}</p></div>
                     {formData.joinActivity === 'เข้าร่วม' && (
                       <>
