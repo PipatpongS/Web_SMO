@@ -199,6 +199,10 @@ const Profile = () => {
               {lang === 'EN' ? (deptTranslationsEN[displayRegData.department] || displayRegData.department) : displayRegData.department}
             </span>
           </div>
+          <div className="flex justify-between border-b border-gray-100 pb-2">
+            <span className="text-gray-500 whitespace-nowrap">{t.shirtSize}</span>
+            <span className="font-semibold text-[#1e3a5f] text-right ml-4">{displayRegData.shirtSize}</span>
+          </div>
         </div>
 
         {/* Edit Button */}
