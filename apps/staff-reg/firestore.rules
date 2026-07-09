@@ -1,0 +1,35 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    function isOwner(userId) {
+      return request.auth != null && request.auth.uid == userId;
+    }
+
+    match /users/{userId} {
+      // ✅ แก้ไขแล้ว: ป้องกันการแฮ็กดึงข้อมูลรายชื่อออกไปทั้งหมด
+      allow get: if true;
+      allow list: if false;
+      
+      // Allow creation of a new registration profile within the registration window
+      allow create: if isOwner(userId)
+                    && request.resource.data.line_uid == userId
+                    && request.resource.data.editCount == 0
+                    && request.resource.data.is_verified == false
+                    && request.resource.data.is_shirt_ordered == false
+                    && request.time.toMillis() >= 1781456400000
+                    && request.time.toMillis() <= 1782838799000;
+      
+      // Allow updates only if the user is the owner, editCount < 2, and not changing restricted fields
+      allow update: if isOwner(userId)
+                    && resource.data.editCount < 2
+                    && resource.data.is_shirt_ordered == false
+                    && request.time.toMillis() <= 1782320399000
+                    && !request.resource.data.diff(resource.data).affectedKeys()
+                        .hasAny(['line_uid', 'is_verified', 'is_shirt_ordered', 'createdAt', 'checkin_day1_morning', 'checkin_day1_afternoon', 'checkin_day2_morning', 'checkin_day2_afternoon', 'shirt_received_at'])
+                    && request.resource.data.editCount == resource.data.editCount + 1;
+                    
+      allow delete: if false;
+    }
+  }
+}
