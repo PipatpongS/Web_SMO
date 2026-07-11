@@ -5,7 +5,10 @@ export const REGISTRATION_START_DATE = import.meta.env.VITE_REGISTRATION_START_D
 export const REGISTRATION_END_DATE = import.meta.env.VITE_REGISTRATION_END_DATE || '2026-07-01T23:59:59+07:00';
 export const EDIT_DEADLINE = import.meta.env.VITE_EDIT_DEADLINE || '2026-07-01T23:59:59+07:00';
 
-// ฟังก์ชันสำหรับเช็คว่าตอนนี้เปิดรับสมัครหรือยัง
+export const STAFF_REGISTRATION_START_DATE = import.meta.env.VITE_STAFF_REGISTRATION_START_DATE || '2026-07-10T00:00:00+07:00';
+export const STAFF_REGISTRATION_END_DATE = import.meta.env.VITE_STAFF_REGISTRATION_END_DATE || '2026-07-17T23:59:59+07:00';
+export const STAFF_EDIT_DEADLINE = import.meta.env.VITE_STAFF_EDIT_DEADLINE || '2026-07-17T23:59:59+07:00';
+
 export const isRegistrationOpen = () => {
   const now = new Date().getTime();
   const start = new Date(REGISTRATION_START_DATE).getTime();
@@ -13,23 +16,45 @@ export const isRegistrationOpen = () => {
   return now >= start && now <= end;
 };
 
-// ฟังก์ชันสำหรับเช็คว่าเปิดรับสมัครไปหรือยัง (ยังไม่ถึงเวลาเปิด)
+export const isStaffRegistrationOpen = () => {
+  const now = new Date().getTime();
+  const start = new Date(STAFF_REGISTRATION_START_DATE).getTime();
+  const end = new Date(STAFF_REGISTRATION_END_DATE).getTime();
+  return now >= start && now <= end;
+};
+
 export const isBeforeRegistration = () => {
   const now = new Date().getTime();
   const start = new Date(REGISTRATION_START_DATE).getTime();
   return now < start;
 };
 
-// ฟังก์ชันสำหรับเช็คว่าปิดรับสมัครไปหรือยัง
+export const isBeforeStaffRegistration = () => {
+  const now = new Date().getTime();
+  const start = new Date(STAFF_REGISTRATION_START_DATE).getTime();
+  return now < start;
+};
+
 export const isAfterRegistration = () => {
   const now = new Date().getTime();
   const end = new Date(REGISTRATION_END_DATE).getTime();
   return now > end;
 };
 
-// ฟังก์ชันสำหรับเช็คว่าหมดเขตแก้ไขข้อมูลหรือยัง
+export const isAfterStaffRegistration = () => {
+  const now = new Date().getTime();
+  const end = new Date(STAFF_REGISTRATION_END_DATE).getTime();
+  return now > end;
+};
+
 export const isEditClosed = () => {
   const now = new Date().getTime();
   const end = new Date(EDIT_DEADLINE).getTime();
+  return now > end;
+};
+
+export const isStaffEditClosed = () => {
+  const now = new Date().getTime();
+  const end = new Date(STAFF_EDIT_DEADLINE).getTime();
   return now > end;
 };

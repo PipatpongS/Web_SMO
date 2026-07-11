@@ -3,22 +3,22 @@ import { doc, getDoc, setDoc, updateDoc, onSnapshot, writeBatch } from 'firebase
 import { db } from '../config/firebase';
 import { useAuth } from './AuthContext';
 
-const RegContext = createContext();
+const StaffRegContext = createContext();
 
-export const useRegistration = () => useContext(RegContext);
+export const useStaffRegistration = () => useContext(StaffRegContext);
 
-export const RegProvider = ({ children }) => {
+export const StaffRegProvider = ({ children }) => {
   const { userProfile, loading: authLoading } = useAuth();
 
   const getCachedState = () => {
     try {
       if (userProfile && userProfile.userId) {
-        const cachedReg = localStorage.getItem(`reg_${userProfile.userId}`);
+        const cachedReg = localStorage.getItem(`staff_reg_${userProfile.userId}`);
         if (cachedReg) {
           return { isReg: true, data: JSON.parse(cachedReg), load: false };
         }
         // Check if we previously confirmed they are NOT registered
-        const notRegistered = localStorage.getItem(`not_reg_${userProfile.userId}`);
+        const notRegistered = localStorage.getItem(`not_staff_reg_${userProfile.userId}`);
         if (notRegistered === 'true') {
           return { isReg: false, data: null, load: false };
         }
@@ -44,7 +44,7 @@ export const RegProvider = ({ children }) => {
       const userId = userProfile.userId;
 
       // 1. Check LocalStorage (Fast Path)
-      const cachedReg = localStorage.getItem(`reg_${userId}`);
+      const cachedReg = localStorage.getItem(`staff_reg_${userId}`);
       if (cachedReg) {
         setRegData(JSON.parse(cachedReg));
         setIsRegistered(true);
@@ -56,7 +56,7 @@ export const RegProvider = ({ children }) => {
       // 2. Fetch from Firebase (Single Read, No Persistent Connection to save Free Tier limits)
       if (db) {
         try {
-          const docRef = doc(db, "users", userId);
+          const docRef = doc(db, "staff_applicants", userId);
           const docSnap = await getDoc(docRef);
           if (docSnap.exists()) {
             const data = docSnap.data();
@@ -77,13 +77,13 @@ export const RegProvider = ({ children }) => {
             }
 
             // Update Cache
-            localStorage.setItem(`reg_${userId}`, JSON.stringify(data));
-            localStorage.removeItem(`not_reg_${userId}`);
+            localStorage.setItem(`staff_reg_${userId}`, JSON.stringify(data));
+            localStorage.removeItem(`not_staff_reg_${userId}`);
             setRegData(data);
             setIsRegistered(true);
           } else {
-            localStorage.removeItem(`reg_${userId}`);
-            localStorage.setItem(`not_reg_${userId}`, 'true');
+            localStorage.removeItem(`staff_reg_${userId}`);
+            localStorage.setItem(`not_staff_reg_${userId}`, 'true');
             setIsRegistered(false);
           }
           setLoading(false);
@@ -132,69 +132,56 @@ export const RegProvider = ({ children }) => {
   };
 
 
-  const registerUser = async (data, collectionName = "users") => {
+  const registerUser = async (data) => {
     if (!userProfile) return { success: false, error: "Not authenticated" };
-
     const userId = userProfile.userId;
-    
     const studentId = data.studentId || '';
     const qr_code = `${userId}:${studentId}`;
-    const short_code = await generateUniqueShortCode(db, qr_code);
-
-
-
-    const registrationPayload = {
-      qr_code,
-      short_code,
-      ...data, // Save all fields from the form dynamically
-      line_uid: userId,
-      line_displayName: userProfile.displayName || '',
-      line_pictureUrl: userProfile.pictureUrl || '',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      checkin_day1_morning: null,
-      checkin_day1_afternoon: null,
-      checkin_day2_morning: null,
-      checkin_day2_afternoon: null,
-      shirt_received_at: null,
-      is_shirt_ordered: false,
-      is_verified: false,
-      editCount: 0,
-      note: 'รอบพิเศษ',
-      shirtSize: 'XL'
-    };
 
     try {
+      const short_code = await generateUniqueShortCode(db, qr_code);
+      delete data.studentIdStatus;
+      delete data.shirtSize;
+      delete data.program;
+      
+      const registrationPayload = {
+        qr_code,
+        short_code,
+        ...data,
+        line_uid: userId,
+        line_displayName: userProfile.displayName || '',
+        line_pictureUrl: userProfile.pictureUrl || '',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        editCount: 0,
+        note: null,
+        staffStatus: 'ส่งใบสมัครเสร็จสิ้น'
+      };
+
       if (db) {
-        await setDoc(doc(db, collectionName, userId), registrationPayload);
+        const batch = writeBatch(db);
+        batch.set(doc(db, "staff_applicants", userId), registrationPayload);
+        batch.set(doc(db, "used_short_codes", short_code), { uid: userId, timestamp: new Date().toISOString() });
+        await batch.commit();
       }
-      // Save to cache
-      localStorage.setItem(`reg_${userId}`, JSON.stringify(registrationPayload));
+
+      localStorage.setItem(`staff_reg_${userId}`, JSON.stringify(registrationPayload));
+      localStorage.removeItem(`not_staff_reg_${userId}`);
       setRegData(registrationPayload);
       setIsRegistered(true);
 
-      // Call API to link Rich Menu (Fire and forget, or handle silently)
-      try {
-        fetch('/api/link-rich-menu', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId })
-        }).catch(e => console.error("Rich menu link fetch error:", e));
-      } catch (e) {
-        console.error("Rich menu link error:", e);
-      }
-
+      localStorage.removeItem('registerFormData');
       return { success: true };
     } catch (err) {
       console.error("Registration error:", err);
       if (err.code === 'permission-denied') {
-        return { success: false, errorCode: 'permission_denied' };
+        return { success: false, error: 'permission_denied', errorMsg: err.message };
       }
-      return { success: false, errorCode: 'register_failed', errorMsg: err.message };
+      return { success: false, error: 'register_failed', errorMsg: err.message };
     }
   };
 
-  const updateUser = async (data, collectionName = "users") => {
+  const updateUser = async (data) => {
     if (!userProfile) return { success: false, error: "Not authenticated" };
     if (!isRegistered || !regData) return { success: false, error: "No existing registration found" };
 
@@ -203,37 +190,16 @@ export const RegProvider = ({ children }) => {
       return { success: false, error: "You have reached the maximum number of edits allowed." };
     }
 
-    // Enforce locks for verified users
-    if (regData.is_verified === true) {
-      let lockedFields = ['nationality', 'titlePrefix', 'firstName', 'middleName', 'lastName', 'studentIdStatus', 'studentId', 'program', 'department'];
-      
-      // ปลดล็อคให้ถ้ายังไม่ได้รับรหัสนักศึกษา
-      if (regData.studentIdStatus === 'ยังไม่ได้รับรหัสนักศึกษา' || regData.studentId === '69070500000') {
-        lockedFields = lockedFields.filter(f => f !== 'studentIdStatus' && f !== 'studentId');
-      }
-
-      for (const field of lockedFields) {
-        if (data[field] !== undefined && data[field] !== regData[field]) {
-          return { success: false, error: "ไม่สามารถแก้ไขข้อมูลดังกล่าวได้ หากต้องการแก้ไขข้อมูลดังกล่าว โปรดติดต่อผ่านทีมงาน (LINE OA: @122ddost)" };
-        }
-      }
-    }
-
-    // Enforce lock for shirt size for EVERYONE
-    if (data.shirtSize !== undefined && data.shirtSize !== regData.shirtSize) {
-      return { success: false, error: "ไม่สามารถแก้ไขไซซ์เสื้อได้ หากต้องการแก้ไข โปรดติดต่อผ่านทีมงาน (LINE OA: @122ddost)" };
-    }
-
     const userId = userProfile.userId;
     const newEditCount = (regData.editCount || 0) + 1;
 
     // Whitelist allowed fields to prevent Mass Assignment vulnerabilities
     const allowedFields = [
       'titlePrefix', 'firstName', 'middleName', 'lastName', 'email', 'phone',
-      'studentIdStatus', 'studentId', 'nationality', 'program', 'department',
-      'shirtSize', 'hasDietaryRestriction', 'dietaryRestriction', 'foodAllergyDetails', 'dietaryOther',
-      'hasMedicalCondition', 'medicalConditionDetails', 'joinActivity',
-      'role1', 'role2', 'pdpaConsent', 'staffStatus'
+      'studentId', 'nationality', 'department', 'lineId',
+      'hasDietaryRestriction', 'dietaryRestriction', 'foodAllergyDetails', 'dietaryOther',
+      'hasMedicalCondition', 'medicalConditionDetails', 'year', 'nickname', 'pdpaConsent',
+      'role1', 'role2', 'staffStatus', 'joinActivity', 'note'
     ];
 
     const sanitizedData = {};
@@ -243,7 +209,6 @@ export const RegProvider = ({ children }) => {
       }
     });
 
-    
     const studentId = data.studentId !== undefined ? data.studentId : (regData.studentId || '');
     const qr_code = `${userId}:${studentId}`;
     let short_code = regData.short_code;
@@ -264,11 +229,18 @@ export const RegProvider = ({ children }) => {
 
     try {
       if (db) {
-        await updateDoc(doc(db, collectionName, userId), updatePayload);
+        if (!regData.short_code || regData.qr_code !== qr_code) {
+      const batch = writeBatch(db);
+      batch.update(doc(db, "staff_applicants", userId), updatePayload);
+      batch.set(doc(db, "used_short_codes", short_code), { uid: userId, timestamp: new Date().toISOString() });
+      await batch.commit();
+    } else {
+      await updateDoc(doc(db, "staff_applicants", userId), updatePayload);
+    }
       }
 
       const newRegData = { ...regData, ...updatePayload };
-      localStorage.setItem(`reg_${userId}`, JSON.stringify(newRegData));
+      localStorage.setItem(`staff_reg_${userId}`, JSON.stringify(newRegData));
       setRegData(newRegData);
 
       return { success: true };
@@ -282,8 +254,8 @@ export const RegProvider = ({ children }) => {
   };
 
   return (
-    <RegContext.Provider value={{ isRegistered, regData, loading: loading || authLoading, registerUser, updateUser }}>
+    <StaffRegContext.Provider value={{ isRegistered, regData, loading: loading || authLoading, registerUser, updateUser }}>
       {children}
-    </RegContext.Provider>
+    </StaffRegContext.Provider>
   );
 };

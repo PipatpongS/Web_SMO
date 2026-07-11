@@ -10,6 +10,7 @@ const ScrollToTop = () => {
 };
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { RegProvider, useRegistration } from './contexts/RegContext';
+import { StaffRegProvider } from './contexts/StaffRegContext';
 import { doc, deleteDoc } from 'firebase/firestore';
 import { db } from './config/firebase';
 
@@ -17,6 +18,9 @@ import { db } from './config/firebase';
 import Home from './pages/Home';
 import Register from './pages/Register';
 import Profile from './pages/Profile';
+import StaffHome from './pages/StaffHome';
+import StaffRegister from './pages/StaffRegister';
+import StaffProfile from './pages/StaffProfile';
 
 import bgImg from './assets/bg.jpg';
 import logoImg from './assets/Logo.png';
@@ -115,6 +119,30 @@ function AppContent() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/staff"
+          element={
+            <PublicRoute>
+              <StaffHome />
+            </PublicRoute>
+          }
+        />
+        <Route
+          path="/staff/register"
+          element={
+            <PublicRoute>
+              <StaffRegister />
+            </PublicRoute>
+          }
+        />
+        <Route
+          path="/staff/profile"
+          element={
+            <ProtectedRoute>
+              <StaffProfile />
+            </ProtectedRoute>
+          }
+        />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
@@ -125,12 +153,14 @@ function App() {
   return (
     <AuthProvider>
       <RegProvider>
+        <StaffRegProvider>
         <div className="min-h-screen font-sans text-white">
           <div className="min-h-screen bg-black/40 backdrop-blur-[2px]">
             <AppContent />
           </div>
         </div>
-      </RegProvider>
+      </StaffRegProvider>
+        </RegProvider>
     </AuthProvider>
   );
 }

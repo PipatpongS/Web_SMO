@@ -7,28 +7,64 @@ service cloud.firestore {
     }
 
     match /users/{userId} {
-      // ✅ แก้ไขแล้ว: ป้องกันการแฮ็กดึงข้อมูลรายชื่อออกไปทั้งหมด
+      // ✅ ป้องกันการแฮ็กดึงข้อมูลรายชื่อออกไปทั้งหมด
       allow get: if true;
       allow list: if false;
       
-      // Allow creation of a new registration profile within the registration window
+      // ✅ การลงทะเบียนใหม่ (ขยายเวลาเปิดรับสมัครรอบพิเศษ ถึง 30 ก.ค. 2569 23:59:59 คือ 1785430799000)
       allow create: if isOwner(userId)
                     && request.resource.data.line_uid == userId
                     && request.resource.data.editCount == 0
                     && request.resource.data.is_verified == false
                     && request.resource.data.is_shirt_ordered == false
                     && request.time.toMillis() >= 1781456400000
-                    && request.time.toMillis() <= 1782925199000; // 1 July 2026 23:59:59 +07:00
+                    && request.time.toMillis() <= 1785430799000;
       
-      // Allow updates only if the user is the owner, editCount < 2, and not changing restricted fields
+      // ✅ การแก้ไขข้อมูล (อัปเดต 2 จุด: วันหมดเขตใหม่ & ปลดล็อครหัสนักศึกษา)
       allow update: if isOwner(userId)
                     && resource.data.editCount < 2
-                    && request.time.toMillis() <= 1782925199000 // 1 July 2026 23:59:59 +07:00
+                    // 1️⃣ ขยายเวลาให้แก้ได้ถึง 24 ก.ค. 2569 23:59:59 (1784912399000)
+                    && request.time.toMillis() <= 1784912399000
                     && !request.resource.data.diff(resource.data).affectedKeys()
                         .hasAny(['line_uid', 'is_verified', 'is_shirt_ordered', 'createdAt', 'checkin_day1_morning', 'checkin_day1_afternoon', 'checkin_day2_morning', 'checkin_day2_afternoon', 'shirt_received_at'])
                     && (resource.data.is_shirt_ordered == false || !request.resource.data.diff(resource.data).affectedKeys().hasAny(['shirtSize']))
-                    && (resource.data.is_verified == false || !request.resource.data.diff(resource.data).affectedKeys().hasAny(['nationality', 'titlePrefix', 'firstName', 'middleName', 'lastName', 'studentIdStatus', 'studentId', 'program', 'department']))
+                    // 2️⃣ เงื่อนไขใหม่: ถ้า Verify แล้ว แต่ยังไม่มีรหัสนักศึกษา -> ปลดล็อคฟิลด์รหัสนักศึกษาให้แก้ได้
+                    && (
+                        resource.data.is_verified == false 
+                        || 
+                        (
+                          (resource.data.studentIdStatus == 'ยังไม่ได้รับรหัสนักศึกษา' || resource.data.studentId == '69070500000')
+                          ? !request.resource.data.diff(resource.data).affectedKeys().hasAny(['nationality', 'titlePrefix', 'firstName', 'middleName', 'lastName', 'program', 'department'])
+                          : !request.resource.data.diff(resource.data).affectedKeys().hasAny(['nationality', 'titlePrefix', 'firstName', 'middleName', 'lastName', 'studentIdStatus', 'studentId', 'program', 'department'])
+                        )
+                    )
                     && request.resource.data.editCount == resource.data.editCount + 1;
+                    
+      allow delete: if false;
+    }
+
+    // ✅ กฎสำหรับระบบจองรหัส Short Code ป้องกันการซ้ำ
+    match /used_short_codes/{code} {
+      allow get: if true;
+      allow create: if request.auth != null;
+      allow update, delete, list: if false;
+    }
+
+    // ✅ กฎสำหรับ Staff (Collection: staff_applicants)
+    match /staff_applicants/{userId} {
+      allow get: if true;
+      allow list: if false;
+      
+      allow create: if isOwner(userId)
+                    && request.resource.data.line_uid == userId
+                    && request.resource.data.editCount == 0
+                    && request.time.toMillis() >= 1783616400000 // 10 Jul 2026 00:00:00 GMT+7
+                    && request.time.toMillis() <= 1784307599000; // 17 Jul 2026 23:59:59 GMT+7
+      
+      allow update: if isOwner(userId)
+                    && resource.data.editCount < 2
+                    && request.resource.data.editCount == resource.data.editCount + 1
+                    && request.time.toMillis() <= 1784307599000; // 17 Jul 2026 23:59:59 GMT+7
                     
       allow delete: if false;
     }

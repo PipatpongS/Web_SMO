@@ -9,12 +9,14 @@ import bImg from '../assets/b.png';
 import LoadingScreen from '../components/LoadingScreen';
 import { isBeforeRegistration, isAfterRegistration, REGISTRATION_START_DATE } from '../config/timeConfig';
 import { useRegistration } from '../contexts/RegContext';
+import { useStaffRegistration } from '../contexts/StaffRegContext';
 
 const content = {
   TH: {
     langBtn: 'TH',
     registerBtn: 'ลงทะเบียนรอบพิเศษ',
     profileBtn: 'โปรไฟล์ของฉัน',
+    staffProfileBtn: 'สถานะใบสมัคร Staff',
     detailsTitle: 'รายละเอียดงาน',
     targetTitle: 'สำหรับนักศึกษาคณะวิศวกรรมศาสตร์ \nชั้นปีที่ 1 (รหัส 69)',
     dateText: 'วันที่ 25 - 26 กรกฎาคม 2569',
@@ -33,6 +35,7 @@ const content = {
     langBtn: 'EN',
     registerBtn: 'Register for Event',
     profileBtn: 'My Profile',
+    staffProfileBtn: 'Staff Application Status',
     detailsTitle: 'Event Details',
     targetTitle: 'For 1st Year Engineering Students \n(ID 69)',
     dateText: '25 - 26 July 2026',
@@ -51,7 +54,8 @@ const content = {
 
 const Home = () => {
   const navigate = useNavigate();
-  const { isRegistered, loading: regLoading } = useRegistration();
+  const { isRegistered: isParticipantRegistered, loading: regLoading } = useRegistration();
+  const { isRegistered: isStaffRegistered, loading: staffLoading } = useStaffRegistration();
   const [lang, setLangState] = useState(() => localStorage.getItem('preferredLang') || 'TH');
   const setLang = (newLang) => {
     localStorage.setItem('preferredLang', newLang);
@@ -111,25 +115,37 @@ const Home = () => {
         </div>
 
         <div className="w-full flex flex-col items-center">
-          <button
-            onClick={() => {
-              if (isRegistered) {
-                navigate('/profile');
-              } else if (!isBeforeRegistration() && !isAfterRegistration()) {
-                navigate('/register');
-              }
-            }}
-            className={`w-full max-w-[250px] mx-auto text-[14px] py-2 flex justify-center items-center space-x-2 mb-12 min-h-[40px] ${(!isRegistered && (isBeforeRegistration() || isAfterRegistration()))
-              ? 'bg-gray-500/50 cursor-not-allowed rounded-full border border-white/20'
-              : 'glass-button'
-              }`}
-            disabled={regLoading || (!isRegistered && (isBeforeRegistration() || isAfterRegistration()))}
-          >
-            {regLoading ? (
+          {(regLoading || staffLoading) ? (
+            <button
+              disabled
+              className="w-full max-w-[250px] mx-auto text-[14px] py-2 flex justify-center items-center mb-12 min-h-[40px] bg-gray-500/50 rounded-full border border-white/20 cursor-not-allowed"
+            >
               <span className="w-4 h-4 border-2 border-white/50 border-t-white rounded-full animate-spin"></span>
-            ) : (
+            </button>
+          ) : isStaffRegistered ? (
+            <button
+              onClick={() => navigate('/staff/profile')}
+              className="w-full max-w-[250px] mx-auto text-[14px] py-2 flex justify-center items-center space-x-2 mb-12 min-h-[40px] glass-button"
+            >
+              <span>{t.staffProfileBtn}</span>
+            </button>
+          ) : (
+            <button
+              onClick={() => {
+                if (isParticipantRegistered) {
+                  navigate('/profile');
+                } else if (!isBeforeRegistration() && !isAfterRegistration()) {
+                  navigate('/register');
+                }
+              }}
+              className={`w-full max-w-[250px] mx-auto text-[14px] py-2 flex justify-center items-center space-x-2 mb-12 min-h-[40px] ${(!isParticipantRegistered && (isBeforeRegistration() || isAfterRegistration()))
+                ? 'bg-gray-500/50 cursor-not-allowed rounded-full border border-white/20'
+                : 'glass-button'
+                }`}
+              disabled={!isParticipantRegistered && (isBeforeRegistration() || isAfterRegistration())}
+            >
               <span>
-                {isRegistered
+                {isParticipantRegistered
                   ? t.profileBtn
                   : isBeforeRegistration()
                     ? (lang === 'TH' ? `เปิดรับสมัคร ${new Date(REGISTRATION_START_DATE).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' })}` : `Opens ${new Date(REGISTRATION_START_DATE).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`)
@@ -137,8 +153,8 @@ const Home = () => {
                       ? (lang === 'TH' ? 'ปิดรับลงทะเบียนแล้ว' : 'Registration Closed')
                       : t.registerBtn}
               </span>
-            )}
-          </button>
+            </button>
+          )}
         </div>
 
         {/* Activity Details Card */}
@@ -230,11 +246,28 @@ const Home = () => {
           <div className="text-center leading-relaxed">
             © 2026 The Student Union of The Faculty of Engineering. All rights reserved.
           </div>
-          <div className="flex items-center space-x-2">
-            <span>Version 1.2.0</span>
+          <div className="flex flex-col items-center space-y-4 pt-2">
+            <div className="flex items-center space-x-2">
+              <span>Version 1.2.0</span>
+            </div>
           </div>
         </div>
       </div>
+
+      {!regLoading && !staffLoading && !isParticipantRegistered && !isStaffRegistered && (
+        <div className="w-full max-w-lg mt-8 flex justify-center z-20 relative pb-12">
+          <button
+            onClick={() => navigate('/staff')}
+            className="w-[90%] max-w-[300px] text-[14px] sm:text-[15px] font-bold py-3 px-6 rounded-3xl bg-white/10 backdrop-blur-md border border-yellow-300/40 shadow-[0_0_20px_rgba(255,215,0,0.15)] text-magical-gold hover:text-yellow-100 hover:bg-white/20 hover:scale-105 transition-all duration-300 flex flex-col justify-center items-center tracking-wide text-center leading-snug"
+          >
+            {lang === 'TH' ? (
+              <>คลิกที่นี่ เพื่อสมัครเป็น Staff<br />สำหรับงานนี้เท่านั้น</>
+            ) : (
+              <>Click here to Apply for Staff<br />for this event only</>
+            )}
+          </button>
+        </div>
+      )}
 
       {/* Fixed Scroll Indicator via Portal */}
       {createPortal(
