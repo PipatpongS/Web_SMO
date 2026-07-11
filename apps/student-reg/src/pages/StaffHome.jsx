@@ -117,6 +117,7 @@ const StaffHome = () => {
               <h3 className="font-bold text-[#1e3a5f] text-lg flex items-center mb-2"><FaCamera className="mr-2 text-blue-500"/> ประชาสัมพันธ์ (3 คน)</h3>
               <p className="text-[13px] sm:text-sm text-gray-700 mb-1"><strong>วันที่:</strong> 25 - 26 กรกฎาคม 2569</p>
               <p className="text-[13px] sm:text-sm text-gray-700 mb-1"><strong>หน้าที่:</strong> เก็บบรรยากาศภายในกิจกรรม, จัดทำคลิป และเนื้อหาประชาสัมพันธ์ เผยแพร่ผ่านช่องทางออนไลน์, หน้าที่อื่นๆ ที่ได้รับมอบหมาย</p>
+              <p className="text-[13px] sm:text-sm text-orange-600"><strong>หมายเหตุ:</strong> อาจมีการนัดหมายเพิ่มเติม</p>
             </div>
           </div>
         </div>

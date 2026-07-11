@@ -1196,6 +1196,7 @@ const StaffRegister = () => {
                     <ul className="text-[13px] text-gray-600 space-y-1">
                       <li><strong>วันที่:</strong> 25 - 26 กรกฎาคม 2569</li>
                       <li><strong>หน้าที่:</strong> เก็บบรรยากาศภายในกิจกรรม, จัดทำคลิป และเนื้อหาประชาสัมพันธ์ เผยแพร่ผ่านช่องทางออนไลน์, หน้าที่อื่นๆ ที่ได้รับมอบหมาย</li>
+                      <li className="text-orange-500"><strong>หมายเหตุ:</strong> อาจมีการนัดหมายเพิ่มเติม</li>
                     </ul>
                   </div>
                 </div>

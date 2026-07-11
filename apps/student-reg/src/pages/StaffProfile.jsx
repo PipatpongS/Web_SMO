@@ -131,7 +131,9 @@ const rolesData = [
     dateEN: 'July 25-26, 2026',
     duty: 'เก็บบรรยากาศภายในกิจกรรม, จัดทำคลิป และเนื้อหาประชาสัมพันธ์ เผยแพร่ผ่านช่องทางออนไลน์, หน้าที่อื่นๆ ที่ได้รับมอบหมาย',
     dutyEN: 'Capture event atmosphere, create clips and PR content for online channels, other assigned tasks',
-    note: null,
+    note: 'อาจมีการนัดหมายเพิ่มเติม',
+    noteEN: 'Additional appointments may be scheduled',
+    noteColor: 'text-orange-600',
   },
 ];
 
