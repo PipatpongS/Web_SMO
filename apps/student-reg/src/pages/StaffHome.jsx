@@ -109,14 +109,14 @@ const StaffHome = () => {
             <div className="bg-white/95 border border-white/50 shadow-md rounded-xl p-4 transition-transform hover:-translate-y-1">
               <h3 className="font-bold text-[#1e3a5f] text-lg flex items-center mb-2"><FaTools className="mr-2 text-slate-500"/> ฝ่ายสถานที่และสวัสดิการ (10 คน)</h3>
               <p className="text-[13px] sm:text-sm text-gray-700 mb-1"><strong>วันที่:</strong> 25 - 26 กรกฎาคม 2569</p>
-              <p className="text-[13px] sm:text-sm text-gray-700 mb-1"><strong>หน้าที่:</strong> ช่วยเคลื่อนย้าย จัดวางอุปกรณ์ต่างๆ, แจกอาหารว่างและเครื่องดื่ม, หน้าที่อื่นๆ ที่ได้รับมอบหมาย</p>
+              <p className="text-[13px] sm:text-sm text-gray-700 mb-1"><strong>หน้าที่:</strong> ช่วยเคลื่อนย้าย จัดวางอุปกรณ์ต่าง ๆ, แจกอาหารว่างและเครื่องดื่ม, หน้าที่อื่น ๆ ที่ได้รับมอบหมาย</p>
               <p className="text-[13px] sm:text-sm text-orange-600"><strong>หมายเหตุ:</strong> มีการนัดหมายจัดสถานที่ วันที่ 24 กรกฎาคม 2569</p>
             </div>
 
             <div className="bg-white/95 border border-white/50 shadow-md rounded-xl p-4 transition-transform hover:-translate-y-1">
               <h3 className="font-bold text-[#1e3a5f] text-lg flex items-center mb-2"><FaCamera className="mr-2 text-blue-500"/> ประชาสัมพันธ์ (3 คน)</h3>
               <p className="text-[13px] sm:text-sm text-gray-700 mb-1"><strong>วันที่:</strong> 25 - 26 กรกฎาคม 2569</p>
-              <p className="text-[13px] sm:text-sm text-gray-700 mb-1"><strong>หน้าที่:</strong> เก็บบรรยากาศภายในกิจกรรม, จัดทำคลิป และเนื้อหาประชาสัมพันธ์ เผยแพร่ผ่านช่องทางออนไลน์, หน้าที่อื่นๆ ที่ได้รับมอบหมาย</p>
+              <p className="text-[13px] sm:text-sm text-gray-700 mb-1"><strong>หน้าที่:</strong> เก็บบรรยากาศภายในกิจกรรม, จัดทำคลิป และเนื้อหาประชาสัมพันธ์ เผยแพร่ผ่านช่องทางออนไลน์, หน้าที่อื่น ๆ ที่ได้รับมอบหมาย</p>
               <p className="text-[13px] sm:text-sm text-orange-600"><strong>หมายเหตุ:</strong> อาจมีการนัดหมายเพิ่มเติม</p>
             </div>
           </div>

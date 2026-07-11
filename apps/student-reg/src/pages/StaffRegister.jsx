@@ -1186,7 +1186,7 @@ const StaffRegister = () => {
                     <h5 className="font-bold text-[#1e3a5f] mb-1 flex items-center"><FaTools className="mr-2 text-slate-500"/> ฝ่ายสถานที่และสวัสดิการ (10 คน)</h5>
                     <ul className="text-[13px] text-gray-600 space-y-1">
                       <li><strong>วันที่:</strong> 25 - 26 กรกฎาคม 2569</li>
-                      <li><strong>หน้าที่:</strong> ช่วยเคลื่อนย้าย จัดวางอุปกรณ์ต่างๆ, แจกอาหารว่างและเครื่องดื่ม, หน้าที่อื่นๆ ที่ได้รับมอบหมาย</li>
+                      <li><strong>หน้าที่:</strong> ช่วยเคลื่อนย้าย จัดวางอุปกรณ์ต่าง ๆ, แจกอาหารว่างและเครื่องดื่ม, หน้าที่อื่น ๆ ที่ได้รับมอบหมาย</li>
                       <li className="text-orange-500"><strong>หมายเหตุ:</strong> มีการนัดหมายจัดสถานที่ วันที่ 24 กรกฎาคม 2569</li>
                     </ul>
                   </div>
@@ -1195,7 +1195,7 @@ const StaffRegister = () => {
                     <h5 className="font-bold text-[#1e3a5f] mb-1 flex items-center"><FaCamera className="mr-2 text-blue-500"/> ประชาสัมพันธ์ (3 คน)</h5>
                     <ul className="text-[13px] text-gray-600 space-y-1">
                       <li><strong>วันที่:</strong> 25 - 26 กรกฎาคม 2569</li>
-                      <li><strong>หน้าที่:</strong> เก็บบรรยากาศภายในกิจกรรม, จัดทำคลิป และเนื้อหาประชาสัมพันธ์ เผยแพร่ผ่านช่องทางออนไลน์, หน้าที่อื่นๆ ที่ได้รับมอบหมาย</li>
+                      <li><strong>หน้าที่:</strong> เก็บบรรยากาศภายในกิจกรรม, จัดทำคลิป และเนื้อหาประชาสัมพันธ์ เผยแพร่ผ่านช่องทางออนไลน์, หน้าที่อื่น ๆ ที่ได้รับมอบหมาย</li>
                       <li className="text-orange-500"><strong>หมายเหตุ:</strong> อาจมีการนัดหมายเพิ่มเติม</li>
                     </ul>
                   </div>
