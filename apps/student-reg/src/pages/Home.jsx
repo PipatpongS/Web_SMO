@@ -7,7 +7,7 @@ import textHeaderImgThai from '../assets/text-header-thai.png';
 import textHeaderImgEng from '../assets/text-header-eng.png';
 import bImg from '../assets/b.png';
 import LoadingScreen from '../components/LoadingScreen';
-import { isBeforeRegistration, isAfterRegistration, REGISTRATION_START_DATE } from '../config/timeConfig';
+import { isBeforeRegistration, isAfterRegistration, REGISTRATION_START_DATE, isAfterStaffRegistration } from '../config/timeConfig';
 import { useRegistration } from '../contexts/RegContext';
 import { useStaffRegistration } from '../contexts/StaffRegContext';
 
@@ -254,7 +254,7 @@ const Home = () => {
         </div>
       </div>
 
-      {!regLoading && !staffLoading && !isParticipantRegistered && !isStaffRegistered && (
+      {!regLoading && !staffLoading && !isParticipantRegistered && !isStaffRegistered && !isAfterStaffRegistration() && (
         <div className="w-full max-w-lg mt-8 flex justify-center z-20 relative pb-12">
           <button
             onClick={() => navigate('/staff')}

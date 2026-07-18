@@ -11,20 +11,20 @@ service cloud.firestore {
       allow get: if true;
       allow list: if false;
       
-      // ✅ การลงทะเบียนใหม่ (ขยายเวลาเปิดรับสมัครรอบพิเศษ ถึง 30 ก.ค. 2569 23:59:59 คือ 1785430799000)
+      // ✅ การลงทะเบียนใหม่ (ขยายเวลาเปิดรับสมัครรอบพิเศษ ถึง 18 ก.ค. 2569 23:59:59 คือ 1784393999000)
       allow create: if isOwner(userId)
                     && request.resource.data.line_uid == userId
                     && request.resource.data.editCount == 0
                     && request.resource.data.is_verified == false
                     && request.resource.data.is_shirt_ordered == false
                     && request.time.toMillis() >= 1781456400000
-                    && request.time.toMillis() <= 1785430799000;
+                    && request.time.toMillis() <= 1784393999000;
       
       // ✅ การแก้ไขข้อมูล (อัปเดต 2 จุด: วันหมดเขตใหม่ & ปลดล็อครหัสนักศึกษา)
       allow update: if isOwner(userId)
                     && resource.data.editCount < 2
-                    // 1️⃣ ขยายเวลาให้แก้ได้ถึง 24 ก.ค. 2569 23:59:59 (1784912399000)
-                    && request.time.toMillis() <= 1784912399000
+                    // 1️⃣ ขยายเวลาให้แก้ได้ถึง 18 ก.ค. 2569 23:59:59 (1784393999000)
+                    && request.time.toMillis() <= 1784393999000
                     && !request.resource.data.diff(resource.data).affectedKeys()
                         .hasAny(['line_uid', 'is_verified', 'is_shirt_ordered', 'createdAt', 'checkin_day1_morning', 'checkin_day1_afternoon', 'checkin_day2_morning', 'checkin_day2_afternoon', 'shirt_received_at'])
                     && (resource.data.is_shirt_ordered == false || !request.resource.data.diff(resource.data).affectedKeys().hasAny(['shirtSize']))

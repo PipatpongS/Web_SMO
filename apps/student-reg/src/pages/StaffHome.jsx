@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { FaChevronDown, FaLine, FaInstagram, FaUsers, FaHeartbeat, FaRunning, FaTools, FaCamera } from 'react-icons/fa';
 import { useStaffRegistration } from '../contexts/StaffRegContext';
+import { isAfterStaffRegistration } from '../config/timeConfig';
 import logoImg from '../assets/Logo.png';
 import textHeaderImgThai from '../assets/text-header-thai.png';
 import textHeaderImgEng from '../assets/text-header-eng.png';
@@ -124,12 +125,28 @@ const StaffHome = () => {
       </div>
 
       <div className="w-full flex flex-col items-center mt-2">
-        <button
-          onClick={() => navigate(isRegistered ? '/staff/profile' : '/staff/register')}
-          className="w-full max-w-[250px] mx-auto text-[15px] font-bold py-3 flex justify-center items-center space-x-2 mb-12 glass-button shadow-lg hover:scale-105 transition-transform"
-        >
-          <span>{isRegistered ? t.statusBtn : t.registerBtn}</span>
-        </button>
+        {isRegistered ? (
+          <button
+            onClick={() => navigate('/staff/profile')}
+            className="w-full max-w-[250px] mx-auto text-[15px] font-bold py-3 flex justify-center items-center space-x-2 mb-12 glass-button shadow-lg hover:scale-105 transition-transform"
+          >
+            <span>{t.statusBtn}</span>
+          </button>
+        ) : isAfterStaffRegistration() ? (
+          <button
+            disabled
+            className="w-full max-w-[250px] mx-auto text-[15px] font-bold py-3 flex justify-center items-center space-x-2 mb-12 bg-gray-500/50 text-white/50 rounded-full border border-white/20 cursor-not-allowed shadow-none"
+          >
+            <span>{lang === 'TH' ? 'ปิดรับสมัครแล้ว' : 'Recruitment Closed'}</span>
+          </button>
+        ) : (
+          <button
+            onClick={() => navigate('/staff/register')}
+            className="w-full max-w-[250px] mx-auto text-[15px] font-bold py-3 flex justify-center items-center space-x-2 mb-12 glass-button shadow-lg hover:scale-105 transition-transform"
+          >
+            <span>{t.registerBtn}</span>
+          </button>
+        )}
       </div>
 
     </div>
