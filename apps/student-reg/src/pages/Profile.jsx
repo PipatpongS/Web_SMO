@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
 import { useAuth } from '../contexts/AuthContext';
 import { useRegistration } from '../contexts/RegContext';
-import { FaArrowLeft } from 'react-icons/fa';
+import { FaArrowLeft, FaClipboardList } from 'react-icons/fa';
 import LoadingScreen from '../components/LoadingScreen';
 import { isEditClosed, EDIT_DEADLINE } from '../config/timeConfig';
 
@@ -152,7 +152,7 @@ const Profile = () => {
         </div>
 
         {/* Line Display Name */}
-        <div className="flex items-center gap-1.5 text-lg font-bold mb-6 text-gray-800">
+        <div className="flex items-center gap-1.5 text-lg font-bold mb-2 text-gray-800">
           <span>{userProfile?.displayName || "LINE User"}</span>
           {displayRegData.is_verified && (
             <svg 
@@ -166,6 +166,16 @@ const Profile = () => {
             </svg>
           )}
         </div>
+
+        {/* Activity Details Button */}
+        <button
+          type="button"
+          onClick={() => navigate('/activity-details')}
+          className="mb-6 px-4 py-1.5 bg-purple-700 hover:bg-purple-800 text-white text-xs sm:text-sm font-semibold rounded-full shadow-md hover:shadow-lg active:scale-95 transition-all flex items-center gap-1.5 cursor-pointer border border-purple-400/30"
+        >
+          <FaClipboardList className="text-sm" />
+          <span>{lang === 'TH' ? 'รายละเอียดกิจกรรม' : 'Activity Details'}</span>
+        </button>
 
         {/* QR Code */}
         <div className="bg-white p-3 rounded-xl mb-8 shadow-md border border-gray-100 flex justify-center w-full max-w-[280px]">

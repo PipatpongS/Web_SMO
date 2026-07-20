@@ -21,6 +21,7 @@ import Profile from './pages/Profile';
 import StaffHome from './pages/StaffHome';
 import StaffRegister from './pages/StaffRegister';
 import StaffProfile from './pages/StaffProfile';
+import ActivityDetails from './pages/ActivityDetails';
 
 import bgImg from './assets/bg.jpg';
 import logoImg from './assets/Logo.png';
@@ -116,6 +117,14 @@ function AppContent() {
           element={
             <ProtectedRoute>
               <Profile />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/activity-details"
+          element={
+            <ProtectedRoute>
+              <ActivityDetails />
             </ProtectedRoute>
           }
         />

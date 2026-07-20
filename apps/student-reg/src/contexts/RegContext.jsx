@@ -161,7 +161,8 @@ export const RegProvider = ({ children }) => {
       is_verified: false,
       editCount: 0,
       note: 'รอบพิเศษ',
-      shirtSize: 'XL'
+      shirtSize: 'XL',
+      group: null
     };
 
     try {
