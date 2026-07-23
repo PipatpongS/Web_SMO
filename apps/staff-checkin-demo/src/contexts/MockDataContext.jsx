@@ -33,11 +33,18 @@ export const MockDataProvider = ({ children }) => {
     const saved = localStorage.getItem('demo_students');
     if (saved) {
       const parsed = JSON.parse(saved);
+      // Clean up any dynamic student that had ':' in their ID
+      const cleaned = parsed.map(s => {
+        if (s.id && s.id.includes(':')) {
+          return { ...s, id: s.id.split(':').pop().trim() };
+        }
+        return s;
+      });
       // Auto-migrate to 2 Letters + 2 Digits shortCode format
-      if (parsed.length > 0 && parsed[0].shortCode && !/^[A-Z]{2}[0-9]{2}$/.test(parsed[0].shortCode)) {
+      if (cleaned.length > 0 && cleaned[0].shortCode && !/^[A-Z]{2}[0-9]{2}$/.test(cleaned[0].shortCode)) {
         return initialData;
       }
-      return parsed;
+      return cleaned;
     }
     return initialData;
   });
@@ -73,15 +80,18 @@ export const MockDataProvider = ({ children }) => {
     localStorage.removeItem('demo_staff');
   };
 
-  const findStudentByCode = (code) => {
-    // Search by shortCode (case-insensitive) or ID
-    const searchUpper = code.trim().toUpperCase();
-    let found = students.find(s => s.shortCode.toUpperCase() === searchUpper || s.id === searchUpper);
+  const findStudentByCode = (rawCode) => {
+    let cleanCode = rawCode.trim();
+    if (cleanCode.includes(':')) {
+      cleanCode = cleanCode.split(':').pop().trim();
+    }
+    const searchUpper = cleanCode.toUpperCase();
+    let found = students.find(s => s.shortCode.toUpperCase() === searchUpper || s.id.toUpperCase() === searchUpper);
 
     // Dynamic Mock for Real QR Code Testing
     // If a long string (like a real QR code payload) is scanned and not found, auto-generate "รัก รักสะอาด"
-    if (!found && code.trim().length > 4) {
-      const qrId = code.trim();
+    if (!found && rawCode.trim().length > 4) {
+      const qrId = cleanCode;
       // Only generate if it doesn't already exist to prevent duplicates
       const existingDynamic = students.find(s => s.id === qrId);
       if (existingDynamic) return existingDynamic;
