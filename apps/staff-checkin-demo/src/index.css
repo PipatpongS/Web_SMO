@@ -1,0 +1,83 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  .glass-panel {
+    @apply bg-black/30 backdrop-blur-md border border-white/20 shadow-lg rounded-2xl;
+  }
+
+  .glass-button {
+    @apply bg-gradient-to-r from-magical-purple to-magical-light text-white font-semibold py-3 px-6 rounded-full outline outline-2 outline-transparent hover:outline-white outline-offset-2 shadow-lg shadow-magical-purple/40 hover:shadow-magical-purple/60 transition-all duration-300 active:scale-95;
+  }
+
+  @keyframes glowPulse {
+    0%, 100% {
+      box-shadow: 0 0 15px rgba(139, 92, 246, 0.5);
+      transform: scale3d(1, 1, 1);
+    }
+    50% {
+      box-shadow: 0 0 30px rgba(139, 92, 246, 0.9), 0 0 15px rgba(255, 255, 255, 0.4);
+      transform: scale3d(1.05, 1.05, 1);
+    }
+  }
+
+  @keyframes scanLine {
+    0% { top: 10%; opacity: 0.8; }
+    50% { top: 85%; opacity: 1; }
+    100% { top: 10%; opacity: 0.8; }
+  }
+
+  .animate-scan-line {
+    animation: scanLine 2s infinite ease-in-out;
+  }
+
+  .text-glow {
+    text-shadow: 0 0 10px rgba(251, 191, 36, 0.5);
+  }
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  touch-action: manipulation;
+  background-image: url('./assets/bg.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-color: #1a0b2e;
+  color: white;
+  font-family: 'Prompt', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Minimal Subtle Scrollbar without track bar overlay */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+#root {
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
