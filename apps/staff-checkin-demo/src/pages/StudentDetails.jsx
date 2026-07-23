@@ -82,7 +82,7 @@ export default function StudentDetails() {
         
         videoRef.current.onloadedmetadata = () => {
           videoRef.current.play();
-          scanLoopRef.current = requestAnimationFrame(scanQR);
+          scanLoopRef.current = setTimeout(scanQR, 250);
         };
       }
 
@@ -116,7 +116,7 @@ export default function StudentDetails() {
         setCameraStream(null);
       }
       if (scanLoopRef.current) {
-        cancelAnimationFrame(scanLoopRef.current);
+        clearTimeout(scanLoopRef.current);
         scanLoopRef.current = null;
       }
     }
@@ -125,7 +125,7 @@ export default function StudentDetails() {
         cameraStream.getTracks().forEach(track => track.stop());
       }
       if (scanLoopRef.current) {
-        cancelAnimationFrame(scanLoopRef.current);
+        clearTimeout(scanLoopRef.current);
       }
     };
   }, [showProxyScanModal]);
@@ -146,14 +146,14 @@ export default function StudentDetails() {
 
       if (code && code.data) {
         if (scanLoopRef.current) {
-          cancelAnimationFrame(scanLoopRef.current);
+          clearTimeout(scanLoopRef.current);
           scanLoopRef.current = null;
         }
         processScannedProxy(code.data);
         return; 
       }
     }
-    scanLoopRef.current = requestAnimationFrame(scanQR);
+    scanLoopRef.current = setTimeout(scanQR, 250);
   };
 
   const processScannedProxy = (searchVal) => {
@@ -521,7 +521,7 @@ export default function StudentDetails() {
               {videoDevices.length > 1 && (
                 <button 
                   onClick={switchCamera}
-                  className="absolute top-2 right-2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full backdrop-blur-md border border-white/20 transition-all active:scale-95 z-20"
+                  className="absolute top-2 right-12 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full backdrop-blur-md border border-white/20 transition-all active:scale-95 z-20"
                 >
                   <RefreshCw size={16} />
                 </button>

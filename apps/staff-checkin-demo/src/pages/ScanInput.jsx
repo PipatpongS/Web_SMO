@@ -48,12 +48,12 @@ export default function ScanInput() {
       if (videoRef.current) {
         videoRef.current.srcObject = newStream;
         videoRef.current.setAttribute("playsinline", true);
+        setCameraActive(true);
         
         // Start QR scanning loop once video is playing
         videoRef.current.onloadedmetadata = () => {
           videoRef.current.play();
-          setCameraActive(true);
-          scanLoopRef.current = requestAnimationFrame(scanQR);
+          scanLoopRef.current = setTimeout(scanQR, 250);
         };
       }
 
@@ -89,7 +89,7 @@ export default function ScanInput() {
         stream.getTracks().forEach(track => track.stop());
       }
       if (scanLoopRef.current) {
-        cancelAnimationFrame(scanLoopRef.current);
+        clearTimeout(scanLoopRef.current);
       }
     };
   }, []);
@@ -111,15 +111,15 @@ export default function ScanInput() {
       if (code && code.data) {
         // Stop scanning to prevent multiple scans
         if (scanLoopRef.current) {
-          cancelAnimationFrame(scanLoopRef.current);
+          clearTimeout(scanLoopRef.current);
           scanLoopRef.current = null;
         }
         executeSearch(code.data);
         return; // Don't queue next frame
       }
     }
-    // Continue scanning
-    scanLoopRef.current = requestAnimationFrame(scanQR);
+    // Continue scanning (throttle to ~4 FPS to prevent lag)
+    scanLoopRef.current = setTimeout(scanQR, 250);
   };
 
   const switchCamera = (e) => {
@@ -224,7 +224,7 @@ export default function ScanInput() {
           {videoDevices.length > 1 && (
             <button 
               onClick={switchCamera}
-              className="absolute top-3 right-3 bg-black/50 hover:bg-black/70 text-white p-2 sm:p-2.5 rounded-full backdrop-blur-md border border-white/20 transition-all active:scale-95 z-20"
+              className="absolute top-4 right-14 bg-black/50 hover:bg-black/70 text-white p-2 sm:p-2.5 rounded-full backdrop-blur-md border border-white/20 transition-all active:scale-95 z-20"
             >
               <RefreshCw size={20} className="sm:w-6 sm:h-6" />
             </button>
