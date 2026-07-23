@@ -214,11 +214,7 @@ export default function ScanInput() {
           />
           <canvas ref={canvasRef} className="hidden" />
 
-          {!cameraActive && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/70 z-0">
-              <Camera size={56} className="text-white/60 mb-1" />
-            </div>
-          )}
+
 
           {/* Camera Switcher Button */}
           {videoDevices.length > 1 && (

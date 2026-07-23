@@ -506,10 +506,7 @@ export default function StudentDetails() {
             >
               <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
               <canvas ref={canvasRef} className="hidden" />
-              <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/65 z-0 p-2 text-center">
-                <Camera size={50} className="text-white/50 mb-1" />
-                <p className="text-xs text-white/80 font-medium">{isTH ? 'แตะเพื่อสแกน QR Code ผู้รับแทน' : 'Tap to scan proxy QR Code'}</p>
-              </div>
+
 
               {/* White Reticle Corners */}
               <div className="absolute top-3 left-3 w-7 h-7 border-t-3 border-l-3 border-white rounded-tl-lg pointer-events-none"></div>
