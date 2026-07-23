@@ -25,10 +25,10 @@ export default function ScanInput() {
   const [stream, setStream] = useState(null);
 
   const startCamera = async (deviceId = null) => {
+    setCameraActive(false);
     try {
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         console.warn('getUserMedia is not supported on insecure HTTP connections over IP');
-        setCameraActive(false);
         return;
       }
 
@@ -67,15 +67,6 @@ export default function ScanInput() {
         const availableDevices = backCams.length > 0 ? backCams : vDevices;
         
         setVideoDevices(availableDevices);
-        
-        // Try to auto-select main camera (camera2 0) for Samsung devices
-        if (availableDevices.length > 1) {
-          const mainCamIndex = availableDevices.findIndex(d => d.label.includes('0, facing back'));
-          if (mainCamIndex !== -1 && mainCamIndex !== 0) {
-            setCurrentDeviceIndex(mainCamIndex);
-            startCamera(availableDevices[mainCamIndex].deviceId);
-          }
-        }
       }
     } catch (err) {
       console.log('Camera access not available or denied:', err);
@@ -219,8 +210,9 @@ export default function ScanInput() {
 
           {/* Loading Spinner */}
           {!cameraActive && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black/60 z-0">
-              <Loader2 className="w-8 h-8 text-white/50 animate-spin" />
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/85 z-10 gap-2">
+              <Loader2 className="w-8 h-8 text-purple-400 animate-spin" />
+              <span className="text-xs text-white/70 font-medium">กำลังเปิดกล้อง...</span>
             </div>
           )}
 
