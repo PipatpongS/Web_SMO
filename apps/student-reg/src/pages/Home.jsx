@@ -248,7 +248,7 @@ const Home = () => {
           </div>
           <div className="flex flex-col items-center space-y-4 pt-2">
             <div className="flex items-center space-x-2">
-              <span>Version 1.2.1</span>
+              <span>Version 1.2.2</span>
             </div>
           </div>
         </div>

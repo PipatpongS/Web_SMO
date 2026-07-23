@@ -146,9 +146,7 @@ export const StaffRegProvider = ({ children }) => {
       
       const registrationPayload = {
         qr_code,
-        qrCode: qr_code,
         short_code,
-        shortCode: short_code,
         ...data,
         line_uid: userId,
         line_displayName: userProfile.displayName || '',

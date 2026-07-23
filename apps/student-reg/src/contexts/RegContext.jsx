@@ -24,7 +24,6 @@ export const RegProvider = ({ children }) => {
         const hashBuffer = await window.crypto.subtle.digest('SHA-256', msgBuffer);
         hashArray = Array.from(new Uint8Array(hashBuffer));
       } else {
-        // Simple fallback hash if SubtleCrypto is unavailable
         let hash = 0;
         const str = baseQrCode + (attempt > 0 ? `_${attempt}` : '');
         for (let i = 0; i < str.length; i++) {
@@ -89,29 +88,24 @@ export const RegProvider = ({ children }) => {
             const currentStudentId = data.studentId || '';
             const expectedQrCode = `${userId}:${currentStudentId}`;
             
-            let targetQrCode = data.qr_code || data.qrCode || expectedQrCode;
-            let targetShortCode = data.short_code || data.shortCode;
+            let targetQrCode = data.qr_code || expectedQrCode;
+            let targetShortCode = data.short_code;
 
             let needsUpdate = false;
             const updateFields = {};
 
-            if (!data.qr_code || !data.qrCode) {
+            if (!data.qr_code) {
               updateFields.qr_code = targetQrCode;
-              updateFields.qrCode = targetQrCode;
               data.qr_code = targetQrCode;
-              data.qrCode = targetQrCode;
               needsUpdate = true;
             }
 
             if (!targetShortCode) {
               targetShortCode = await generateUniqueShortCode(db, targetQrCode);
               updateFields.short_code = targetShortCode;
-              updateFields.shortCode = targetShortCode;
               data.short_code = targetShortCode;
-              data.shortCode = targetShortCode;
               needsUpdate = true;
 
-              // Register in used_short_codes collection
               try {
                 await setDoc(doc(db, "used_short_codes", targetShortCode), {
                   uid: userId,
@@ -192,9 +186,7 @@ export const RegProvider = ({ children }) => {
 
     const registrationPayload = {
       qr_code,
-      qrCode: qr_code,
       short_code,
-      shortCode: short_code,
       ...data,
       line_uid: userId,
       line_displayName: userProfile.displayName || '',
@@ -218,7 +210,6 @@ export const RegProvider = ({ children }) => {
       if (db) {
         await setDoc(doc(db, collectionName, userId), registrationPayload);
       }
-      // Save to cache
       localStorage.setItem(`reg_${userId}`, JSON.stringify(registrationPayload));
       setRegData(registrationPayload);
       setIsRegistered(true);
@@ -289,7 +280,7 @@ export const RegProvider = ({ children }) => {
 
     const studentId = data.studentId !== undefined ? data.studentId : (regData.studentId || '');
     const qr_code = `${userId}:${studentId}`;
-    let short_code = regData.short_code || regData.shortCode;
+    let short_code = regData.short_code;
 
     if (!short_code || regData.qr_code !== qr_code) {
       short_code = await generateUniqueShortCode(db, qr_code);
@@ -307,9 +298,7 @@ export const RegProvider = ({ children }) => {
 
     const updatePayload = {
       qr_code,
-      qrCode: qr_code,
       short_code,
-      shortCode: short_code,
       ...sanitizedData,
       line_displayName: userProfile.displayName || '',
       line_pictureUrl: userProfile.pictureUrl || '',
