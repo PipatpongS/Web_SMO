@@ -76,7 +76,38 @@ export const MockDataProvider = ({ children }) => {
   const findStudentByCode = (code) => {
     // Search by shortCode (case-insensitive) or ID
     const searchUpper = code.trim().toUpperCase();
-    return students.find(s => s.shortCode.toUpperCase() === searchUpper || s.id === searchUpper);
+    let found = students.find(s => s.shortCode.toUpperCase() === searchUpper || s.id === searchUpper);
+
+    // Dynamic Mock for Real QR Code Testing
+    // If a long string (like a real QR code payload) is scanned and not found, auto-generate "รัก รักสะอาด"
+    if (!found && code.trim().length > 4) {
+      const qrId = code.trim();
+      // Only generate if it doesn't already exist to prevent duplicates
+      const existingDynamic = students.find(s => s.id === qrId);
+      if (existingDynamic) return existingDynamic;
+
+      const newStudent = {
+        id: qrId,
+        firstName: "รัก",
+        lastName: "รักสะอาด",
+        department: "วิศวกรรมคอมพิวเตอร์",
+        shortCode: "RK99",
+        phone: "099-999-9999",
+        checkin_day0_shirt: false,
+        proxy_name: "",
+        checkin_day1_morning: false,
+        checkin_day1_afternoon: false,
+        checkin_day2_morning: false,
+        checkin_day2_afternoon: false
+      };
+      // For immediate return in this cycle, since state update is async
+      setTimeout(() => {
+        setStudents(prev => [...prev, newStudent]);
+      }, 0);
+      return newStudent;
+    }
+
+    return found;
   };
 
   const updateCheckin = (studentId, field, value, proxyName = "") => {

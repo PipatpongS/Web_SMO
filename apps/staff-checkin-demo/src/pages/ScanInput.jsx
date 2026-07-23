@@ -1,13 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useMockData } from '../contexts/MockDataContext';
-import { ArrowLeft, Search, Camera } from 'lucide-react';
+import { ArrowLeft, Search, Camera, RefreshCw } from 'lucide-react';
+import jsQR from 'jsqr';
 
 export default function ScanInput() {
   const [code, setCode] = useState('');
   const [error, setError] = useState('');
   const [cameraActive, setCameraActive] = useState(false);
   const videoRef = useRef(null);
+  const canvasRef = useRef(null);
+  const scanLoopRef = useRef(null);
   
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -16,37 +19,117 @@ export default function ScanInput() {
 
   const isTH = lang === 'TH';
 
-  // Initialize Real Camera Feed
-  useEffect(() => {
-    let stream = null;
-    const startCamera = async () => {
-      try {
-        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-          console.warn('getUserMedia is not supported on insecure HTTP connections over IP');
-          setCameraActive(false);
-          return;
-        }
-        stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: { ideal: 'environment' } }
-        });
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-          setCameraActive(true);
-        }
-      } catch (err) {
-        console.log('Camera access not available or denied:', err);
+  const [videoDevices, setVideoDevices] = useState([]);
+  const [currentDeviceIndex, setCurrentDeviceIndex] = useState(0);
+  const [stream, setStream] = useState(null);
+
+  const startCamera = async (deviceId = null) => {
+    try {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        console.warn('getUserMedia is not supported on insecure HTTP connections over IP');
         setCameraActive(false);
+        return;
       }
-    };
 
+      // Stop existing stream if any
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+      }
+
+      const constraints = {
+        video: deviceId 
+          ? { deviceId: { exact: deviceId } } 
+          : { facingMode: { ideal: 'environment' } }
+      };
+
+      const newStream = await navigator.mediaDevices.getUserMedia(constraints);
+      setStream(newStream);
+
+      if (videoRef.current) {
+        videoRef.current.srcObject = newStream;
+        videoRef.current.setAttribute("playsinline", true);
+        
+        // Start QR scanning loop once video is playing
+        videoRef.current.onloadedmetadata = () => {
+          videoRef.current.play();
+          setCameraActive(true);
+          scanLoopRef.current = requestAnimationFrame(scanQR);
+        };
+      }
+
+      // Enumerate devices after permission is granted to get labels
+      if (!deviceId) {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const vDevices = devices.filter(d => d.kind === 'videoinput');
+        // Try to filter only back cameras if labels exist
+        const backCams = vDevices.filter(d => d.label.toLowerCase().includes('back') || d.label.toLowerCase().includes('environment') || d.label.toLowerCase().includes('rear'));
+        const availableDevices = backCams.length > 0 ? backCams : vDevices;
+        
+        setVideoDevices(availableDevices);
+        
+        // Try to auto-select main camera (camera2 0) for Samsung devices
+        if (availableDevices.length > 1) {
+          const mainCamIndex = availableDevices.findIndex(d => d.label.includes('0, facing back'));
+          if (mainCamIndex !== -1 && mainCamIndex !== 0) {
+            setCurrentDeviceIndex(mainCamIndex);
+            startCamera(availableDevices[mainCamIndex].deviceId);
+          }
+        }
+      }
+    } catch (err) {
+      console.log('Camera access not available or denied:', err);
+      setCameraActive(false);
+    }
+  };
+
+  useEffect(() => {
     startCamera();
-
     return () => {
       if (stream) {
         stream.getTracks().forEach(track => track.stop());
       }
+      if (scanLoopRef.current) {
+        cancelAnimationFrame(scanLoopRef.current);
+      }
     };
   }, []);
+
+  const scanQR = () => {
+    if (videoRef.current && videoRef.current.readyState === videoRef.current.HAVE_ENOUGH_DATA && canvasRef.current) {
+      const video = videoRef.current;
+      const canvas = canvasRef.current;
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext("2d", { willReadFrequently: true });
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      
+      const code = jsQR(imageData.data, imageData.width, imageData.height, {
+        inversionAttempts: "dontInvert",
+      });
+
+      if (code && code.data) {
+        // Stop scanning to prevent multiple scans
+        if (scanLoopRef.current) {
+          cancelAnimationFrame(scanLoopRef.current);
+          scanLoopRef.current = null;
+        }
+        executeSearch(code.data);
+        return; // Don't queue next frame
+      }
+    }
+    // Continue scanning
+    scanLoopRef.current = requestAnimationFrame(scanQR);
+  };
+
+  const switchCamera = (e) => {
+    e.stopPropagation();
+    if (videoDevices.length > 1) {
+      const nextIndex = (currentDeviceIndex + 1) % videoDevices.length;
+      setCurrentDeviceIndex(nextIndex);
+      startCamera(videoDevices[nextIndex].deviceId);
+    }
+  };
 
   // Strict Short Code Formatter: Exactly 2 Uppercase Letters + 2 Digits (e.g. AB12, CP01)
   const handleCodeChange = (e) => {
@@ -129,11 +212,22 @@ export default function ScanInput() {
             muted 
             className="w-full h-full object-cover"
           />
+          <canvas ref={canvasRef} className="hidden" />
 
           {!cameraActive && (
             <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/70 z-0">
               <Camera size={56} className="text-white/60 mb-1" />
             </div>
+          )}
+
+          {/* Camera Switcher Button */}
+          {videoDevices.length > 1 && (
+            <button 
+              onClick={switchCamera}
+              className="absolute top-3 right-3 bg-black/50 hover:bg-black/70 text-white p-2 sm:p-2.5 rounded-full backdrop-blur-md border border-white/20 transition-all active:scale-95 z-20"
+            >
+              <RefreshCw size={20} className="sm:w-6 sm:h-6" />
+            </button>
           )}
 
           {/* Scanner Reticles */}

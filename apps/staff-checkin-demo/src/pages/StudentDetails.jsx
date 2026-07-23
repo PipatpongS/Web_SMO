@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useMockData } from '../contexts/MockDataContext';
-import { ArrowLeft, Save, Check, CheckCircle2, X, Lock, Camera, Search, QrCode } from 'lucide-react';
+import { ArrowLeft, Save, Check, CheckCircle2, X, Lock, Camera, Search, QrCode, RefreshCw } from 'lucide-react';
+import jsQR from 'jsqr';
 
 export default function StudentDetails() {
   const { id } = useParams();
@@ -34,6 +35,8 @@ export default function StudentDetails() {
 
   // Camera stream for Proxy Scanner Modal
   const videoRef = useRef(null);
+  const canvasRef = useRef(null);
+  const scanLoopRef = useRef(null);
 
   useEffect(() => {
     const found = students.find(s => s.id === id);
@@ -52,32 +55,138 @@ export default function StudentDetails() {
     }
   }, [id, students, navigate, mode]);
 
-  // Handle camera stream when proxy scan modal opens
-  useEffect(() => {
-    let stream = null;
-    if (showProxyScanModal) {
-      const startCamera = async () => {
-        try {
-          if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-            stream = await navigator.mediaDevices.getUserMedia({
-              video: { facingMode: { ideal: 'environment' } }
-            });
-            if (videoRef.current) {
-              videoRef.current.srcObject = stream;
-            }
-          }
-        } catch (err) {
-          console.log('Camera error for proxy scanner:', err);
-        }
+  const [videoDevices, setVideoDevices] = useState([]);
+  const [currentDeviceIndex, setCurrentDeviceIndex] = useState(0);
+  const [cameraStream, setCameraStream] = useState(null);
+
+  const startCamera = async (deviceId = null) => {
+    try {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return;
+      
+      if (cameraStream) {
+        cameraStream.getTracks().forEach(track => track.stop());
+      }
+
+      const constraints = {
+        video: deviceId 
+          ? { deviceId: { exact: deviceId } } 
+          : { facingMode: { ideal: 'environment' } }
       };
+
+      const newStream = await navigator.mediaDevices.getUserMedia(constraints);
+      setCameraStream(newStream);
+
+      if (videoRef.current) {
+        videoRef.current.srcObject = newStream;
+        videoRef.current.setAttribute("playsinline", true);
+        
+        videoRef.current.onloadedmetadata = () => {
+          videoRef.current.play();
+          scanLoopRef.current = requestAnimationFrame(scanQR);
+        };
+      }
+
+      if (!deviceId) {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const vDevices = devices.filter(d => d.kind === 'videoinput');
+        const backCams = vDevices.filter(d => d.label.toLowerCase().includes('back') || d.label.toLowerCase().includes('environment') || d.label.toLowerCase().includes('rear'));
+        const availableDevices = backCams.length > 0 ? backCams : vDevices;
+        
+        setVideoDevices(availableDevices);
+        
+        if (availableDevices.length > 1) {
+          const mainCamIndex = availableDevices.findIndex(d => d.label.includes('0, facing back'));
+          if (mainCamIndex !== -1 && mainCamIndex !== 0) {
+            setCurrentDeviceIndex(mainCamIndex);
+            startCamera(availableDevices[mainCamIndex].deviceId);
+          }
+        }
+      }
+    } catch (err) {
+      console.log('Camera error for proxy scanner:', err);
+    }
+  };
+
+  useEffect(() => {
+    if (showProxyScanModal) {
       startCamera();
+    } else {
+      if (cameraStream) {
+        cameraStream.getTracks().forEach(track => track.stop());
+        setCameraStream(null);
+      }
+      if (scanLoopRef.current) {
+        cancelAnimationFrame(scanLoopRef.current);
+        scanLoopRef.current = null;
+      }
     }
     return () => {
-      if (stream) {
-        stream.getTracks().forEach(track => track.stop());
+      if (cameraStream) {
+        cameraStream.getTracks().forEach(track => track.stop());
+      }
+      if (scanLoopRef.current) {
+        cancelAnimationFrame(scanLoopRef.current);
       }
     };
   }, [showProxyScanModal]);
+
+  const scanQR = () => {
+    if (videoRef.current && videoRef.current.readyState === videoRef.current.HAVE_ENOUGH_DATA && canvasRef.current) {
+      const video = videoRef.current;
+      const canvas = canvasRef.current;
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext("2d", { willReadFrequently: true });
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      
+      const code = jsQR(imageData.data, imageData.width, imageData.height, {
+        inversionAttempts: "dontInvert",
+      });
+
+      if (code && code.data) {
+        if (scanLoopRef.current) {
+          cancelAnimationFrame(scanLoopRef.current);
+          scanLoopRef.current = null;
+        }
+        processScannedProxy(code.data);
+        return; 
+      }
+    }
+    scanLoopRef.current = requestAnimationFrame(scanQR);
+  };
+
+  const processScannedProxy = (searchVal) => {
+    const found = findStudentByCode(searchVal);
+    if (found) {
+      setScannedProxy({
+        id: found.id,
+        name: `${found.firstName} ${found.lastName}`,
+        phone: found.phone || "089-876-5432"
+      });
+      setProxyName(`${found.id} - ${found.firstName} ${found.lastName}`);
+    } else {
+      // If a real unknown QR code is scanned, just use the raw payload
+      setScannedProxy({
+        id: searchVal.slice(0, 15), // Truncate if it's too long
+        name: "รับแทนบุคคลภายนอก",
+        phone: "-"
+      });
+      setProxyName(`${searchVal.slice(0, 15)} - รับแทนบุคคลภายนอก`);
+    }
+    setProxyStudentId('');
+    setShowProxyScanModal(false);
+    setModalShortCode('');
+  };
+
+  const switchCamera = (e) => {
+    e.stopPropagation();
+    if (videoDevices.length > 1) {
+      const nextIndex = (currentDeviceIndex + 1) % videoDevices.length;
+      setCurrentDeviceIndex(nextIndex);
+      startCamera(videoDevices[nextIndex].deviceId);
+    }
+  };
 
   if (!student) return null;
 
@@ -147,21 +256,7 @@ export default function StudentDetails() {
   // Proxy modal shortcode search handler
   const handleProxyModalSubmit = (e) => {
     e.preventDefault();
-    const searchVal = modalShortCode.trim();
-    const found = findStudentByCode(searchVal);
-    if (found) {
-      setScannedProxy({
-        id: found.id,
-        name: `${found.firstName} ${found.lastName}`,
-        phone: found.phone || "089-876-5432"
-      });
-      setProxyName(`${found.id} - ${found.firstName} ${found.lastName}`);
-    } else {
-      handleSimulateProxyScan();
-    }
-    setProxyStudentId('');
-    setShowProxyScanModal(false);
-    setModalShortCode('');
+    processScannedProxy(modalShortCode.trim());
   };
 
   const handleSimulateProxyScan = () => {
@@ -410,6 +505,7 @@ export default function StudentDetails() {
               className="w-full max-w-[240px] sm:max-w-[280px] md:max-w-[320px] aspect-square bg-black rounded-2xl border-2 border-purple-500/80 relative overflow-hidden flex items-center justify-center cursor-pointer mx-auto my-2 shadow-2xl shadow-purple-500/20"
             >
               <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
+              <canvas ref={canvasRef} className="hidden" />
               <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/65 z-0 p-2 text-center">
                 <Camera size={50} className="text-white/50 mb-1" />
                 <p className="text-xs text-white/80 font-medium">{isTH ? 'แตะเพื่อสแกน QR Code ผู้รับแทน' : 'Tap to scan proxy QR Code'}</p>
@@ -420,6 +516,16 @@ export default function StudentDetails() {
               <div className="absolute top-3 right-3 w-7 h-7 border-t-3 border-r-3 border-white rounded-tr-lg pointer-events-none"></div>
               <div className="absolute bottom-3 left-3 w-7 h-7 border-b-3 border-l-3 border-white rounded-bl-lg pointer-events-none"></div>
               <div className="absolute bottom-3 right-3 w-7 h-7 border-b-3 border-r-3 border-white rounded-br-lg pointer-events-none"></div>
+
+              {/* Camera Switcher Button */}
+              {videoDevices.length > 1 && (
+                <button 
+                  onClick={switchCamera}
+                  className="absolute top-2 right-2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full backdrop-blur-md border border-white/20 transition-all active:scale-95 z-20"
+                >
+                  <RefreshCw size={16} />
+                </button>
+              )}
 
               {/* Scanner Line */}
               <div className="absolute inset-x-2 h-0.5 bg-gradient-to-r from-transparent via-purple-400 to-transparent shadow-[0_0_15px_#a855f7] animate-scan-line pointer-events-none z-10"></div>
