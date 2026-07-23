@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useMockData } from '../contexts/MockDataContext';
-import { ArrowLeft, Search, Camera, RefreshCw } from 'lucide-react';
+import { ArrowLeft, Search, Camera, RefreshCw, Loader2 } from 'lucide-react';
 import jsQR from 'jsqr';
 
 export default function ScanInput() {
@@ -50,7 +50,6 @@ export default function ScanInput() {
       if (videoRef.current) {
         videoRef.current.srcObject = newStream;
         videoRef.current.setAttribute("playsinline", true);
-        setCameraActive(true);
         
         // Start QR scanning loop once video is playing
         videoRef.current.onloadedmetadata = () => {
@@ -213,9 +212,17 @@ export default function ScanInput() {
             autoPlay 
             playsInline 
             muted 
-            className="w-full h-full object-cover"
+            onPlaying={() => setCameraActive(true)}
+            className={`w-full h-full object-cover transition-opacity duration-300 ${cameraActive ? 'opacity-100' : 'opacity-0'}`}
           />
           <canvas ref={canvasRef} className="hidden" />
+
+          {/* Loading Spinner */}
+          {!cameraActive && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/60 z-0">
+              <Loader2 className="w-8 h-8 text-white/50 animate-spin" />
+            </div>
+          )}
 
 
 

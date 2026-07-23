@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useMockData } from '../contexts/MockDataContext';
-import { ArrowLeft, Save, Check, CheckCircle2, X, Lock, Camera, Search, QrCode, RefreshCw } from 'lucide-react';
+import { ArrowLeft, Save, Check, CheckCircle2, X, Lock, Camera, Search, QrCode, RefreshCw, Loader2 } from 'lucide-react';
 import jsQR from 'jsqr';
 
 export default function StudentDetails() {
@@ -59,6 +59,7 @@ export default function StudentDetails() {
   const [videoDevices, setVideoDevices] = useState([]);
   const [currentDeviceIndex, setCurrentDeviceIndex] = useState(0);
   const [cameraStream, setCameraStream] = useState(null);
+  const [proxyCameraActive, setProxyCameraActive] = useState(false);
 
   const startCamera = async (deviceId = null) => {
     try {
@@ -118,6 +119,7 @@ export default function StudentDetails() {
         streamRef.current = null;
       }
       setCameraStream(null);
+      setProxyCameraActive(false);
     }
     return () => {
       if (streamRef.current) {
@@ -504,9 +506,22 @@ export default function StudentDetails() {
               onClick={handleSimulateProxyScan}
               className="w-full max-w-[240px] sm:max-w-[280px] md:max-w-[320px] aspect-square bg-black rounded-2xl border-2 border-purple-500/80 relative overflow-hidden flex items-center justify-center cursor-pointer mx-auto my-2 shadow-2xl shadow-purple-500/20"
             >
-              <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover" />
+              <video 
+                ref={videoRef} 
+                autoPlay 
+                playsInline 
+                muted 
+                onPlaying={() => setProxyCameraActive(true)}
+                className={`w-full h-full object-cover transition-opacity duration-300 ${proxyCameraActive ? 'opacity-100' : 'opacity-0'}`}
+              />
               <canvas ref={canvasRef} className="hidden" />
 
+              {/* Loading Spinner */}
+              {!proxyCameraActive && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/60 z-0">
+                  <Loader2 className="w-8 h-8 text-white/50 animate-spin" />
+                </div>
+              )}
 
               {/* White Reticle Corners */}
               <div className="absolute top-3 left-3 w-7 h-7 border-t-3 border-l-3 border-white rounded-tl-lg pointer-events-none"></div>
