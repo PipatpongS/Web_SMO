@@ -37,6 +37,7 @@ export default function StudentDetails() {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const scanLoopRef = useRef(null);
+  const streamRef = useRef(null);
 
   useEffect(() => {
     const found = students.find(s => s.id === id);
@@ -63,8 +64,8 @@ export default function StudentDetails() {
     try {
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return;
       
-      if (cameraStream) {
-        cameraStream.getTracks().forEach(track => track.stop());
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
       }
 
       const constraints = {
@@ -75,6 +76,7 @@ export default function StudentDetails() {
 
       const newStream = await navigator.mediaDevices.getUserMedia(constraints);
       setCameraStream(newStream);
+      streamRef.current = newStream;
 
       if (videoRef.current) {
         videoRef.current.srcObject = newStream;
@@ -111,18 +113,16 @@ export default function StudentDetails() {
     if (showProxyScanModal) {
       startCamera();
     } else {
-      if (cameraStream) {
-        cameraStream.getTracks().forEach(track => track.stop());
-        setCameraStream(null);
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+        streamRef.current = null;
       }
-      if (scanLoopRef.current) {
-        clearTimeout(scanLoopRef.current);
-        scanLoopRef.current = null;
-      }
+      setCameraStream(null);
     }
     return () => {
-      if (cameraStream) {
-        cameraStream.getTracks().forEach(track => track.stop());
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+        streamRef.current = null;
       }
       if (scanLoopRef.current) {
         clearTimeout(scanLoopRef.current);
@@ -523,9 +523,6 @@ export default function StudentDetails() {
                   <RefreshCw size={16} />
                 </button>
               )}
-
-              {/* Scanner Line */}
-              <div className="absolute inset-x-2 h-0.5 bg-gradient-to-r from-transparent via-purple-400 to-transparent shadow-[0_0_15px_#a855f7] animate-scan-line pointer-events-none z-10"></div>
             </div>
 
             {/* Short Code Form inside Modal */}

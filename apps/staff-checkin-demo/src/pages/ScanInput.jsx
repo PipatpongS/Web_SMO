@@ -11,6 +11,7 @@ export default function ScanInput() {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const scanLoopRef = useRef(null);
+  const streamRef = useRef(null);
   
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -32,8 +33,8 @@ export default function ScanInput() {
       }
 
       // Stop existing stream if any
-      if (stream) {
-        stream.getTracks().forEach(track => track.stop());
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
       }
 
       const constraints = {
@@ -44,6 +45,7 @@ export default function ScanInput() {
 
       const newStream = await navigator.mediaDevices.getUserMedia(constraints);
       setStream(newStream);
+      streamRef.current = newStream;
 
       if (videoRef.current) {
         videoRef.current.srcObject = newStream;
@@ -85,8 +87,9 @@ export default function ScanInput() {
   useEffect(() => {
     startCamera();
     return () => {
-      if (stream) {
-        stream.getTracks().forEach(track => track.stop());
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+        streamRef.current = null;
       }
       if (scanLoopRef.current) {
         clearTimeout(scanLoopRef.current);
@@ -231,9 +234,6 @@ export default function ScanInput() {
           <div className="absolute top-3 right-3 w-8 h-8 sm:w-10 sm:h-10 border-t-4 border-r-4 border-white rounded-tr-xl pointer-events-none z-10"></div>
           <div className="absolute bottom-3 left-3 w-8 h-8 sm:w-10 sm:h-10 border-b-4 border-l-4 border-white rounded-bl-lg pointer-events-none z-10"></div>
           <div className="absolute bottom-3 right-3 w-8 h-8 sm:w-10 sm:h-10 border-b-4 border-r-4 border-white rounded-br-lg pointer-events-none z-10"></div>
-
-          {/* Laser Line */}
-          <div className="absolute inset-x-3 h-0.5 bg-gradient-to-r from-transparent via-white to-transparent shadow-[0_0_20px_#ffffff] animate-scan-line pointer-events-none z-10"></div>
         </div>
 
         {/* Short Code Input Form */}
