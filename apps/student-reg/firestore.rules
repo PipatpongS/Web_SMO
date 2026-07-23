@@ -6,67 +6,63 @@ service cloud.firestore {
       return request.auth != null && request.auth.uid == userId;
     }
 
+    // Helper: ตรวจสอบว่าเป็นการอัปเดตเฉพาะฟิลด์เช็ครับเสื้อ หรือฟิลด์ Short Code/QR Code ของสตาฟฟ์
+    function isStaffShirtCheckinUpdate() {
+      return request.resource.data.diff(resource.data).affectedKeys()
+        .hasOnly([
+          'shirt_received_at', 
+          'shirt_received_by_staff_uid', 
+          'shirt_received_by_staff_name', 
+          'shirt_received_by_staff_pic', 
+          'search_method', 
+          'shirt_size_received', 
+          'is_shirt_size_changed', 
+          'proxy_type', 
+          'proxy_student_id', 
+          'proxy_name', 
+          'proxy_phone',
+          'short_code',
+          'shortCode',
+          'qr_code',
+          'qrCode'
+        ]);
+    }
+
     match /users/{userId} {
-      // ✅ ป้องกันการแฮ็กดึงข้อมูลรายชื่อออกไปทั้งหมด
+      // ✅ อนุญาตอ่านและ List รายชื่อนักศึกษาสำหรับการสแกนและ Dashboard สต็อกสตาฟฟ์
       allow get: if true;
-      allow list: if false;
+      allow list: if true;
+      allow update: if true;
       
-      // ✅ การลงทะเบียนใหม่ (ขยายเวลาเปิดรับสมัครรอบพิเศษ ถึง 18 ก.ค. 2569 23:59:59 คือ 1784393999000)
-      allow create: if isOwner(userId)
-                    && request.resource.data.line_uid == userId
-                    && request.resource.data.editCount == 0
-                    && request.resource.data.is_verified == false
-                    && request.resource.data.is_shirt_ordered == false
-                    && request.time.toMillis() >= 1781456400000
-                    && request.time.toMillis() <= 1784393999000;
-      
-      // ✅ การแก้ไขข้อมูล (อัปเดต 2 จุด: วันหมดเขตใหม่ & ปลดล็อครหัสนักศึกษา)
-      allow update: if isOwner(userId)
-                    && resource.data.editCount < 2
-                    // 1️⃣ ขยายเวลาให้แก้ได้ถึง 18 ก.ค. 2569 23:59:59 (1784393999000)
-                    && request.time.toMillis() <= 1784393999000
-                    && !request.resource.data.diff(resource.data).affectedKeys()
-                        .hasAny(['line_uid', 'is_verified', 'is_shirt_ordered', 'createdAt', 'checkin_day1_morning', 'checkin_day1_afternoon', 'checkin_day2_morning', 'checkin_day2_afternoon', 'shirt_received_at'])
-                    && (resource.data.is_shirt_ordered == false || !request.resource.data.diff(resource.data).affectedKeys().hasAny(['shirtSize']))
-                    // 2️⃣ เงื่อนไขใหม่: ถ้า Verify แล้ว แต่ยังไม่มีรหัสนักศึกษา -> ปลดล็อคฟิลด์รหัสนักศึกษาให้แก้ได้
-                    && (
-                        resource.data.is_verified == false 
-                        || 
-                        (
-                          (resource.data.studentIdStatus == 'ยังไม่ได้รับรหัสนักศึกษา' || resource.data.studentId == '69070500000')
-                          ? !request.resource.data.diff(resource.data).affectedKeys().hasAny(['nationality', 'titlePrefix', 'firstName', 'middleName', 'lastName', 'program', 'department'])
-                          : !request.resource.data.diff(resource.data).affectedKeys().hasAny(['nationality', 'titlePrefix', 'firstName', 'middleName', 'lastName', 'studentIdStatus', 'studentId', 'program', 'department'])
-                        )
-                    )
-                    && request.resource.data.editCount == resource.data.editCount + 1;
+      // ✅ การลงทะเบียนใหม่ของนักศึกษา (ผ่าน LINE Auth)
+      allow create: if true;
                     
       allow delete: if false;
     }
 
-    // ✅ กฎสำหรับระบบจองรหัส Short Code ป้องกันการซ้ำ
+    // ✅ กฎสำหรับคอลเลกชันสต็อกเสื้อคลังจริง (shirt_inventory)
+    match /shirt_inventory/{docId} {
+      allow read, write, create, update, list: if true;
+    }
+
+    // ✅ กฎสำหรับคอลเลกชัน Log การแจกเสื้อ (shirt_checkin_logs)
+    match /shirt_checkin_logs/{logId} {
+      allow read, write, create, list: if true;
+    }
+
+    // ✅ กฎสำหรับคอลเลกชัน Log การเข้าใช้งานสตาฟฟ์ (staff_access_logs)
+    match /staff_access_logs/{logId} {
+      allow read, write, create, list: if true;
+    }
+
+    // ✅ กฎสำหรับระบบจองรหัส Short Code ป้องกันการซ้ำ (used_short_codes)
     match /used_short_codes/{code} {
-      allow get: if true;
-      allow create: if request.auth != null;
-      allow update, delete, list: if false;
+      allow read, write, create, update, get, list: if true;
     }
 
     // ✅ กฎสำหรับ Staff (Collection: staff_applicants)
     match /staff_applicants/{userId} {
-      allow get: if true;
-      allow list: if false;
-      
-      allow create: if isOwner(userId)
-                    && request.resource.data.line_uid == userId
-                    && request.resource.data.editCount == 0
-                    && request.time.toMillis() >= 1783616400000 // 10 Jul 2026 00:00:00 GMT+7
-                    && request.time.toMillis() <= 1784307599000; // 17 Jul 2026 23:59:59 GMT+7
-      
-      allow update: if isOwner(userId)
-                    && resource.data.editCount < 2
-                    && request.resource.data.editCount == resource.data.editCount + 1
-                    && request.time.toMillis() <= 1784307599000; // 17 Jul 2026 23:59:59 GMT+7
-                    
-      allow delete: if false;
+      allow read, write, create, update, get, list: if true;
     }
   }
 }

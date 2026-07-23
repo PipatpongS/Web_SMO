@@ -1,7 +1,7 @@
-import React, { createContext, useState, useEffect, useContext } from 'react';
-import { doc, getDoc, setDoc, updateDoc, onSnapshot, writeBatch } from 'firebase/firestore';
-import { db } from '../config/firebase';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
+import { db } from '../config/firebase';
+import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 
 const RegContext = createContext();
 
@@ -9,34 +9,57 @@ export const useRegistration = () => useContext(RegContext);
 
 export const RegProvider = ({ children }) => {
   const { userProfile, loading: authLoading } = useAuth();
+  const [isRegistered, setIsRegistered] = useState(false);
+  const [regData, setRegData] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  const getCachedState = () => {
-    try {
-      if (userProfile && userProfile.userId) {
-        const cachedReg = localStorage.getItem(`reg_${userProfile.userId}`);
-        if (cachedReg) {
-          return { isReg: true, data: JSON.parse(cachedReg), load: false };
+  // Helper: SHA-256 Hash to generate 2 Letters + 2 Digits Short Code (e.g. BC39)
+  const generateUniqueShortCode = async (dbInstance, baseQrCode) => {
+    let attempt = 0;
+    while (true) {
+      const msgBuffer = new TextEncoder().encode(baseQrCode + (attempt > 0 ? `_${attempt}` : ''));
+      let hashArray;
+      
+      if (window.crypto && window.crypto.subtle) {
+        const hashBuffer = await window.crypto.subtle.digest('SHA-256', msgBuffer);
+        hashArray = Array.from(new Uint8Array(hashBuffer));
+      } else {
+        // Simple fallback hash if SubtleCrypto is unavailable
+        let hash = 0;
+        const str = baseQrCode + (attempt > 0 ? `_${attempt}` : '');
+        for (let i = 0; i < str.length; i++) {
+          hash = ((hash << 5) - hash) + str.charCodeAt(i);
+          hash |= 0;
         }
-        // Check if we previously confirmed they are NOT registered
-        const notRegistered = localStorage.getItem(`not_reg_${userProfile.userId}`);
-        if (notRegistered === 'true') {
-          return { isReg: false, data: null, load: false };
-        }
+        hashArray = [Math.abs(hash) % 256, Math.abs(hash >> 8) % 256, Math.abs(hash >> 16) % 256, Math.abs(hash >> 24) % 256];
       }
-    } catch (e) { }
-    return { isReg: false, data: null, load: true };
-  };
+      
+      const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+      const numbers = '0123456789';
+      let code = '';
+      code += letters[hashArray[0] % 26];
+      code += letters[hashArray[1] % 26];
+      code += numbers[hashArray[2] % 10];
+      code += numbers[hashArray[3] % 10];
 
-  const initialState = getCachedState();
-  const [isRegistered, setIsRegistered] = useState(initialState.isReg);
-  const [regData, setRegData] = useState(initialState.data);
-  const [loading, setLoading] = useState(initialState.load);
+      if (!dbInstance) return code;
+
+      const docRef = doc(dbInstance, 'used_short_codes', code);
+      const docSnap = await getDoc(docRef);
+      if (!docSnap.exists()) {
+        return code;
+      }
+      attempt++;
+    }
+  };
 
   useEffect(() => {
     let unsubscribe = null;
 
     const checkRegistration = async () => {
-      if (authLoading || !userProfile) {
+      if (!userProfile) {
+        setIsRegistered(false);
+        setRegData(null);
         if (!authLoading) setLoading(false);
         return;
       }
@@ -46,34 +69,75 @@ export const RegProvider = ({ children }) => {
       // 1. Check LocalStorage (Fast Path)
       const cachedReg = localStorage.getItem(`reg_${userId}`);
       if (cachedReg) {
-        setRegData(JSON.parse(cachedReg));
-        setIsRegistered(true);
-        setLoading(false);
-        // We do NOT return here, we proceed to set up the snapshot listener
-        // to get realtime updates from Firebase.
+        try {
+          setRegData(JSON.parse(cachedReg));
+          setIsRegistered(true);
+          setLoading(false);
+        } catch (e) {}
       }
 
-      // 2. Fetch from Firebase (Single Read, No Persistent Connection to save Free Tier limits)
+      // 2. Fetch from Firebase and Auto-Backfill missing Short Code / QR Code
       if (db) {
         try {
           const docRef = doc(db, "users", userId);
           const docSnap = await getDoc(docRef);
+
           if (docSnap.exists()) {
             const data = docSnap.data();
+
+            // Auto-backfill missing qr_code or short_code for existing users
+            const currentStudentId = data.studentId || '';
+            const expectedQrCode = `${userId}:${currentStudentId}`;
+            
+            let targetQrCode = data.qr_code || data.qrCode || expectedQrCode;
+            let targetShortCode = data.short_code || data.shortCode;
+
+            let needsUpdate = false;
+            const updateFields = {};
+
+            if (!data.qr_code || !data.qrCode) {
+              updateFields.qr_code = targetQrCode;
+              updateFields.qrCode = targetQrCode;
+              data.qr_code = targetQrCode;
+              data.qrCode = targetQrCode;
+              needsUpdate = true;
+            }
+
+            if (!targetShortCode) {
+              targetShortCode = await generateUniqueShortCode(db, targetQrCode);
+              updateFields.short_code = targetShortCode;
+              updateFields.shortCode = targetShortCode;
+              data.short_code = targetShortCode;
+              data.shortCode = targetShortCode;
+              needsUpdate = true;
+
+              // Register in used_short_codes collection
+              try {
+                await setDoc(doc(db, "used_short_codes", targetShortCode), {
+                  uid: userId,
+                  timestamp: new Date().toISOString()
+                }, { merge: true });
+              } catch (scErr) {
+                console.error("Failed to write used_short_codes on backfill:", scErr);
+              }
+            }
 
             // Sync LINE profile changes to Firebase silently
             if (userProfile && (
               data.line_displayName !== (userProfile.displayName || '') ||
               data.line_pictureUrl !== (userProfile.pictureUrl || '')
             )) {
-              const newProfileData = {
-                line_displayName: userProfile.displayName || '',
-                line_pictureUrl: userProfile.pictureUrl || ''
-              };
-              updateDoc(docRef, newProfileData).catch(err => {
-                console.error("Failed to sync LINE profile update:", err);
+              updateFields.line_displayName = userProfile.displayName || '';
+              updateFields.line_pictureUrl = userProfile.pictureUrl || '';
+              data.line_displayName = userProfile.displayName || '';
+              data.line_pictureUrl = userProfile.pictureUrl || '';
+              needsUpdate = true;
+            }
+
+            if (needsUpdate) {
+              updateDoc(docRef, updateFields).catch(err => {
+                console.error("Failed to backfill short_code/qr_code update:", err);
               });
-              Object.assign(data, newProfileData);
             }
 
             // Update Cache
@@ -93,7 +157,6 @@ export const RegProvider = ({ children }) => {
           setLoading(false);
         }
       } else {
-        // Fallback for dev mode without Firebase
         if (!cachedReg) setIsRegistered(false);
         setLoading(false);
       }
@@ -106,47 +169,33 @@ export const RegProvider = ({ children }) => {
     };
   }, [userProfile, authLoading]);
 
-  
-  const generateUniqueShortCode = async (db, baseQrCode) => {
-    let attempt = 0;
-    while (true) {
-      const msgBuffer = new TextEncoder().encode(baseQrCode + (attempt > 0 ? `_${attempt}` : ''));
-      const hashBuffer = await window.crypto.subtle.digest('SHA-256', msgBuffer);
-      const hashArray = Array.from(new Uint8Array(hashBuffer));
-      
-      const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-      const numbers = '0123456789';
-      let code = '';
-      code += letters[hashArray[0] % 26];
-      code += letters[hashArray[1] % 26];
-      code += numbers[hashArray[2] % 10];
-      code += numbers[hashArray[3] % 10];
-
-      const docRef = doc(db, 'used_short_codes', code);
-      const docSnap = await getDoc(docRef);
-      if (!docSnap.exists()) {
-        return code;
-      }
-      attempt++;
-    }
-  };
-
-
+  // Registration handler for new students
   const registerUser = async (data, collectionName = "users") => {
     if (!userProfile) return { success: false, error: "Not authenticated" };
 
     const userId = userProfile.userId;
-    
     const studentId = data.studentId || '';
     const qr_code = `${userId}:${studentId}`;
     const short_code = await generateUniqueShortCode(db, qr_code);
 
-
+    // Reserve short_code in used_short_codes collection
+    if (db) {
+      try {
+        await setDoc(doc(db, "used_short_codes", short_code), {
+          uid: userId,
+          timestamp: new Date().toISOString()
+        });
+      } catch (err) {
+        console.error("Failed to write to used_short_codes:", err);
+      }
+    }
 
     const registrationPayload = {
       qr_code,
+      qrCode: qr_code,
       short_code,
-      ...data, // Save all fields from the form dynamically
+      shortCode: short_code,
+      ...data,
       line_uid: userId,
       line_displayName: userProfile.displayName || '',
       line_pictureUrl: userProfile.pictureUrl || '',
@@ -161,7 +210,7 @@ export const RegProvider = ({ children }) => {
       is_verified: false,
       editCount: 0,
       note: 'รอบพิเศษ',
-      shirtSize: 'XL',
+      shirtSize: data.shirtSize || 'XL',
       group: null
     };
 
@@ -174,7 +223,6 @@ export const RegProvider = ({ children }) => {
       setRegData(registrationPayload);
       setIsRegistered(true);
 
-      // Call API to link Rich Menu (Fire and forget, or handle silently)
       try {
         fetch('/api/link-rich-menu', {
           method: 'POST',
@@ -195,20 +243,17 @@ export const RegProvider = ({ children }) => {
     }
   };
 
+  // Profile update handler
   const updateUser = async (data, collectionName = "users") => {
     if (!userProfile) return { success: false, error: "Not authenticated" };
     if (!isRegistered || !regData) return { success: false, error: "No existing registration found" };
 
-    // Check local edit count limit just to be safe
     if (regData.editCount >= 2) {
       return { success: false, error: "You have reached the maximum number of edits allowed." };
     }
 
-    // Enforce locks for verified users
     if (regData.is_verified === true) {
       let lockedFields = ['nationality', 'titlePrefix', 'firstName', 'middleName', 'lastName', 'studentIdStatus', 'studentId', 'program', 'department'];
-      
-      // ปลดล็อคให้ถ้ายังไม่ได้รับรหัสนักศึกษา
       if (regData.studentIdStatus === 'ยังไม่ได้รับรหัสนักศึกษา' || regData.studentId === '69070500000') {
         lockedFields = lockedFields.filter(f => f !== 'studentIdStatus' && f !== 'studentId');
       }
@@ -220,7 +265,6 @@ export const RegProvider = ({ children }) => {
       }
     }
 
-    // Enforce lock for shirt size for EVERYONE
     if (data.shirtSize !== undefined && data.shirtSize !== regData.shirtSize) {
       return { success: false, error: "ไม่สามารถแก้ไขไซซ์เสื้อได้ หากต้องการแก้ไข โปรดติดต่อผ่านทีมงาน (LINE OA: @122ddost)" };
     }
@@ -228,7 +272,6 @@ export const RegProvider = ({ children }) => {
     const userId = userProfile.userId;
     const newEditCount = (regData.editCount || 0) + 1;
 
-    // Whitelist allowed fields to prevent Mass Assignment vulnerabilities
     const allowedFields = [
       'titlePrefix', 'firstName', 'middleName', 'lastName', 'email', 'phone',
       'studentIdStatus', 'studentId', 'nationality', 'program', 'department',
@@ -244,18 +287,29 @@ export const RegProvider = ({ children }) => {
       }
     });
 
-    
     const studentId = data.studentId !== undefined ? data.studentId : (regData.studentId || '');
     const qr_code = `${userId}:${studentId}`;
-    let short_code = regData.short_code;
+    let short_code = regData.short_code || regData.shortCode;
+
     if (!short_code || regData.qr_code !== qr_code) {
       short_code = await generateUniqueShortCode(db, qr_code);
+      if (db) {
+        try {
+          await setDoc(doc(db, "used_short_codes", short_code), {
+            uid: userId,
+            timestamp: new Date().toISOString()
+          }, { merge: true });
+        } catch (scErr) {
+          console.error("Failed to write used_short_codes on update:", scErr);
+        }
+      }
     }
-
 
     const updatePayload = {
       qr_code,
+      qrCode: qr_code,
       short_code,
+      shortCode: short_code,
       ...sanitizedData,
       line_displayName: userProfile.displayName || '',
       line_pictureUrl: userProfile.pictureUrl || '',

@@ -178,15 +178,22 @@ const Profile = () => {
         </button>
 
         {/* QR Code */}
-        <div className="bg-white p-3 rounded-xl mb-8 shadow-md border border-gray-100 flex justify-center w-full max-w-[280px]">
+        <div className="bg-white p-3.5 rounded-2xl mb-3 shadow-lg border border-gray-100 flex justify-center w-full max-w-[280px]">
           <QRCodeSVG
             value={qrValue}
             size={260}
             level="H"
             includeMargin={false}
-            className="w-full h-auto rounded-md"
+            className="w-full h-auto rounded-xl"
           />
         </div>
+
+        {/* Short Code Badge right under QR Code */}
+        {(displayRegData.short_code || displayRegData.shortCode) && (
+          <div className="mb-5 px-4 py-1 bg-purple-50 text-purple-900 border border-purple-200/80 shadow-sm rounded-full flex items-center justify-center font-mono font-extrabold text-xs sm:text-sm tracking-[0.15em]">
+            {displayRegData.short_code || displayRegData.shortCode}
+          </div>
+        )}
 
         {/* User Info */}
         <div className="w-full space-y-3 text-sm text-gray-800 mb-6">
