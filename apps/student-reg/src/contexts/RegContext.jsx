@@ -52,6 +52,44 @@ export const RegProvider = ({ children }) => {
     }
   };
 
+  // Helper: Single-Use Temporary Walk-in Short Code Generator (e.g. W-AB12)
+  const generateTempWalkinShortCode = async (dbInstance, baseQrCode) => {
+    let attempt = 0;
+    while (true) {
+      const str = 'WALKIN_TEMP_' + baseQrCode + (attempt > 0 ? `_${attempt}` : '');
+      let hashArray;
+      if (window.crypto && window.crypto.subtle) {
+        const msgBuffer = new TextEncoder().encode(str);
+        const hashBuffer = await window.crypto.subtle.digest('SHA-256', msgBuffer);
+        hashArray = Array.from(new Uint8Array(hashBuffer));
+      } else {
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+          hash = ((hash << 5) - hash) + str.charCodeAt(i);
+          hash |= 0;
+        }
+        hashArray = [Math.abs(hash) % 256, Math.abs(hash >> 8) % 256, Math.abs(hash >> 16) % 256, Math.abs(hash >> 24) % 256];
+      }
+
+      const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+      const numbers = '0123456789';
+      let code = 'W-';
+      code += letters[hashArray[0] % 26];
+      code += letters[hashArray[1] % 26];
+      code += numbers[hashArray[2] % 10];
+      code += numbers[hashArray[3] % 10];
+
+      if (!dbInstance) return code;
+
+      const docRef = doc(dbInstance, 'used_short_codes', code);
+      const docSnap = await getDoc(docRef);
+      if (!docSnap.exists()) {
+        return code;
+      }
+      attempt++;
+    }
+  };
+
   useEffect(() => {
     let unsubscribe = null;
 
@@ -69,89 +107,77 @@ export const RegProvider = ({ children }) => {
       const cachedReg = localStorage.getItem(`reg_${userId}`);
       if (cachedReg) {
         try {
-          setRegData(JSON.parse(cachedReg));
+          const parsed = JSON.parse(cachedReg);
+          setRegData(parsed);
           setIsRegistered(true);
-          setLoading(false);
-        } catch (e) {}
+        } catch (e) {
+          console.error("Error parsing cached reg data", e);
+        }
       }
 
-      // 2. Fetch from Firebase and Auto-Backfill missing Short Code / QR Code
-      if (db) {
-        try {
-          const docRef = doc(db, "users", userId);
+      // 2. Fetch from Firestore
+      try {
+        if (db) {
+          const docRef = doc(db, 'users', userId);
           const docSnap = await getDoc(docRef);
-
           if (docSnap.exists()) {
             const data = docSnap.data();
+            setIsRegistered(true);
 
             // Auto-backfill missing qr_code or short_code for existing users
-            const currentStudentId = data.studentId || '';
-            const expectedQrCode = `${userId}:${currentStudentId}`;
-            
-            let targetQrCode = data.qr_code || expectedQrCode;
+            let targetQrCode = data.qr_code;
             let targetShortCode = data.short_code;
-
             let needsUpdate = false;
-            const updateFields = {};
 
-            if (!data.qr_code) {
-              updateFields.qr_code = targetQrCode;
-              data.qr_code = targetQrCode;
+            if (!targetQrCode) {
+              const studentId = data.studentId || '';
+              targetQrCode = `${userId}:${studentId}`;
               needsUpdate = true;
             }
 
             if (!targetShortCode) {
               targetShortCode = await generateUniqueShortCode(db, targetQrCode);
-              updateFields.short_code = targetShortCode;
-              data.short_code = targetShortCode;
-              needsUpdate = true;
-
-              try {
-                await setDoc(doc(db, "used_short_codes", targetShortCode), {
-                  uid: userId,
-                  timestamp: new Date().toISOString()
-                }, { merge: true });
-              } catch (scErr) {
-                console.error("Failed to write used_short_codes on backfill:", scErr);
-              }
-            }
-
-            // Sync LINE profile changes to Firebase silently
-            if (userProfile && (
-              data.line_displayName !== (userProfile.displayName || '') ||
-              data.line_pictureUrl !== (userProfile.pictureUrl || '')
-            )) {
-              updateFields.line_displayName = userProfile.displayName || '';
-              updateFields.line_pictureUrl = userProfile.pictureUrl || '';
-              data.line_displayName = userProfile.displayName || '';
-              data.line_pictureUrl = userProfile.pictureUrl || '';
               needsUpdate = true;
             }
 
             if (needsUpdate) {
-              updateDoc(docRef, updateFields).catch(err => {
+              const updateFields = {};
+              if (!data.qr_code) {
+                updateFields.qr_code = targetQrCode;
+                data.qr_code = targetQrCode;
+              }
+              if (!data.short_code) {
+                updateFields.short_code = targetShortCode;
+                data.short_code = targetShortCode;
+                // Reserve short_code
+                try {
+                  await setDoc(doc(db, "used_short_codes", targetShortCode), {
+                    uid: userId,
+                    timestamp: new Date().toISOString()
+                  });
+                } catch (scErr) {
+                  console.error("Failed to write used_short_codes on backfill:", scErr);
+                }
+              }
+
+              try {
+                await updateDoc(docRef, updateFields);
+              } catch (err) {
                 console.error("Failed to backfill short_code/qr_code update:", err);
-              });
+              }
             }
 
-            // Update Cache
-            localStorage.setItem(`reg_${userId}`, JSON.stringify(data));
-            localStorage.removeItem(`not_reg_${userId}`);
             setRegData(data);
-            setIsRegistered(true);
+            localStorage.setItem(`reg_${userId}`, JSON.stringify(data));
           } else {
-            localStorage.removeItem(`reg_${userId}`);
-            localStorage.setItem(`not_reg_${userId}`, 'true');
             setIsRegistered(false);
+            setRegData(null);
+            localStorage.removeItem(`reg_${userId}`);
           }
-          setLoading(false);
-        } catch (err) {
-          console.error("Setup listener error:", err);
-          if (!cachedReg) setIsRegistered(false);
-          setLoading(false);
         }
-      } else {
-        if (!cachedReg) setIsRegistered(false);
+      } catch (error) {
+        console.error("Error checking registration status:", error);
+      } finally {
         setLoading(false);
       }
     };
@@ -171,12 +197,18 @@ export const RegProvider = ({ children }) => {
     const studentId = data.studentId || '';
     const qr_code = `${userId}:${studentId}`;
     const short_code = await generateUniqueShortCode(db, qr_code);
+    const walkin_temp_short_code = await generateTempWalkinShortCode(db, qr_code);
 
-    // Reserve short_code in used_short_codes collection
+    // Reserve short_code and walkin_temp_short_code in used_short_codes collection
     if (db) {
       try {
         await setDoc(doc(db, "used_short_codes", short_code), {
           uid: userId,
+          timestamp: new Date().toISOString()
+        });
+        await setDoc(doc(db, "used_short_codes", walkin_temp_short_code), {
+          uid: userId,
+          type: 'walkin_temp',
           timestamp: new Date().toISOString()
         });
       } catch (err) {
@@ -184,7 +216,7 @@ export const RegProvider = ({ children }) => {
       }
     }
 
-    const walkinTempQr = `WALKIN_TEMP:${userId}:${short_code}:${Date.now()}`;
+    const walkinTempQr = `WALKIN_TEMP:${userId}:${walkin_temp_short_code}:${Date.now()}`;
 
     const registrationPayload = {
       qr_code,
@@ -207,7 +239,7 @@ export const RegProvider = ({ children }) => {
       walkin_status: 'PENDING_APPROVAL',
       walkin_verified: false,
       walkin_temp_qr: walkinTempQr,
-      walkin_temp_short_code: short_code,
+      walkin_temp_short_code: walkin_temp_short_code,
       shirtSize: data.shirtSize || 'XL',
       group: null
     };
