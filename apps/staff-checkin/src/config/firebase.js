@@ -22,12 +22,10 @@ try {
   console.error("Firebase initialization error:", e);
 }
 
-// LIFF Initialization Helper
+// LIFF Initialization — safe, never auto-redirects, just returns profile if already logged in
 export const initLiff = async () => {
   const liffId = import.meta.env.VITE_LIFF_ID || "2010390110-fPHy5j81";
-  if (!liffId) {
-    return null;
-  }
+  if (!liffId) return null;
 
   try {
     await liff.init({ liffId });
@@ -40,25 +38,21 @@ export const initLiff = async () => {
         pictureUrl: profile.pictureUrl,
         statusMessage: profile.statusMessage
       };
-    } else {
-      if (liff.isInClient()) {
-        liff.login({ redirectUri: window.location.href });
-      }
     }
+    // Not logged in to LIFF yet — do NOT redirect automatically
+    return null;
   } catch (err) {
-    console.error("LIFF Init error:", err);
+    console.warn("LIFF Init note:", err?.message || err);
   }
   return null;
 };
 
-// Explicit LINE Login Trigger
+// Explicit LINE Login Trigger — called only by authenticated staff who want to link LINE profile
 export const liffLogin = async () => {
   const liffId = import.meta.env.VITE_LIFF_ID || "2010390110-fPHy5j81";
   try {
     await liff.init({ liffId });
-    if (!liff.isLoggedIn()) {
-      liff.login({ redirectUri: window.location.href });
-    } else {
+    if (liff.isLoggedIn()) {
       const profile = await liff.getProfile();
       return {
         line_uid: profile.userId,
@@ -67,6 +61,9 @@ export const liffLogin = async () => {
         pictureUrl: profile.pictureUrl,
         statusMessage: profile.statusMessage
       };
+    } else {
+      // Redirect to LINE login — safe because this is explicitly triggered by user action
+      liff.login({ redirectUri: window.location.href });
     }
   } catch (err) {
     console.error("liffLogin error:", err);

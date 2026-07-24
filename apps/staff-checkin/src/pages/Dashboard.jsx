@@ -22,35 +22,39 @@ export default function Dashboard() {
     <div className="w-full max-w-md sm:max-w-lg flex flex-col items-center justify-center relative z-10 py-2 px-3 sm:px-4 animate-fadeIn transition-all duration-300 ease-in-out my-auto space-y-6 sm:space-y-8">
       
       {/* Staff Status Bar */}
-      <div className="w-full flex justify-between items-center bg-black/30 p-4 sm:p-5 rounded-3xl backdrop-blur-md border border-white/15 shadow-xl mb-4 sm:mb-6">
-        <div className="flex items-center gap-3 sm:gap-4">
-          <div className="bg-purple-500/20 w-11 h-11 sm:w-12 sm:h-12 rounded-2xl border border-purple-400/30 text-purple-300 flex items-center justify-center overflow-hidden shrink-0 shadow-inner">
-            {profilePic ? (
-              <img src={profilePic} alt="LINE Profile" className="w-full h-full object-cover rounded-2xl" />
-            ) : (
-              <User size={22} />
-            )}
+      <div className="w-full bg-black/30 px-3 py-3 sm:px-4 sm:py-3.5 rounded-3xl backdrop-blur-md border border-white/15 shadow-xl mb-4 sm:mb-6">
+        <div className="flex items-center justify-between gap-2">
+          {/* Left: avatar + name + badge */}
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="bg-purple-500/20 w-10 h-10 sm:w-11 sm:h-11 rounded-2xl border border-purple-400/30 text-purple-300 flex items-center justify-center overflow-hidden shrink-0 shadow-inner">
+              {profilePic ? (
+                <img src={profilePic} alt="LINE Profile" className="w-full h-full object-cover rounded-2xl" />
+              ) : (
+                <User size={20} />
+              )}
+            </div>
+            <div className="min-w-0">
+              <p className="text-white text-sm font-extrabold truncate leading-tight">{displayName}</p>
+              <span className={`text-[10px] px-2 py-0.5 rounded-md font-extrabold border inline-block mt-0.5 ${
+                isSupervisor 
+                  ? 'bg-purple-500/30 text-purple-200 border-purple-400/40' 
+                  : 'bg-blue-500/30 text-blue-200 border-blue-400/40'
+              }`}>
+                {isSupervisor ? (isTH ? 'ผู้ดูแลระบบ' : 'Admin') : (isTH ? 'สตาฟฟ์' : 'Staff')}
+              </span>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <p className="text-white text-sm sm:text-base font-extrabold">{displayName}</p>
-            <span className={`text-[10px] px-2.5 py-0.5 rounded-md font-extrabold border ${
-              isSupervisor 
-                ? 'bg-purple-500/30 text-purple-200 border-purple-400/40' 
-                : 'bg-blue-500/30 text-blue-200 border-blue-400/40'
-            }`}>
-              {isSupervisor ? (isTH ? 'ผู้ดูแลระบบ' : 'Admin') : (isTH ? 'สตาฟฟ์' : 'Staff')}
-            </span>
-          </div>
-        </div>
 
-        <button 
-          onClick={handleLogout} 
-          className="flex items-center gap-1.5 text-xs text-red-300 hover:text-red-100 font-bold px-3.5 py-2 rounded-xl bg-red-500/20 hover:bg-red-500/30 border border-red-400/30 transition-all cursor-pointer shadow-sm"
-          title={isTH ? "ออกจากระบบ" : "Log out"}
-        >
-          <LogOut size={16} />
-          <span>{isTH ? 'ออกจากระบบ' : 'Log out'}</span>
-        </button>
+          {/* Right: logout button — icon only on mobile, icon+text on sm+ */}
+          <button 
+            onClick={handleLogout} 
+            className="flex items-center gap-1 text-red-300 hover:text-red-100 font-bold px-2.5 py-2 sm:px-3 rounded-xl bg-red-500/20 hover:bg-red-500/30 border border-red-400/30 transition-all cursor-pointer shadow-sm shrink-0"
+            title={isTH ? "ออกจากระบบ" : "Log out"}
+          >
+            <LogOut size={15} />
+            <span className="hidden sm:inline text-xs">{isTH ? 'ออกจากระบบ' : 'Log out'}</span>
+          </button>
+        </div>
       </div>
 
       {/* Main Menu Cards Container */}

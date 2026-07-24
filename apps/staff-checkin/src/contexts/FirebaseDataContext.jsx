@@ -90,14 +90,28 @@ export const FirebaseDataProvider = ({ children }) => {
   const [loading, setLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // Initialize LIFF and get staff LINE profile
+  // Initialize LIFF on mount — safe, just checks if already logged in
   useEffect(() => {
     initLiff().then(profile => {
-      if (profile) {
-        setLiffProfile(profile);
-      }
+      if (profile) setLiffProfile(profile);
     });
   }, []);
+
+  // When staff logs in but LIFF profile not yet loaded → trigger LINE login
+  useEffect(() => {
+    if (!staff) return;           // not logged in to app yet
+    if (liffProfile) return;      // already have LIFF profile
+
+    // Small delay to let LIFF init settle, then trigger login
+    const timer = setTimeout(() => {
+      liffLogin().then(profile => {
+        if (profile) setLiffProfile(profile);
+      });
+    }, 800);
+
+    return () => clearTimeout(timer);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [staff?.name]); // only re-run when staff changes
 
   const triggerLiffLogin = async () => {
     const profile = await liffLogin();
