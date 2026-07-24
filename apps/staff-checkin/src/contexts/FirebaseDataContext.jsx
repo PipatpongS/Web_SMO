@@ -726,10 +726,11 @@ export const FirebaseDataProvider = ({ children }) => {
     const staffUid = liffProfile?.line_uid || staff?.username || 'STAFF_ANONYMOUS';
     const approvedAt = getThaiISOString();
 
-    // 1. Determine nationality
-    const isForeigner = targetStudent.nationality && 
+    // 1. Determine nationality (Foreigners strictly ONLY in Group 1: DREAM or Group 2: DESIGN)
+    const isForeigner = (targetStudent.is_foreigner === true || targetStudent.isForeigner === true) || 
+      (targetStudent.nationality && 
       targetStudent.nationality.trim() !== 'ไทย' && 
-      targetStudent.nationality.trim().toLowerCase() !== 'thai';
+      targetStudent.nationality.trim().toLowerCase() !== 'thai');
 
     const GROUP_NAMES_MAP = {
       '1': 'DREAM',
