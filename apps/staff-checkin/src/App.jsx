@@ -50,15 +50,15 @@ const LayoutContent = ({ children }) => {
 
   const outerWrapperClass = isScrollablePage
     ? 'min-h-screen w-screen font-sans text-white bg-black/40 backdrop-blur-[2px] overflow-y-auto'
-    : 'min-h-[100dvh] sm:h-[100dvh] w-screen font-sans text-white bg-black/40 backdrop-blur-[2px] overflow-y-auto sm:overflow-hidden';
+    : 'h-[100dvh] w-screen font-sans text-white bg-black/40 backdrop-blur-[2px] overflow-hidden';
 
   const innerFlexClass = isScrollablePage
     ? 'flex flex-col items-center min-h-screen px-3 sm:px-6 pb-8 relative'
-    : 'flex flex-col items-center justify-between min-h-[100dvh] sm:h-full px-3 sm:px-6 pb-4 relative';
+    : 'flex flex-col items-center h-full px-3 sm:px-6 pb-2 relative';
 
   const contentAreaClass = isScrollablePage
     ? 'w-full flex-1 flex flex-col'
-    : 'w-full flex-1 flex flex-col justify-center items-center py-2 min-h-0';
+    : 'w-full flex-1 flex flex-col justify-center items-center py-2 overflow-hidden';
 
   return (
     <div className={outerWrapperClass}>
@@ -70,7 +70,7 @@ const LayoutContent = ({ children }) => {
           className="fixed top-0 left-0 m-0 p-0 w-20 md:w-28 z-50 pointer-events-none" 
         />
 
-        <div className={`w-full ${containerWidthClass} flex flex-col items-center ${isScrollablePage ? 'min-h-screen' : 'min-h-full sm:h-full'} transition-all duration-300`}>
+        <div className={`w-full ${containerWidthClass} flex flex-col items-center ${isScrollablePage ? 'min-h-screen' : 'h-full'} transition-all duration-300`}>
           {/* Top Header Section */}
           <div className="w-full flex justify-center lg:justify-start items-center -mt-6 sm:-mt-8 -mb-3 sm:-mb-5 relative z-10 shrink-0 min-h-[4rem] text-white">
             <div className="flex items-center z-10">
