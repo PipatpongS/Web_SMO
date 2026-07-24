@@ -25,9 +25,9 @@ export default function Dashboard() {
 
   const getRoleLabel = () => {
     if (isSupervisor) return isTH ? 'ผู้ดูแลระบบ (Admin)' : 'Admin';
-    if (isWalkinOperator) return isTH ? 'สตาฟฟ์อนุมัติ Walk-in' : 'Walk-in Operator';
-    if (isShirtOperator) return isTH ? 'สตาฟฟ์ตรวจแจกเสื้อ' : 'Shirt Operator';
-    return isTH ? 'สตาฟฟ์' : 'Staff';
+    if (isWalkinOperator) return isTH ? 'สตาฟอนุมัติ Walk-in' : 'Walk-in Operator';
+    if (isShirtOperator) return isTH ? 'สตาฟตรวจแจกเสื้อ' : 'Shirt Operator';
+    return isTH ? 'สตาฟ' : 'Staff';
   };
 
   return (
@@ -92,7 +92,7 @@ export default function Dashboard() {
               </span>
               <span className="text-xs text-white/70 block font-medium leading-relaxed">
                 {isTH 
-                  ? 'สแกน QR Code หรือค้นหารายชื่อ เพื่ออนุมัติการลงทะเบียนหน้างานและสุ่มกลุ่มกิจกรรม 1-5 ทันที' 
+                  ? 'สแกน QR Code หรือค้นหารายชื่อ เพื่ออนุมัติการลงทะเบียนหน้างานและสุ่มกลุ่มกิจกรรมทันที' 
                   : 'Scan QR Code or search student to approve walk-in and assign group instantly'}
               </span>
             </div>

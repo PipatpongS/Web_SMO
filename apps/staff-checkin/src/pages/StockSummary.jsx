@@ -611,7 +611,7 @@ export default function StockSummary() {
                           </div>
                         )}
                         <p className="text-xs text-gray-700 font-bold">
-                          สตาฟฟ์ผู้แจก: <span className="text-purple-900 font-extrabold">{s.shirt_received_by_staff_name || 'Staff Operator'}</span>
+                          สตาฟผู้แจก: <span className="text-purple-900 font-extrabold">{s.shirt_received_by_staff_name || 'Staff Operator'}</span>
                         </p>
                       </div>
 

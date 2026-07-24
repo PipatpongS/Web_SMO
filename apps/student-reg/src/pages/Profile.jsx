@@ -198,7 +198,7 @@ const Profile = () => {
                   </h2>
                   <p className="text-xs text-amber-800 font-medium">
                     {lang === 'TH'
-                      ? 'โปรดแสดง QR Code นี้ให้สตาฟฟ์ที่โต๊ะลงทะเบียนเพื่อตรวจบัตรและอนุมัติการเข้างาน'
+                      ? 'โปรดแสดง QR Code นี้ให้สตาฟที่โต๊ะลงทะเบียนเพื่อตรวจบัตรและอนุมัติการเข้างาน'
                       : 'Please show this QR Code to staff at the registration desk for verification'}
                   </p>
                 </div>
