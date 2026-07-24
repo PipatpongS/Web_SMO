@@ -283,24 +283,27 @@ export const FirebaseDataProvider = ({ children }) => {
     const tempShortUpper = tempShortCode ? tempShortCode.toUpperCase() : searchUpper;
     const lineUidUpper = lineUidFromQr ? lineUidFromQr.toUpperCase() : null;
 
-    // 1️⃣ Step 1: Check Local Cache FIRST (0 Firestore Reads!)
-    const localMatch = students.find(s => {
-      const sId = (s.id || s.docId || '').toUpperCase();
-      const sLineUid = (s.line_uid || '').toUpperCase();
-      const sShortCode = (s.shortCode || s.short_code || s.walkin_temp_short_code || '').toUpperCase();
-      const sQrCode = (s.qrCode || s.qr_code || '').toUpperCase();
-      const sStudentId = (s.studentId || '').toUpperCase();
+    // 1️⃣ Step 1: Check Local Cache FIRST (Strict LINE UID matching)
+    if (lineUidFromQr) {
+      const localUidMatch = students.find(s => (s.docId === lineUidFromQr || s.line_uid === lineUidFromQr || s.id === lineUidFromQr));
+      if (localUidMatch) return localUidMatch;
+    } else {
+      const localMatch = students.find(s => {
+        const sShortCode = (s.shortCode || s.short_code || s.walkin_temp_short_code || '').toUpperCase();
+        const sQrCode = (s.qrCode || s.qr_code || '').toUpperCase();
+        const sStudentId = (s.studentId || '').toUpperCase();
+        const isPlaceholder = sStudentId === '69070500000';
 
-      if (lineUidUpper && (sId === lineUidUpper || sLineUid === lineUidUpper)) return true;
-      if (tempShortUpper && (sShortCode === tempShortUpper || sId === tempShortUpper)) return true;
-      if (searchUpper && (sId === searchUpper || sShortCode === searchUpper || sQrCode === searchUpper || sStudentId === searchUpper)) return true;
-      return false;
-    });
-    if (localMatch) return localMatch;
+        if (tempShortUpper && sShortCode === tempShortUpper) return true;
+        if (searchUpper && (sShortCode === searchUpper || sQrCode === searchUpper || (!isPlaceholder && sStudentId === searchUpper))) return true;
+        return false;
+      });
+      if (localMatch) return localMatch;
+    }
 
     if (!db) return null;
 
-    // 2️⃣ Step 2: Direct Document Key Lookup by LINE UID (EXACTLY 1 Read!)
+    // 2️⃣ Step 2: Direct Document Key Lookup by EXACT LINE UID (Preserve Case!)
     if (lineUidFromQr) {
       try {
         const docRef = doc(db, 'users', lineUidFromQr);
@@ -308,7 +311,7 @@ export const FirebaseDataProvider = ({ children }) => {
         if (docSnap.exists()) {
           const found = { ...docSnap.data(), docId: docSnap.id, line_uid: docSnap.id };
           setStudents(prev => [...prev.filter(x => x.docId !== found.docId), found]);
-          return found; // Return immediately — 1 Read consumed total!
+          return found; // Return exact user doc immediately!
         }
       } catch (err) {
         console.warn("Direct QR LINE UID doc get note:", err);
