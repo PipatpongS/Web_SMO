@@ -72,18 +72,21 @@ const LayoutContent = ({ children }) => {
 
         <div className={`w-full ${containerWidthClass} flex flex-col items-center ${isScrollablePage ? 'min-h-screen' : 'min-h-full sm:h-full'} transition-all duration-300`}>
           {/* Top Header Section */}
-          <div className="w-full flex justify-center sm:justify-between items-center pt-2 pb-2 px-3 sm:px-4 relative z-10 shrink-0 min-h-[4rem] sm:min-h-[5.5rem]">
-            <img 
-              src={logoTop} 
-              alt="KMUTT ENG Logo" 
-              className="h-20 sm:h-28 md:h-36 object-contain drop-shadow-lg" 
-            />
+          <div className="w-full flex justify-center lg:justify-start items-center -mt-6 sm:-mt-8 -mb-3 sm:-mb-5 relative z-10 shrink-0 min-h-[4rem] text-white">
+            <div className="flex items-center z-10">
+              <img 
+                src={logoTop} 
+                alt="KMUTT ENG Logo" 
+                className="h-24 sm:h-32 md:h-36 object-contain drop-shadow-lg" 
+              />
+            </div>
             
             {/* Language Switcher Button */}
-            <div className="absolute right-3 sm:relative sm:right-auto z-20">
+            <div className="absolute right-0 z-20">
               <button 
                 onClick={() => setLang(lang === 'TH' ? 'EN' : 'TH')} 
-                className="bg-white/20 hover:bg-white/30 transition-all duration-200 active:scale-75 px-3 py-1.5 rounded-full text-xs sm:text-sm font-semibold backdrop-blur-sm flex items-center cursor-pointer border border-white/10 shrink-0 shadow-sm"
+                type="button"
+                className="bg-white/20 hover:bg-white/30 transition-all duration-200 active:scale-75 px-2.5 py-1 rounded-full text-xs sm:text-sm font-semibold backdrop-blur-sm flex items-center cursor-pointer text-white border border-white/10 shadow-sm"
               >
                 <span className="mr-1">🌐</span> 
                 <span className="w-6 text-center inline-block">{lang}</span>
