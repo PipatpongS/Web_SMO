@@ -33,11 +33,16 @@ export default function StudentDetails() {
     try {
       const res = await approveWalkinRegistration(student.docId || student.id);
       if (res.success) {
+        const groupName = res.assignedGroupName || res.assignedGroup || '';
         setStudent(prev => ({
           ...prev,
           walkin_status: 'APPROVED',
-          walkin_verified: true
+          walkin_verified: true,
+          group: res.assignedGroup || prev.group
         }));
+        alert(isTH 
+          ? `✅ อนุมัติการลงทะเบียนสำเร็จ!\nได้รับกลุ่ม ${groupName}` 
+          : `✅ Registration Approved Successfully!\nAssigned Group ${groupName}`);
       } else {
         alert(isTH ? `เกิดข้อผิดพลาด: ${res.error}` : `Error: ${res.error}`);
       }

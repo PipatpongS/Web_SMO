@@ -42,8 +42,10 @@ export const formatThaiTime = (dateObj = new Date()) => {
 
 // Staff Roles
 export const ROLES = {
-  OPERATOR: 'STAFF_OPERATOR',   // Regular Staff - Shirt Check-in
-  SUPERVISOR: 'STAFF_SUPERVISOR' // High Admin - Shirt Check-in + Stock Dashboard
+  SUPERVISOR: 'STAFF_SUPERVISOR',       // High Admin - Full Access
+  SHIRT_OPERATOR: 'STAFF_SHIRT_OPERATOR', // Shirt Check-in Operator
+  WALKIN_OPERATOR: 'STAFF_WALKIN_OPERATOR', // Walk-in Approval & Group Assignment Operator
+  OPERATOR: 'STAFF_OPERATOR'            // Legacy fallback
 };
 
 const CACHE_KEY = 'cached_students_db_real_v5';
@@ -439,19 +441,25 @@ export const FirebaseDataProvider = ({ children }) => {
 
     const cleanUser = username.trim().toLowerCase();
 
-    const envAdminUser = (import.meta.env.VITE_STAFF_ADMIN_USER || 'admin').trim().toLowerCase();
-    const envAdminPass = (import.meta.env.VITE_STAFF_ADMIN_PASS || 'admin').trim();
+    const envAdminUser = (import.meta.env.VITE_STAFF_ADMIN_USER || 'rak_smo').trim().toLowerCase();
+    const envAdminPass = (import.meta.env.VITE_STAFF_ADMIN_PASS || 'Rak_vidva_!?').trim();
 
-    const envOperatorUser = (import.meta.env.VITE_STAFF_OPERATOR_USER || 'staff').trim().toLowerCase();
-    const envOperatorPass = (import.meta.env.VITE_STAFF_OPERATOR_PASS || 'staff').trim();
+    const envShirtOperatorUser = (import.meta.env.VITE_STAFF_OPERATOR_USER || 'shirt_check').trim().toLowerCase();
+    const envShirtOperatorPass = (import.meta.env.VITE_STAFF_OPERATOR_PASS || 'HB{lVtEE9jU').trim();
+
+    const envWalkinOperatorUser = (import.meta.env.VITE_STAFF_WALKIN_OPERATOR_USER || 'walkin_approve').trim().toLowerCase();
+    const envWalkinOperatorPass = (import.meta.env.VITE_STAFF_WALKIN_OPERATOR_PASS || 'Walkin_vidva_2026!?').trim();
 
     // 1. Verify against Environment Variables
     if (cleanUser === envAdminUser && password === envAdminPass) {
       role = ROLES.SUPERVISOR;
-      name = 'Admin Staff';
-    } else if (cleanUser === envOperatorUser && password === envOperatorPass) {
-      role = ROLES.OPERATOR;
-      name = 'Staff CPE';
+      name = 'Admin Staff (SMO)';
+    } else if (cleanUser === envShirtOperatorUser && password === envShirtOperatorPass) {
+      role = ROLES.SHIRT_OPERATOR;
+      name = 'Shirt Check Operator';
+    } else if (cleanUser === envWalkinOperatorUser && password === envWalkinOperatorPass) {
+      role = ROLES.WALKIN_OPERATOR;
+      name = 'Walk-in Approval Operator';
     } 
     
     // 2. Verify against Firestore 'staff' collection if configured
@@ -463,7 +471,7 @@ export const FirebaseDataProvider = ({ children }) => {
         if (!snapStaff.empty) {
           const sDoc = snapStaff.docs[0].data();
           if (sDoc.password === password) {
-            role = sDoc.role === 'SUPERVISOR' || sDoc.role === 'ADMIN' ? ROLES.SUPERVISOR : ROLES.OPERATOR;
+            role = sDoc.role === 'SUPERVISOR' || sDoc.role === 'ADMIN' ? ROLES.SUPERVISOR : (sDoc.role || ROLES.OPERATOR);
             name = sDoc.name || sDoc.username;
           }
         }
@@ -684,7 +692,7 @@ export const FirebaseDataProvider = ({ children }) => {
     }
   };
 
-  // Approve Walk-in Registration On-site by Staff
+  // Approve Walk-in Registration On-site by Staff & Instant Group Assignment
   const approveWalkinRegistration = async (studentDocId) => {
     if (!studentDocId) return { success: false, error: 'Missing student document ID' };
 
@@ -695,9 +703,46 @@ export const FirebaseDataProvider = ({ children }) => {
     const staffUid = liffProfile?.line_uid || staff?.username || 'STAFF_ANONYMOUS';
     const approvedAt = getThaiISOString();
 
+    // 1. Determine nationality
+    const isForeigner = targetStudent.nationality && 
+      targetStudent.nationality.trim() !== 'ไทย' && 
+      targetStudent.nationality.trim().toLowerCase() !== 'thai';
+
+    // 2. Count current group sizes across all students
+    const groupCounts = { '1': 0, '2': 0, '3': 0, '4': 0, '5': 0 };
+    students.forEach(s => {
+      if (s.group && groupCounts.hasOwnProperty(String(s.group).trim())) {
+        groupCounts[String(s.group).trim()]++;
+      }
+    });
+
+    let candidateGroups = [];
+    if (isForeigner) {
+      // Foreigners ONLY in Group 1 (DREAM) or Group 2 (DESIGN)
+      const minCount = Math.min(groupCounts['1'], groupCounts['2']);
+      if (groupCounts['1'] === minCount) candidateGroups.push('1');
+      if (groupCounts['2'] === minCount) candidateGroups.push('2');
+    } else {
+      // Thais in Groups 1-5 (Min count balancing with random tie-breaker)
+      const minCount = Math.min(...Object.values(groupCounts));
+      candidateGroups = Object.keys(groupCounts).filter(g => groupCounts[g] === minCount);
+    }
+
+    // Tie-breaker: Equal-probability random choice among candidate minimum groups
+    const assignedGroup = candidateGroups[Math.floor(Math.random() * candidateGroups.length)];
+    const GROUP_NAMES_MAP = {
+      '1': 'DREAM',
+      '2': 'DESIGN',
+      '3': 'BUILD',
+      '4': 'BLOOM',
+      '5': 'BEYOND'
+    };
+    const assignedGroupName = GROUP_NAMES_MAP[assignedGroup] || assignedGroup;
+
     const updateFields = {
       walkin_status: 'APPROVED',
       walkin_verified: true,
+      group: assignedGroup,
       walkin_approved_at: approvedAt,
       walkin_approved_by_staff_name: staffName,
       walkin_approved_by_staff_uid: staffUid,
@@ -712,10 +757,13 @@ export const FirebaseDataProvider = ({ children }) => {
         try {
           await addDoc(collection(db, 'staff_access_logs'), {
             timestamp: approvedAt,
-            event: 'WALKIN_APPROVED',
+            event: 'WALKIN_APPROVED_AND_ASSIGNED_GROUP',
             student_doc_id: studentDocId,
             student_id: targetStudent.studentId || '',
             student_name: `${targetStudent.firstName || ''} ${targetStudent.lastName || ''}`.trim(),
+            assigned_group: assignedGroup,
+            assigned_group_name: assignedGroupName,
+            is_foreigner: isForeigner,
             staff_line_uid: staffUid,
             staff_name: staffName,
             user_agent: navigator.userAgent
@@ -736,10 +784,14 @@ export const FirebaseDataProvider = ({ children }) => {
         return updated;
       });
 
-      return { success: true };
+      return { 
+        success: true, 
+        assignedGroup, 
+        assignedGroupName 
+      };
     } catch (err) {
-      console.error("Failed to approve walk-in:", err);
-      return { success: false, error: err.message };
+      console.error("Approve Walk-in error:", err);
+      return { success: false, error: err?.message || String(err) };
     }
   };
 
