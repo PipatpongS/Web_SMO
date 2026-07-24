@@ -545,64 +545,110 @@ export default function StockSummary() {
         </div>
 
         {/* Recent Received List */}
-        <div className="space-y-2.5 pt-3 border-t border-gray-200">
-          <div className="flex items-center justify-between">
-            <h3 className="text-xs sm:text-base font-extrabold text-gray-900 flex items-center gap-2">
-              <Clock size={18} className="text-purple-700" /> 
+        <div className="space-y-4 pt-5 border-t-2 border-purple-100">
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <h3 className="text-base sm:text-lg font-black text-purple-950 flex items-center gap-2">
+              <Clock size={22} className="text-purple-700" /> 
               <span>{isTH ? 'รายการเช็ครับเสื้อล่าสุด' : 'Recent Shirt Check-ins'}</span>
             </h3>
-            <span className="text-xs text-gray-500 font-medium">
+            <span className="text-xs sm:text-sm text-purple-800 font-bold bg-purple-100 px-3 py-1 rounded-full border border-purple-200">
               {isTH ? 'แสดง 15 รายการล่าสุด' : 'Showing latest 15 records'}
             </span>
           </div>
 
-          <div className="space-y-2 max-h-[260px] overflow-y-auto pr-1">
+          <div className="space-y-3 max-h-[480px] overflow-y-auto pr-1">
             {recentReceived.length > 0 ? (
-              recentReceived.map((s, idx) => (
-                <div key={s.docId || s.id || idx} className="p-3.5 rounded-2xl bg-gray-50 border border-gray-200 flex items-center justify-between text-xs sm:text-sm shadow-sm hover:border-purple-300 transition-colors gap-2">
-                  <div className="space-y-0.5 min-w-0">
-                    <p className="font-black text-gray-900 text-xs sm:text-sm truncate">{s.firstName} {s.lastName}</p>
-                    <p className="text-[10px] text-gray-500 font-mono truncate">
-                      {s.studentId} • <span className="font-bold text-purple-700">{s.department}</span>
-                    </p>
-                    {/* Staff LINE profile */}
-                    <div className="flex items-center gap-1.5 pt-0.5">
-                      {s.shirt_received_by_staff_pic ? (
-                        <img
-                          src={s.shirt_received_by_staff_pic}
-                          alt="staff"
-                          className="w-4 h-4 rounded-full object-cover border border-gray-300 shrink-0"
-                        />
-                      ) : (
-                        <div className="w-4 h-4 rounded-full bg-purple-100 flex items-center justify-center shrink-0">
-                          <User size={9} className="text-purple-400" />
+              recentReceived.map((s, idx) => {
+                // Formatted Thai Time helper
+                const formatCheckedInTime = (isoString) => {
+                  if (!isoString) return 'ไม่ระบุเวลา';
+                  try {
+                    const d = new Date(isoString);
+                    if (isNaN(d.getTime())) return isoString;
+                    const hours = String(d.getHours()).padStart(2, '0');
+                    const minutes = String(d.getMinutes()).padStart(2, '0');
+                    const seconds = String(d.getSeconds()).padStart(2, '0');
+                    const day = String(d.getDate()).padStart(2, '0');
+                    const monthNames = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+                    const month = monthNames[d.getMonth()] || '';
+                    return `${day} ${month} เวลา ${hours}:${minutes}:${seconds} น.`;
+                  } catch (e) {
+                    return isoString;
+                  }
+                };
+
+                const registeredSize = s.shirtSize || s.shirt_size;
+                const receivedSize = s.shirt_size_received || registeredSize;
+                const isSizeMismatched = registeredSize && receivedSize && registeredSize !== receivedSize;
+
+                return (
+                  <div key={s.docId || s.id || idx} className="p-4 sm:p-5 rounded-2xl bg-white border-2 border-gray-200 hover:border-purple-400 shadow-sm transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div className="space-y-1.5 min-w-0">
+                      <div className="flex items-center gap-2.5 flex-wrap">
+                        <p className="font-extrabold text-gray-900 text-base sm:text-lg">{s.firstName} {s.lastName}</p>
+                        {/* Timestamp Badge */}
+                        <span className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold text-slate-700 bg-slate-100 px-3 py-1 rounded-lg border border-slate-200">
+                          <Clock size={15} className="text-purple-600 shrink-0" />
+                          <span>{formatCheckedInTime(s.shirt_received_at || s.timestamp)}</span>
+                        </span>
+                      </div>
+
+                      <p className="text-xs sm:text-sm text-gray-600 font-medium">
+                        <span className="font-mono text-slate-500 font-bold">{s.studentId}</span> • <span className="font-extrabold text-purple-800">{s.department}</span>
+                      </p>
+
+                      {/* Staff LINE profile */}
+                      <div className="flex items-center gap-2 pt-0.5">
+                        {s.shirt_received_by_staff_pic ? (
+                          <img
+                            src={s.shirt_received_by_staff_pic}
+                            alt="staff"
+                            className="w-5 h-5 rounded-full object-cover border border-gray-300 shrink-0"
+                          />
+                        ) : (
+                          <div className="w-5 h-5 rounded-full bg-purple-100 flex items-center justify-center shrink-0 border border-purple-200">
+                            <User size={12} className="text-purple-600" />
+                          </div>
+                        )}
+                        <p className="text-xs text-gray-700 font-bold">
+                          สตาฟฟ์ผู้แจก: <span className="text-purple-900 font-extrabold">{s.shirt_received_by_staff_name || 'Staff Operator'}</span>
+                        </p>
+                      </div>
+
+                      {s.proxy_name && (
+                        <div className="inline-flex items-center gap-1 text-xs text-blue-900 font-bold bg-blue-50 px-2.5 py-1 rounded-lg border border-blue-200">
+                          <span>👤 รับแทนโดย: {s.proxy_name} {s.proxy_student_id ? `(${s.proxy_student_id})` : ''}</span>
                         </div>
                       )}
-                      <p className="text-[10px] text-gray-500 font-medium truncate">{s.shirt_received_by_staff_name || 'Staff'}</p>
                     </div>
-                    {s.proxy_name && (
-                      <p className="text-[10px] text-blue-700 font-semibold">รับแทน: {s.proxy_name}</p>
-                    )}
+
+                    <div className="sm:text-right space-y-1.5 shrink-0 border-t sm:border-t-0 pt-2 sm:pt-0 border-slate-100">
+                      {isSizeMismatched ? (
+                        <div className="p-2.5 rounded-xl bg-amber-50 border-2 border-amber-300 space-y-1 text-center sm:text-right">
+                          <span className="px-2.5 py-0.5 rounded-md bg-rose-600 text-white font-black text-xs inline-block shadow-sm">
+                            ⚠️ ไม่ตรงไซซ์
+                          </span>
+                          <p className="text-xs sm:text-sm font-extrabold text-amber-950">
+                            จอง <span className="line-through text-slate-500">{registeredSize}</span> ➔ รับจริง <span className="text-rose-700 text-base sm:text-lg font-black bg-rose-100 px-2 py-0.5 rounded-md">{receivedSize}</span>
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="p-2.5 rounded-xl bg-emerald-50 border-2 border-emerald-200 text-center sm:text-right min-w-[110px]">
+                          <span className="px-3 py-1 rounded-lg bg-emerald-600 text-white font-black text-base sm:text-lg inline-block shadow-sm">
+                            {receivedSize || 'M'}
+                          </span>
+                          <p className="text-xs font-extrabold text-emerald-800 mt-1 flex items-center justify-center sm:justify-end gap-1">
+                            <CheckCircle2 size={14} className="text-emerald-600" />
+                            <span>ตรงไซซ์จอง</span>
+                          </p>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <div className="text-right space-y-1 shrink-0">
-                    {/* Received size */}
-                    <span className="px-2.5 py-1 rounded-lg bg-amber-100 text-amber-800 border border-amber-300 font-extrabold text-sm inline-block">
-                      {s.shirt_size_received || s.shirtSize}
-                    </span>
-                    {/* Reserved size badge */}
-                    {s.shirtSize && s.shirt_size_received && s.shirtSize !== s.shirt_size_received && (
-                      <p className="text-[9px] text-slate-400 font-medium">
-                        จอง: <span className="font-black text-slate-600">{s.shirtSize}</span>
-                      </p>
-                    )}
-                    {s.shirtSize && (!s.shirt_size_received || s.shirtSize === s.shirt_size_received) && (
-                      <p className="text-[9px] text-emerald-500 font-medium">ตรงไซซ์</p>
-                    )}
-                  </div>
-                </div>
-              ))
+                );
+              })
             ) : (
-              <p className="text-xs text-gray-500 text-center py-8 italic bg-gray-50 rounded-2xl border border-gray-200">
+              <p className="text-sm text-gray-500 text-center py-10 italic bg-gray-50 rounded-2xl border border-gray-200 font-medium">
                 {isRefreshing 
                   ? (isTH ? 'กำลังโหลดข้อมูลจาก Firebase...' : 'Syncing data from Firebase...') 
                   : (isTH ? 'ยังไม่มีรายการรับเสื้อในกลุ่มนี้' : 'No shirt check-in records found')}
