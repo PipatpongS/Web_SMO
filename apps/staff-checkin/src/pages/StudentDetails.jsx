@@ -304,22 +304,90 @@ export default function StudentDetails() {
 
         {/* IF ALREADY RECEIVED -> Display Detailed Receipt info */}
         {isReceived ? (
-          <div className="space-y-3 bg-emerald-50/80 p-4 sm:p-5 rounded-2xl border border-emerald-200 text-xs sm:text-sm text-emerald-950">
-            <h3 className="font-extrabold text-emerald-800 text-sm sm:text-base flex items-center gap-2">
-              <ShieldCheck className="w-5 h-5 text-emerald-600" /> ประวัติการรับเสื้อเรียบร้อย
-            </h3>
-            
-            <div className="space-y-2 text-slate-800 font-medium">
-              <p>🕒 <b>วันเวลาที่รับ:</b> {student.shirt_received_at}</p>
-              <p>👤 <b>สตาฟฟ์ผู้แจก:</b> {student.shirt_received_by_staff_name || 'Staff'}</p>
-              <p>👕 <b>ไซซ์เสื้อที่ได้รับ:</b> <span className="font-black text-amber-700 text-base">{student.shirt_size_received || student.shirtSize}</span> (ไซซ์คงเหลือเดิม: {student.shirtSize})</p>
-              
+          <div className="space-y-3 bg-emerald-50/80 p-4 sm:p-5 rounded-2xl border border-emerald-200">
+            {/* Header */}
+            <div className="flex items-center gap-2.5 border-b border-emerald-200 pb-3 mb-1">
+              <div className="w-9 h-9 rounded-xl bg-emerald-600 flex items-center justify-center shrink-0 shadow-sm">
+                <ShieldCheck className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h3 className="font-extrabold text-emerald-800 text-sm sm:text-base leading-tight">ประวัติการรับเสื้อเรียบร้อย</h3>
+                <p className="text-[10px] text-emerald-600 font-medium">บันทึกข้อมูลในระบบแล้ว</p>
+              </div>
+            </div>
+
+            <div className="space-y-2.5">
+              {/* Date & Time */}
+              {student.shirt_received_at && (() => {
+                const dtStr = student.shirt_received_at;
+                const dt = new Date(dtStr);
+                const isValid = !isNaN(dt.getTime());
+                const dateStr = isValid
+                  ? dt.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' })
+                  : dtStr.split('T')[0] || dtStr;
+                const timeStr = isValid
+                  ? dt.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+                  : (dtStr.split('T')[1] || '').replace(/\.\d+\+.*$/, '').replace(/\+.*$/, '');
+                return (
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="bg-white rounded-xl px-3 py-2.5 border border-emerald-100 shadow-sm">
+                      <p className="text-[9px] text-slate-400 font-semibold uppercase tracking-wide mb-0.5">วันที่รับ</p>
+                      <p className="text-xs font-bold text-slate-800 leading-tight">{dateStr}</p>
+                    </div>
+                    <div className="bg-white rounded-xl px-3 py-2.5 border border-emerald-100 shadow-sm">
+                      <p className="text-[9px] text-slate-400 font-semibold uppercase tracking-wide mb-0.5">เวลาที่รับ</p>
+                      <p className="text-sm font-black text-emerald-700 font-mono">{timeStr}</p>
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* Shirt Size Received vs Reserved */}
+              <div className="bg-white rounded-xl px-3 py-2.5 border border-amber-200 shadow-sm">
+                <p className="text-[9px] text-slate-400 font-semibold uppercase tracking-wide mb-1.5">ไซซ์เสื้อที่ได้รับ</p>
+                <div className="flex items-center gap-2.5">
+                  <span className="text-2xl font-black text-amber-700">{student.shirt_size_received || student.shirtSize}</span>
+                  {student.is_shirt_size_changed && student.shirtSize && (
+                    <div className="flex items-center gap-1 text-[10px] text-slate-500 font-medium bg-amber-50 px-2 py-1 rounded-lg border border-amber-200">
+                      <Shirt size={11} className="text-amber-500" />
+                      <span>จองไว้: <b className="text-amber-700">{student.shirtSize}</b></span>
+                    </div>
+                  )}
+                  {!student.is_shirt_size_changed && student.shirtSize && (
+                    <div className="flex items-center gap-1 text-[10px] text-emerald-600 font-medium bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-200">
+                      <Shirt size={11} className="text-emerald-500" />
+                      <span>ตรงกับที่จอง</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Staff who distributed */}
+              <div className="bg-white rounded-xl px-3 py-2.5 border border-emerald-100 shadow-sm">
+                <p className="text-[9px] text-slate-400 font-semibold uppercase tracking-wide mb-1.5">สตาฟฟ์ผู้แจก</p>
+                <div className="flex items-center gap-2.5">
+                  {student.shirt_received_by_staff_pic ? (
+                    <img
+                      src={student.shirt_received_by_staff_pic}
+                      alt="Staff"
+                      className="w-8 h-8 rounded-full object-cover border-2 border-emerald-300 shadow-sm shrink-0"
+                    />
+                  ) : (
+                    <div className="w-8 h-8 rounded-full bg-purple-100 border-2 border-purple-200 flex items-center justify-center shrink-0">
+                      <User size={16} className="text-purple-500" />
+                    </div>
+                  )}
+                  <p className="text-sm font-bold text-slate-800">{student.shirt_received_by_staff_name || 'Staff'}</p>
+                </div>
+              </div>
+
+              {/* Proxy info */}
               {student.proxy_name && (
-                <div className="p-3 rounded-xl bg-white border border-emerald-200 mt-2 space-y-1 shadow-sm">
-                  <p className="font-bold text-amber-800">👥 รายละเอียดผู้รับแทน:</p>
-                  <p className="text-slate-700">• ชื่อผู้รับแทน: {student.proxy_name}</p>
-                  {student.proxy_student_id && <p className="text-slate-700">• รหัสนักศึกษา: {student.proxy_student_id}</p>}
-                  {student.proxy_phone && <p className="text-slate-700">• เบอร์โทรติดต่อ: {student.proxy_phone}</p>}
+                <div className="bg-blue-50 rounded-xl px-3 py-2.5 border border-blue-200 shadow-sm space-y-1">
+                  <p className="text-[9px] text-blue-400 font-semibold uppercase tracking-wide">รายละเอียดผู้รับแทน</p>
+                  <p className="text-xs font-bold text-blue-800">{student.proxy_name}</p>
+                  {student.proxy_student_id && <p className="text-[11px] text-slate-600">รหัส: {student.proxy_student_id}</p>}
+                  {student.proxy_phone && <p className="text-[11px] text-slate-600">โทร: {student.proxy_phone}</p>}
                 </div>
               )}
             </div>
@@ -327,7 +395,7 @@ export default function StudentDetails() {
             <button 
               onClick={handleRevoke}
               disabled={isSubmitting}
-              className="w-full mt-4 py-2.5 rounded-xl bg-red-100 hover:bg-red-200 border border-red-300 text-red-700 font-bold text-xs sm:text-sm transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm"
+              className="w-full mt-2 py-2.5 rounded-xl bg-red-100 hover:bg-red-200 border border-red-300 text-red-700 font-bold text-xs sm:text-sm transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm disabled:opacity-50"
             >
               <XCircle size={16} /> {isTH ? 'ยกเลิกรายการนี้' : 'Revoke Item'}
             </button>

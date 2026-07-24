@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useData } from '../contexts/FirebaseDataContext';
 import { 
-  BarChart2, Filter, LogOut, ArrowLeft, Clock, ShieldCheck, Shirt, RefreshCw, Search, Edit3, Save, X, CheckCircle2 
+  BarChart2, Filter, LogOut, ArrowLeft, Clock, ShieldCheck, Shirt, RefreshCw, Search, Edit3, Save, X, CheckCircle2, User 
 } from 'lucide-react';
 
 const SHIRT_SIZES = ['SS', 'S', 'M', 'L', 'XL', '2XL', '3XL', '4XL', '5XL'];
@@ -559,25 +559,45 @@ export default function StockSummary() {
           <div className="space-y-2 max-h-[260px] overflow-y-auto pr-1">
             {recentReceived.length > 0 ? (
               recentReceived.map((s, idx) => (
-                <div key={s.docId || s.id || idx} className="p-3.5 rounded-2xl bg-gray-50 border border-gray-200 flex items-center justify-between text-xs sm:text-sm shadow-sm hover:border-purple-300 transition-colors">
-                  <div className="space-y-0.5">
-                    <p className="font-black text-gray-900 text-xs sm:text-base">{s.firstName} {s.lastName}</p>
-                    <p className="text-[11px] text-gray-600 font-mono">
-                      {s.studentId} • <span className="font-bold text-purple-800">{s.department}</span>
+                <div key={s.docId || s.id || idx} className="p-3.5 rounded-2xl bg-gray-50 border border-gray-200 flex items-center justify-between text-xs sm:text-sm shadow-sm hover:border-purple-300 transition-colors gap-2">
+                  <div className="space-y-0.5 min-w-0">
+                    <p className="font-black text-gray-900 text-xs sm:text-sm truncate">{s.firstName} {s.lastName}</p>
+                    <p className="text-[10px] text-gray-500 font-mono truncate">
+                      {s.studentId} • <span className="font-bold text-purple-700">{s.department}</span>
                     </p>
+                    {/* Staff LINE profile */}
+                    <div className="flex items-center gap-1.5 pt-0.5">
+                      {s.shirt_received_by_staff_pic ? (
+                        <img
+                          src={s.shirt_received_by_staff_pic}
+                          alt="staff"
+                          className="w-4 h-4 rounded-full object-cover border border-gray-300 shrink-0"
+                        />
+                      ) : (
+                        <div className="w-4 h-4 rounded-full bg-purple-100 flex items-center justify-center shrink-0">
+                          <User size={9} className="text-purple-400" />
+                        </div>
+                      )}
+                      <p className="text-[10px] text-gray-500 font-medium truncate">{s.shirt_received_by_staff_name || 'Staff'}</p>
+                    </div>
                     {s.proxy_name && (
-                      <p className="text-[11px] text-amber-800 font-bold">
-                        👥 {isTH ? 'รับแทนโดย:' : 'Proxy:'} {s.proxy_name}
-                      </p>
+                      <p className="text-[10px] text-blue-700 font-semibold">รับแทน: {s.proxy_name}</p>
                     )}
                   </div>
                   <div className="text-right space-y-1 shrink-0">
-                    <span className="px-3 py-1 rounded-xl bg-emerald-100 text-emerald-800 border border-emerald-300 font-extrabold text-xs inline-block">
-                      {isTH ? 'รับไซซ์' : 'Received Size'} {s.shirt_size_received || s.shirtSize}
+                    {/* Received size */}
+                    <span className="px-2.5 py-1 rounded-lg bg-amber-100 text-amber-800 border border-amber-300 font-extrabold text-sm inline-block">
+                      {s.shirt_size_received || s.shirtSize}
                     </span>
-                    <p className="text-[10px] text-gray-500 font-medium">
-                      {isTH ? 'สตาฟฟ์:' : 'Staff:'} {s.shirt_received_by_staff_name || 'Staff'}
-                    </p>
+                    {/* Reserved size badge */}
+                    {s.shirtSize && s.shirt_size_received && s.shirtSize !== s.shirt_size_received && (
+                      <p className="text-[9px] text-slate-400 font-medium">
+                        จอง: <span className="font-black text-slate-600">{s.shirtSize}</span>
+                      </p>
+                    )}
+                    {s.shirtSize && (!s.shirt_size_received || s.shirtSize === s.shirt_size_received) && (
+                      <p className="text-[9px] text-emerald-500 font-medium">ตรงไซซ์</p>
+                    )}
                   </div>
                 </div>
               ))
