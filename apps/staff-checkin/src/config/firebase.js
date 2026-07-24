@@ -24,7 +24,7 @@ try {
 
 // LIFF Initialization — safe, never auto-redirects, just returns profile if already logged in
 export const initLiff = async () => {
-  const liffId = import.meta.env.VITE_LIFF_ID || "2010390110-fPHy5j81";
+  const liffId = import.meta.env.VITE_LIFF_ID || "2010390110-0UH9iPjG";
   if (!liffId) return null;
 
   try {
@@ -49,7 +49,7 @@ export const initLiff = async () => {
 
 // Explicit LINE Login Trigger — uses exact registered root Callback URL
 export const liffLogin = async () => {
-  const liffId = import.meta.env.VITE_LIFF_ID || "2010390110-fPHy5j81";
+  const liffId = import.meta.env.VITE_LIFF_ID || "2010390110-0UH9iPjG";
   try {
     await liff.init({ liffId });
     if (liff.isLoggedIn()) {
