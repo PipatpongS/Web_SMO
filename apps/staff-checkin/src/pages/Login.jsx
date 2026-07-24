@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useData } from '../contexts/FirebaseDataContext';
-import { Lock, User, KeyRound } from 'lucide-react';
+import { Lock, User, KeyRound, MessageCircle, CheckCircle2 } from 'lucide-react';
 
 export default function Login() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { login, lang, staff } = useData();
+  const { login, triggerLiffLogin, liffProfile, lang, staff } = useData();
   const navigate = useNavigate();
 
   const isTH = lang === 'TH';
@@ -53,6 +53,23 @@ export default function Login() {
             {isTH ? 'กรอกไอดีและรหัสผ่านเพื่อเข้าใช้งาน' : 'Enter your ID and Password to access staff portal'}
           </p>
         </div>
+
+        {/* LINE Profile Indicator */}
+        {liffProfile ? (
+          <div className="mb-4 p-2.5 rounded-2xl bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-between gap-2 text-xs text-emerald-200">
+            <div className="flex items-center gap-2 min-w-0">
+              {liffProfile.pictureUrl ? (
+                <img src={liffProfile.pictureUrl} alt="LINE" className="w-7 h-7 rounded-full object-cover border border-emerald-300 shrink-0" />
+              ) : (
+                <User size={16} className="text-emerald-300" />
+              )}
+              <span className="font-bold truncate">{liffProfile.displayName}</span>
+            </div>
+            <span className="flex items-center gap-1 text-[10px] bg-emerald-500/30 px-2 py-0.5 rounded-md font-black shrink-0">
+              <CheckCircle2 size={12} /> {isTH ? 'เชื่อม LINE แล้ว' : 'LINE Connected'}
+            </span>
+          </div>
+        ) : null}
         
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
@@ -100,6 +117,20 @@ export default function Login() {
             {isSubmitting ? (isTH ? 'กำลังเข้าสู่ระบบ...' : 'Logging in...') : (isTH ? 'เข้าสู่ระบบ' : 'Login')}
           </button>
         </form>
+
+        {/* LINE Profile Sync Button (If not yet connected) */}
+        {!liffProfile && (
+          <div className="mt-4 pt-3 border-t border-white/15 text-center">
+            <button
+              type="button"
+              onClick={triggerLiffLogin}
+              className="w-full py-2.5 px-4 rounded-xl bg-[#06C755] hover:bg-[#05b34c] text-white text-xs font-bold transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+            >
+              <MessageCircle size={16} />
+              <span>{isTH ? 'เชื่อมต่อโปรไฟล์ LINE (ดึงชื่อ/รูป)' : 'Sync LINE Profile'}</span>
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
