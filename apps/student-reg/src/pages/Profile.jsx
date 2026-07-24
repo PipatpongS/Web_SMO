@@ -180,8 +180,12 @@ const Profile = () => {
         {/* Check Walk-in Status */}
         {(() => {
           const isWalkinPending = displayRegData?.walkin_status === 'PENDING_APPROVAL' || (displayRegData?.note === 'รอบหน้างาน' && !displayRegData?.walkin_verified);
-          const tempQrValue = displayRegData?.walkin_temp_qr || `WALKIN_TEMP:${userProfile?.userId}:${displayRegData?.short_code}:${Date.now()}`;
-          const tempShortCode = displayRegData?.walkin_temp_short_code || displayRegData?.short_code;
+          
+          let tempShortCode = displayRegData?.walkin_temp_short_code;
+          if (!tempShortCode || !tempShortCode.startsWith('W-')) {
+            tempShortCode = `W-${displayRegData?.short_code || 'WALK'}`;
+          }
+          const tempQrValue = displayRegData?.walkin_temp_qr || `WALKIN_TEMP:${userProfile?.userId}:${tempShortCode}:${Date.now()}`;
 
           if (isWalkinPending) {
             return (
@@ -212,8 +216,9 @@ const Profile = () => {
 
                 {/* Temp Short Code Badge */}
                 {tempShortCode && (
-                  <div className="mb-5 px-4 py-1 bg-amber-100 text-amber-900 border border-amber-300 shadow-sm rounded-full flex items-center justify-center font-mono font-extrabold text-xs sm:text-sm tracking-[0.15em]">
-                    รหัสสำรอง: {tempShortCode}
+                  <div className="mb-5 px-5 py-1.5 bg-amber-100 text-amber-950 border-2 border-amber-300 shadow-sm rounded-full flex items-center justify-center font-extrabold text-xs sm:text-sm tracking-wide">
+                    <span>{lang === 'TH' ? 'รหัสยืนยัน' : 'Verification Code'}:</span>
+                    <span className="ml-1.5 font-black text-amber-900 text-sm sm:text-base">{tempShortCode}</span>
                   </div>
                 )}
 
