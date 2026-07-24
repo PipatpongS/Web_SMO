@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useData, ROLES } from '../contexts/FirebaseDataContext';
-import { Shirt, BarChart2, LogOut, ShieldCheck, User } from 'lucide-react';
+import { Shirt, BarChart2, LogOut, ShieldCheck, User, UserCheck } from 'lucide-react';
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -14,9 +14,21 @@ export default function Dashboard() {
 
   const isTH = lang === 'TH';
   const isSupervisor = staff?.role === ROLES.SUPERVISOR;
+  const isWalkinOperator = staff?.role === ROLES.WALKIN_OPERATOR;
+  const isShirtOperator = staff?.role === ROLES.SHIRT_OPERATOR;
+
+  const canDoWalkin = isSupervisor || isWalkinOperator;
+  const canDoShirt = isSupervisor || isShirtOperator;
 
   const displayName = liffProfile?.displayName || staff?.displayName || staff?.name || (isSupervisor ? 'Admin Staff' : 'Staff');
   const profilePic = liffProfile?.pictureUrl || staff?.pictureUrl || null;
+
+  const getRoleLabel = () => {
+    if (isSupervisor) return isTH ? 'ผู้ดูแลระบบ (Admin)' : 'Admin';
+    if (isWalkinOperator) return isTH ? 'สตาฟฟ์อนุมัติ Walk-in' : 'Walk-in Operator';
+    if (isShirtOperator) return isTH ? 'สตาฟฟ์ตรวจแจกเสื้อ' : 'Shirt Operator';
+    return isTH ? 'สตาฟฟ์' : 'Staff';
+  };
 
   return (
     <div className="w-full max-w-md sm:max-w-lg flex flex-col items-center justify-center relative z-10 py-2 px-3 sm:px-4 animate-fadeIn transition-all duration-300 ease-in-out my-auto space-y-6 sm:space-y-8">
@@ -38,9 +50,11 @@ export default function Dashboard() {
               <span className={`text-[10px] px-2 py-0.5 rounded-md font-extrabold border inline-block mt-0.5 ${
                 isSupervisor 
                   ? 'bg-purple-500/30 text-purple-200 border-purple-400/40' 
+                  : isWalkinOperator
+                  ? 'bg-amber-500/30 text-amber-200 border-amber-400/40'
                   : 'bg-blue-500/30 text-blue-200 border-blue-400/40'
               }`}>
-                {isSupervisor ? (isTH ? 'ผู้ดูแลระบบ' : 'Admin') : (isTH ? 'สตาฟฟ์' : 'Staff')}
+                {getRoleLabel()}
               </span>
             </div>
           </div>
@@ -63,25 +77,49 @@ export default function Dashboard() {
           {isTH ? 'เลือกรายการเมนูสตาฟ' : 'Staff Action Menu'}
         </h2>
         
-        {/* Menu 1: Shirt Distribution */}
-        <button 
-          onClick={() => navigate('/scan')}
-          className="w-full glass-panel p-4 sm:p-5 flex items-center gap-4 hover:bg-white/15 transition-all cursor-pointer group text-left shadow-2xl border border-white/20 hover:border-amber-400/50 rounded-3xl"
-        >
-          <div className="bg-amber-400/20 p-3.5 rounded-2xl text-amber-300 group-hover:scale-110 transition-transform shrink-0 border border-amber-400/40 shadow-inner">
-            <Shirt size={32} />
-          </div>
-          <div className="space-y-0.5">
-            <span className="text-base sm:text-lg font-black block text-white group-hover:text-amber-200 transition-colors">
-              {isTH ? '1. เช็ครับเสื้อ' : '1. Shirt Check-in'}
-            </span>
-            <span className="text-xs text-white/70 block font-medium">
-              {isTH ? 'สแกน QR Code หรือพิมพ์ Short Code เพื่อเช็ครับเสื้อ' : 'Scan QR Code or Short Code for shirt check-in'}
-            </span>
-          </div>
-        </button>
+        {/* Menu 1: Walk-in Approval & Instant Group Assignment */}
+        {canDoWalkin && (
+          <button 
+            onClick={() => navigate('/scan?mode=walkin')}
+            className="w-full glass-panel p-4 sm:p-5 flex items-center gap-4 hover:bg-white/15 transition-all cursor-pointer group text-left shadow-2xl border border-white/20 hover:border-amber-400/50 rounded-3xl"
+          >
+            <div className="bg-amber-400/20 p-3.5 rounded-2xl text-amber-300 group-hover:scale-110 transition-transform shrink-0 border border-amber-400/40 shadow-inner">
+              <UserCheck size={32} />
+            </div>
+            <div className="space-y-0.5">
+              <span className="text-base sm:text-lg font-black block text-white group-hover:text-amber-200 transition-colors">
+                {isTH ? '1. อนุมัติการลงทะเบียน (สุ่มกลุ่มกิจกรรม)' : '1. Walk-in Approval & Grouping'}
+              </span>
+              <span className="text-xs text-white/70 block font-medium leading-relaxed">
+                {isTH 
+                  ? 'สแกน QR Code หรือค้นหารายชื่อ เพื่ออนุมัติการลงทะเบียนหน้างานและสุ่มกลุ่มกิจกรรม 1-5 ทันที' 
+                  : 'Scan QR Code or search student to approve walk-in and assign group instantly'}
+              </span>
+            </div>
+          </button>
+        )}
 
-        {/* Menu 2: Stock & Summary Dashboard (Available for Admin/Supervisor) */}
+        {/* Menu 2: Shirt Distribution */}
+        {canDoShirt && (
+          <button 
+            onClick={() => navigate('/scan?mode=shirt')}
+            className="w-full glass-panel p-4 sm:p-5 flex items-center gap-4 hover:bg-white/15 transition-all cursor-pointer group text-left shadow-2xl border border-white/20 hover:border-purple-400/50 rounded-3xl"
+          >
+            <div className="bg-purple-500/20 p-3.5 rounded-2xl text-purple-300 group-hover:scale-110 transition-transform shrink-0 border border-purple-400/40 shadow-inner">
+              <Shirt size={32} />
+            </div>
+            <div className="space-y-0.5">
+              <span className="text-base sm:text-lg font-black block text-white group-hover:text-purple-200 transition-colors">
+                {isTH ? '2. เช็ครับเสื้อ' : '2. Shirt Check-in'}
+              </span>
+              <span className="text-xs text-white/70 block font-medium leading-relaxed">
+                {isTH ? 'สแกน QR Code หรือพิมพ์ Short Code เพื่อเช็ครับเสื้อและบันทึกข้อมูล' : 'Scan QR Code or Short Code for shirt check-in'}
+              </span>
+            </div>
+          </button>
+        )}
+
+        {/* Menu 3: Stock & Summary Dashboard (Available for Admin/Supervisor) */}
         {isSupervisor && (
           <button 
             onClick={() => navigate('/stock-summary')}
@@ -92,9 +130,9 @@ export default function Dashboard() {
             </div>
             <div className="space-y-0.5">
               <span className="text-base sm:text-lg font-black block text-white group-hover:text-emerald-200 transition-colors">
-                {isTH ? '2. Dashboard สรุปยอดและสต็อกเสื้อ' : '2. Stock Summary Dashboard'}
+                {isTH ? '3. Dashboard สรุปยอดและสต็อกเสื้อ' : '3. Stock Summary Dashboard'}
               </span>
-              <span className="text-xs text-white/70 block font-medium">
+              <span className="text-xs text-white/70 block font-medium leading-relaxed">
                 {isTH ? 'ดูรายงานสต็อกคงเหลือและการรับเสื้อ Real-time' : 'View real-time stock balance & distribution report'}
               </span>
             </div>

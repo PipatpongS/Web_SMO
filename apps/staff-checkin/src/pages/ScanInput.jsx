@@ -197,6 +197,10 @@ export default function ScanInput() {
     executeSearch(code, 'SHORT_CODE');
   };
 
+  const searchParams = new URLSearchParams(window.location.search);
+  const mode = searchParams.get('mode') || 'shirt';
+  const isWalkinMode = mode === 'walkin';
+
   return (
     <div className="w-full h-full flex flex-col items-center justify-between overflow-hidden py-1 px-3 sm:px-4 min-h-0">
       
@@ -213,10 +217,23 @@ export default function ScanInput() {
       {/* Main Glass Panel */}
       <div className="glass-panel p-4 sm:p-5 w-full flex-1 min-h-0 flex flex-col items-center justify-between overflow-hidden shadow-2xl">
         
-        {/* Title */}
-        <h2 className="text-sm sm:text-base md:text-lg font-bold text-center text-white text-glow shrink-0 mb-1">
-          {isTH ? 'สแกน QR Code เพื่อเช็ครับเสื้อ' : 'Scan QR Code for Shirt Pickup'}
-        </h2>
+        {/* Mode Indicator & Title */}
+        <div className="flex flex-col items-center mb-1 shrink-0 space-y-1">
+          <span className={`text-[10px] sm:text-xs px-2.5 py-0.5 rounded-full font-black border uppercase tracking-wider ${
+            isWalkinMode 
+              ? 'bg-amber-400/30 text-amber-200 border-amber-400/50' 
+              : 'bg-purple-500/30 text-purple-200 border-purple-400/50'
+          }`}>
+            {isWalkinMode 
+              ? (isTH ? '📋 โหมดอนุมัติ Walk-in สุ่มกลุ่ม' : '📋 Walk-in Approval Mode')
+              : (isTH ? '👕 โหมดเช็ครับเสื้อ' : '👕 Shirt Pickup Mode')}
+          </span>
+          <h2 className="text-sm sm:text-base md:text-lg font-bold text-center text-white text-glow">
+            {isWalkinMode 
+              ? (isTH ? 'สแกน QR Code เพื่ออนุมัติการลงทะเบียนและสุ่มกลุ่ม' : 'Scan QR Code for Walk-in Approval & Grouping')
+              : (isTH ? 'สแกน QR Code เพื่อเช็ครับเสื้อ' : 'Scan QR Code for Shirt Pickup')}
+          </h2>
+        </div>
 
         {/* White Camera Box */}
         <div className="w-full max-w-[270px] sm:max-w-[380px] md:max-w-[440px] h-[44vh] max-h-[380px] aspect-square rounded-2xl bg-black/75 border-2 sm:border-3 border-white/80 relative overflow-hidden flex items-center justify-center shadow-2xl my-1 shrink min-h-[160px]">
