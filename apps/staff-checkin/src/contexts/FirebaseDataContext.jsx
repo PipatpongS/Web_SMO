@@ -254,8 +254,7 @@ export const FirebaseDataProvider = ({ children }) => {
     return true;
   };
 
-  // ⭐️ ULTRA LOW QUOTA LOOKUP (Consumes EXACTLY 1 Read or 0 Read if in Cache)
-  // ⭐️ ULTRA LOW QUOTA LOOKUP (Consumes EXACTLY 1 Read or 0 Read if in Cache)
+  // ⭐️ ULTRA LOW QUOTA LOOKUP (Consumes 0 Read if in Local Cache, or EXACTLY 1 Read on QR scan)
   const findStudentByCodeDirect = async (rawCode) => {
     if (!rawCode) return null;
     const rawClean = rawCode.trim();
@@ -282,7 +281,7 @@ export const FirebaseDataProvider = ({ children }) => {
     const tempShortUpper = tempShortCode ? tempShortCode.toUpperCase() : searchUpper;
     const lineUidUpper = lineUidFromQr ? lineUidFromQr.toUpperCase() : null;
 
-    // 1️⃣ Primary QR Code & Local Cache Search
+    // 1️⃣ Step 1: Check Local Cache FIRST (0 Firestore Reads!)
     const localMatch = students.find(s => {
       const sId = (s.id || s.docId || '').toUpperCase();
       const sLineUid = (s.line_uid || '').toUpperCase();
@@ -299,7 +298,7 @@ export const FirebaseDataProvider = ({ children }) => {
 
     if (!db) return null;
 
-    // 2️⃣ Direct Document Key Lookup by LINE UID
+    // 2️⃣ Step 2: Direct Document Key Lookup by LINE UID (EXACTLY 1 Read!)
     if (lineUidFromQr) {
       try {
         const docRef = doc(db, 'users', lineUidFromQr);
@@ -307,27 +306,27 @@ export const FirebaseDataProvider = ({ children }) => {
         if (docSnap.exists()) {
           const found = { docId: docSnap.id, id: docSnap.id, ...docSnap.data() };
           setStudents(prev => [...prev.filter(x => x.docId !== found.docId), found]);
-          return found;
+          return found; // Return immediately — 1 Read consumed total!
         }
       } catch (err) {
         console.warn("Direct QR LINE UID doc get note:", err);
       }
     }
 
-    // 3️⃣ Direct Get by Document Key matching searchUpper (e.g. UID or Short Code as key)
+    // 3️⃣ Step 3: Direct Get by Document Key matching searchUpper (1 Read!)
     try {
       const docRef = doc(db, 'users', searchUpper);
       const docSnap = await getDoc(docRef);
       if (docSnap.exists()) {
         const found = { docId: docSnap.id, id: docSnap.id, ...docSnap.data() };
         setStudents(prev => [...prev.filter(x => x.docId !== found.docId), found]);
-        return found;
+        return found; // Return immediately — 1 Read consumed total!
       }
     } catch (err) {
       console.warn("Direct doc get note:", err);
     }
 
-    // 4️⃣ Lookup by used_short_codes/{shortCode} collection
+    // 4️⃣ Step 4: Lookup by used_short_codes/{shortCode} Document Key (1-2 Reads)
     try {
       const targetShortCode = tempShortUpper || searchUpper;
       const scRef = doc(db, 'used_short_codes', targetShortCode);
@@ -340,7 +339,7 @@ export const FirebaseDataProvider = ({ children }) => {
           if (studentDocSnap.exists()) {
             const found = { docId: studentDocSnap.id, id: studentDocSnap.id, ...studentDocSnap.data() };
             setStudents(prev => [...prev.filter(x => x.docId !== found.docId), found]);
-            return found;
+            return found; // Return immediately!
           }
         }
       }
@@ -348,7 +347,7 @@ export const FirebaseDataProvider = ({ children }) => {
       console.warn("used_short_codes lookup note:", err);
     }
 
-    // 5️⃣ Targeted Query by short_code / walkin_temp_short_code field
+    // 5️⃣ Step 5: Targeted Query by short_code / walkin_temp_short_code field with limit(1)
     const targetCodesToQuery = Array.from(new Set([searchUpper, tempShortUpper].filter(Boolean)));
     for (const codeStr of targetCodesToQuery) {
       try {
@@ -358,7 +357,7 @@ export const FirebaseDataProvider = ({ children }) => {
           const dSnap = snapShort.docs[0];
           const found = { docId: dSnap.id, id: dSnap.id, ...dSnap.data() };
           setStudents(prev => [...prev.filter(x => x.docId !== found.docId), found]);
-          return found;
+          return found; // Return immediately!
         }
       } catch (err) {
         console.warn("short_code query note:", err);
@@ -371,14 +370,14 @@ export const FirebaseDataProvider = ({ children }) => {
           const dSnap = snapWalkinTemp.docs[0];
           const found = { docId: dSnap.id, id: dSnap.id, ...dSnap.data() };
           setStudents(prev => [...prev.filter(x => x.docId !== found.docId), found]);
-          return found;
+          return found; // Return immediately!
         }
       } catch (err) {
         console.warn("walkin_temp_short_code query note:", err);
       }
     }
 
-    // 6️⃣ Targeted Query by studentId (ONLY if NOT placeholder "69070500000")
+    // 6️⃣ Step 6: Targeted Query by studentId (ONLY if NOT placeholder "69070500000")
     const targetStudentId = studentIdFromQr || searchUpper;
     const isPlaceholderId = targetStudentId === '69070500000' || targetStudentId.includes('ยังไม่ได้รับ');
     
