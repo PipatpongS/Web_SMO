@@ -889,15 +889,30 @@ export default function StudentDetails() {
 
             {/* Short Code Input for Proxy */}
             <div className="space-y-2 pt-1">
-              <label className="block text-xs text-slate-600 font-semibold text-center">หรือพิมพ์ Short Code ของผู้รับแทน</label>
+              <label className="block text-xs text-slate-600 font-semibold text-center">หรือพิมพ์ Short Code ของผู้รับแทน (เช่น W-AB12)</label>
               <div className="flex gap-2">
                 <input
                   type="text"
-                  maxLength={4}
+                  maxLength={6}
                   value={proxyCodeInput}
-                  onChange={(e) => setProxyCodeInput(e.target.value.toUpperCase())}
-                  placeholder="CP02"
-                  className="flex-1 px-3.5 py-2.5 text-center font-mono font-black text-base rounded-xl bg-slate-100 border border-slate-300 text-slate-900 uppercase focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  onChange={(e) => {
+                    const inputVal = e.target.value.toUpperCase();
+                    if (!inputVal) {
+                      setProxyCodeInput('');
+                      return;
+                    }
+                    let clean = inputVal.replace(/[^A-Z0-9]/g, '');
+                    if (!clean) {
+                      setProxyCodeInput('');
+                      return;
+                    }
+                    if (clean.startsWith('W')) {
+                      clean = clean.slice(1);
+                    }
+                    setProxyCodeInput(`W-${clean.slice(0, 4)}`);
+                  }}
+                  placeholder="W-AB12"
+                  className="flex-1 px-3.5 py-2.5 text-center font-mono font-black text-base rounded-xl bg-slate-100 border border-slate-300 text-slate-900 uppercase focus:outline-none focus:ring-2 focus:ring-amber-500 tracking-wider"
                 />
                 <button
                   onClick={() => handleProxyLookup(proxyCodeInput, 'SHORT_CODE')}

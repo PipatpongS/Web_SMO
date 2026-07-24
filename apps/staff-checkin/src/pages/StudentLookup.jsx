@@ -137,7 +137,7 @@ export default function StudentLookup() {
             type="text"
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
-            placeholder={isTH ? 'เช่น W-AI37, 66010001, สมชาย' : 'e.g. W-AI37, 66010001, Somchai'}
+            placeholder={isTH ? 'เช่น W-AB12, 66010001, สมชาย' : 'e.g. W-AB12, 66010001, Somchai'}
             className="flex-1 px-4 py-2.5 rounded-2xl bg-white/15 border border-white/25 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-amber-400 font-bold text-sm"
           />
           <button
