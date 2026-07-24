@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useData } from '../contexts/FirebaseDataContext';
-import { ArrowLeft, CheckCircle2, ShieldCheck, AlertTriangle, XCircle, Shirt, Phone, Loader2, QrCode, User } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, ShieldCheck, AlertTriangle, XCircle, Shirt, Phone, Loader2, QrCode, User, Hash, Users } from 'lucide-react';
 import jsQR from 'jsqr';
 
 const SHIRT_SIZES = ['SS', 'S', 'M', 'L', 'XL', '2XL', '3XL', '4XL', '5XL'];
@@ -193,20 +193,25 @@ export default function StudentDetails() {
     setIsSubmitting(true);
 
     const payload = {
+      studentDocId: student.docId || student.id,
       shirtSizeReceived: selectedSize,
-      isProxy: isProxy,
       proxyType: isProxy ? proxyType : null,
       proxyStudentId: isProxy ? proxyStudentId : null,
       proxyName: isProxy ? proxyName : null,
-      proxyPhone: isProxy ? proxyPhone : null
+      proxyPhone: isProxy ? proxyPhone : null,
+      searchMethod: 'QR_CODE'
     };
 
-    const success = await confirmShirtPickup(student.docId || student.id, payload);
-    setIsSubmitting(false);
-
-    if (success) {
-      setShowConfirmModal(false);
-      setShowSuccessModal(true);
+    try {
+      const success = await confirmShirtPickup(payload);
+      if (success) {
+        setShowConfirmModal(false);
+        setShowSuccessModal(true);
+      }
+    } catch (err) {
+      console.error('confirmShirtPickup error:', err);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -492,29 +497,73 @@ export default function StudentDetails() {
       {/* CONFIRMATION MODAL */}
       {showConfirmModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm">
-          <div className="bg-white rounded-3xl p-6 w-full max-w-sm border border-slate-200 text-center space-y-4 shadow-2xl text-slate-800">
-            <h3 className="text-lg font-black text-slate-900">ยืนยันการรับเสื้อ</h3>
-            
-            <div className="text-xs text-slate-700 space-y-1.5 bg-slate-50 p-3.5 rounded-2xl border border-slate-200 text-left font-medium">
-              <p>👤 <b>ผู้รับเสื้อ:</b> {student.firstName} {student.lastName}</p>
-              <p>🆔 <b>รหัสนักศึกษา:</b> {formatStudentId(student.studentId || student.id)}</p>
-              <p>👕 <b>ไซซ์เสื้อที่จะมอบ:</b> <span className="font-black text-amber-700 text-sm">{selectedSize}</span></p>
-              {isProxy && <p>👥 <b>ผู้รับแทน:</b> {proxyName || proxyStudentId || 'ระบุผู้รับแทน'}</p>}
+          <div className="bg-white rounded-3xl p-6 w-full max-w-sm border border-slate-200 shadow-2xl text-slate-800 space-y-5">
+            {/* Header */}
+            <div className="flex items-center gap-3 pb-1 border-b border-slate-100">
+              <div className="w-10 h-10 rounded-2xl bg-purple-100 flex items-center justify-center shrink-0">
+                <CheckCircle2 size={22} className="text-purple-700" />
+              </div>
+              <div className="text-left">
+                <h3 className="text-base font-black text-slate-900 leading-tight">ยืนยันการรับเสื้อ</h3>
+                <p className="text-[11px] text-slate-500 font-medium">กรุณาตรวจสอบข้อมูลให้ถูกต้องก่อนยืนยัน</p>
+              </div>
             </div>
 
-            <div className="flex gap-2 pt-1">
+            {/* Info rows */}
+            <div className="space-y-2.5">
+              <div className="flex items-center gap-3 bg-slate-50 px-4 py-2.5 rounded-xl border border-slate-100">
+                <User size={15} className="text-slate-400 shrink-0" />
+                <div className="text-left min-w-0">
+                  <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wide">ผู้รับเสื้อ</p>
+                  <p className="text-sm font-bold text-slate-800 truncate">{student.firstName} {student.lastName}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 bg-slate-50 px-4 py-2.5 rounded-xl border border-slate-100">
+                <Hash size={15} className="text-slate-400 shrink-0" />
+                <div className="text-left">
+                  <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wide">รหัสนักศึกษา</p>
+                  <p className="text-sm font-bold text-slate-800">{formatStudentId(student.studentId || student.id)}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 bg-amber-50 px-4 py-2.5 rounded-xl border border-amber-200">
+                <Shirt size={15} className="text-amber-500 shrink-0" />
+                <div className="text-left">
+                  <p className="text-[10px] text-amber-500 font-semibold uppercase tracking-wide">ไซซ์เสื้อที่จะมอบ</p>
+                  <p className="text-lg font-black text-amber-700">{selectedSize}</p>
+                </div>
+              </div>
+              {isProxy && (
+                <div className="flex items-center gap-3 bg-blue-50 px-4 py-2.5 rounded-xl border border-blue-200">
+                  <Users size={15} className="text-blue-500 shrink-0" />
+                  <div className="text-left">
+                    <p className="text-[10px] text-blue-500 font-semibold uppercase tracking-wide">ผู้รับแทน</p>
+                    <p className="text-sm font-bold text-blue-700">{proxyName || proxyStudentId || 'ระบุผู้รับแทน'}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Buttons */}
+            <div className="flex gap-2.5 pt-1">
               <button
+                type="button"
                 onClick={() => setShowConfirmModal(false)}
-                className="flex-1 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 text-xs font-bold cursor-pointer"
+                disabled={isSubmitting}
+                className="flex-1 py-3 rounded-2xl bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 text-sm font-bold cursor-pointer transition-colors disabled:opacity-50"
               >
                 ยกเลิก
               </button>
               <button
+                type="button"
                 onClick={handleConfirmSubmit}
                 disabled={isSubmitting}
-                className="flex-1 py-2.5 rounded-xl bg-purple-700 hover:bg-purple-800 text-white font-black text-xs flex items-center justify-center gap-1 shadow-lg cursor-pointer"
+                className="flex-1 py-3 rounded-2xl bg-purple-700 hover:bg-purple-800 text-white font-black text-sm flex items-center justify-center gap-2 shadow-lg cursor-pointer transition-colors disabled:opacity-70"
               >
-                {isSubmitting ? <Loader2 size={16} className="animate-spin" /> : 'ยืนยันบันทึก'}
+                {isSubmitting ? (
+                  <><Loader2 size={16} className="animate-spin" /><span>กำลังบันทึก...</span></>
+                ) : (
+                  <><CheckCircle2 size={16} /><span>ยืนยันบันทึก</span></>
+                )}
               </button>
             </div>
           </div>
@@ -524,18 +573,20 @@ export default function StudentDetails() {
       {/* SUCCESS MODAL */}
       {showSuccessModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
-          <div className="bg-white rounded-3xl p-6 sm:p-8 w-full max-w-sm border border-slate-200 text-center space-y-4 shadow-2xl text-slate-800">
-            <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 border border-emerald-300 flex items-center justify-center mx-auto shadow-sm">
-              <CheckCircle2 size={38} />
+          <div className="bg-white rounded-3xl p-7 w-full max-w-sm border border-slate-200 text-center space-y-4 shadow-2xl text-slate-800">
+            <div className="w-20 h-20 rounded-full bg-emerald-100 text-emerald-600 border-2 border-emerald-300 flex items-center justify-center mx-auto shadow-md">
+              <CheckCircle2 size={44} strokeWidth={2} />
             </div>
-            <h3 className="text-xl font-black text-slate-900">บันทึกรับเสื้อสำเร็จ!</h3>
-            <p className="text-xs text-slate-600 font-medium">ข้อมูลถูกอัปเดตไปยังระบบและบันทึกประวัติเรียบร้อยแล้ว</p>
-            
+            <div>
+              <h3 className="text-xl font-black text-slate-900">บันทึกสำเร็จ</h3>
+              <p className="text-xs text-slate-500 font-medium mt-1">จ่ายเสื้อและบันทึกข้อมูลเรียบร้อยแล้ว</p>
+            </div>
             <button
+              type="button"
               onClick={() => { setShowSuccessModal(false); navigate('/scan'); }}
-              className="w-full py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-sm shadow-lg cursor-pointer"
+              className="w-full py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-sm shadow-lg cursor-pointer transition-colors flex items-center justify-center gap-2"
             >
-              สแกนคนถัดไป
+              <QrCode size={16} /> สแกนคนถัดไป
             </button>
           </div>
         </div>

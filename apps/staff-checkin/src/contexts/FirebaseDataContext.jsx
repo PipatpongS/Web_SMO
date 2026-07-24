@@ -467,20 +467,33 @@ export const FirebaseDataProvider = ({ children }) => {
   };
 
   // Confirm Shirt Pickup & Write Audit Logs
-  const confirmShirtPickup = async ({
-    studentDocId,
-    shirtSizeReceived,
-    proxyType = null,
-    proxyStudentId = null,
-    proxyName = null,
-    proxyPhone = null,
-    searchMethod = 'QR_CODE'
-  }) => {
+  const confirmShirtPickup = async (docIdOrOptions, options = {}) => {
+    let studentDocId, shirtSizeReceived, proxyType, proxyStudentId, proxyName, proxyPhone, searchMethod;
+
+    if (typeof docIdOrOptions === 'object' && docIdOrOptions !== null) {
+      studentDocId = docIdOrOptions.studentDocId || docIdOrOptions.id;
+      shirtSizeReceived = docIdOrOptions.shirtSizeReceived;
+      proxyType = docIdOrOptions.proxyType || null;
+      proxyStudentId = docIdOrOptions.proxyStudentId || null;
+      proxyName = docIdOrOptions.proxyName || null;
+      proxyPhone = docIdOrOptions.proxyPhone || null;
+      searchMethod = docIdOrOptions.searchMethod || 'QR_CODE';
+    } else {
+      studentDocId = docIdOrOptions;
+      shirtSizeReceived = options.shirtSizeReceived;
+      proxyType = options.proxyType || null;
+      proxyStudentId = options.proxyStudentId || null;
+      proxyName = options.proxyName || null;
+      proxyPhone = options.proxyPhone || null;
+      searchMethod = options.searchMethod || 'QR_CODE';
+    }
+
     const timestamp = getThaiISOString();
     const currentStudent = students.find(s => s.docId === studentDocId || s.id === studentDocId || s.studentId === studentDocId);
 
     if (!currentStudent) {
-      throw new Error("ไม่พบข้อมูลนักศึกษาในระบบ");
+      console.error("Student not found for docId:", studentDocId);
+      return false;
     }
 
     const registeredSize = currentStudent.shirtSize || 'M';
@@ -505,38 +518,42 @@ export const FirebaseDataProvider = ({ children }) => {
     };
 
     if (db) {
-      const batch = writeBatch(db);
-      const userRef = doc(db, 'users', currentStudent.docId || studentDocId);
+      try {
+        const batch = writeBatch(db);
+        const userRef = doc(db, 'users', currentStudent.docId || studentDocId);
 
-      batch.update(userRef, updatePayload);
+        batch.update(userRef, updatePayload);
 
-      const logRef = doc(collection(db, 'shirt_checkin_logs'));
-      batch.set(logRef, {
-        log_id: logRef.id,
-        student_id: currentStudent.studentId || currentStudent.id,
-        student_name: `${currentStudent.firstName} ${currentStudent.lastName}`.trim(),
-        department: currentStudent.department || '',
-        search_method: searchMethod,
-        shirtSize: registeredSize,
-        shirt_size_received: shirtSizeReceived,
-        is_size_changed: isSizeChanged,
-        action: 'CHECKIN_SHIRT',
-        timestamp: timestamp,
-        staff_line_uid: staffUid,
-        staff_display_name: staffName,
-        staff_picture_url: staffPic,
-        proxy_type: proxyType || null,
-        proxy_student_id: proxyStudentId || null,
-        proxy_name: proxyName || null,
-        proxy_phone: proxyPhone || null
-      });
+        const logRef = doc(collection(db, 'shirt_checkin_logs'));
+        batch.set(logRef, {
+          log_id: logRef.id,
+          student_id: currentStudent.studentId || currentStudent.id,
+          student_name: `${currentStudent.firstName || ''} ${currentStudent.lastName || ''}`.trim(),
+          department: currentStudent.department || '',
+          search_method: searchMethod,
+          shirtSize: registeredSize,
+          shirt_size_received: shirtSizeReceived,
+          is_size_changed: isSizeChanged,
+          action: 'CHECKIN_SHIRT',
+          timestamp: timestamp,
+          staff_line_uid: staffUid,
+          staff_display_name: staffName,
+          staff_picture_url: staffPic,
+          proxy_type: proxyType || null,
+          proxy_student_id: proxyStudentId || null,
+          proxy_name: proxyName || null,
+          proxy_phone: proxyPhone || null
+        });
 
-      await batch.commit();
+        await batch.commit();
+      } catch (err) {
+        console.error("Firestore batch update error:", err);
+      }
     }
 
     setStudents(prev => {
       const updatedList = prev.map(s => {
-        if (s.docId === studentDocId || s.id === studentDocId || s.studentId === studentDocId) {
+        if (s.docId === (currentStudent.docId || studentDocId) || s.id === (currentStudent.id || studentDocId)) {
           return { ...s, ...updatePayload };
         }
         return s;
