@@ -709,8 +709,18 @@ export const FirebaseDataProvider = ({ children }) => {
   const approveWalkinRegistration = async (studentDocId) => {
     if (!studentDocId) return { success: false, error: 'Missing student document ID' };
 
-    const targetStudent = students.find(s => s.docId === studentDocId || s.id === studentDocId);
+    const targetStudent = students.find(s => 
+      s.docId === studentDocId || 
+      s.id === studentDocId || 
+      s.studentId === studentDocId ||
+      (s.short_code && s.short_code.toUpperCase() === String(studentDocId).toUpperCase()) ||
+      (s.walkin_temp_short_code && s.walkin_temp_short_code.toUpperCase() === String(studentDocId).toUpperCase())
+    );
+
     if (!targetStudent) return { success: false, error: 'Student record not found' };
+
+    // Real Firestore Document Key (LINE UID)
+    const firestoreDocId = targetStudent.docId || targetStudent.id || targetStudent.line_uid || studentDocId;
 
     const staffName = liffProfile?.displayName || staff?.displayName || staff?.name || 'Staff';
     const staffUid = liffProfile?.line_uid || staff?.username || 'STAFF_ANONYMOUS';
@@ -779,14 +789,15 @@ export const FirebaseDataProvider = ({ children }) => {
 
     try {
       if (db) {
-        const studentRef = doc(db, 'users', studentDocId);
+        const studentRef = doc(db, 'users', firestoreDocId);
         await updateDoc(studentRef, updateFields);
+        console.log("✅ Walk-in registration approved in Firestore for docId:", firestoreDocId);
 
         try {
           await addDoc(collection(db, 'staff_access_logs'), {
             timestamp: approvedAt,
             event: 'WALKIN_APPROVED_AND_ASSIGNED_GROUP',
-            student_doc_id: studentDocId,
+            student_doc_id: firestoreDocId,
             student_id: targetStudent.studentId || '',
             student_name: `${targetStudent.firstName || ''} ${targetStudent.lastName || ''}`.trim(),
             assigned_group: assignedGroup,
@@ -803,7 +814,7 @@ export const FirebaseDataProvider = ({ children }) => {
 
       setStudents(prev => {
         const updated = prev.map(s => {
-          if (s.docId === studentDocId || s.id === studentDocId) {
+          if (s.docId === firestoreDocId || s.id === firestoreDocId || s.docId === studentDocId || s.id === studentDocId) {
             return { ...s, ...updateFields };
           }
           return s;
@@ -818,7 +829,7 @@ export const FirebaseDataProvider = ({ children }) => {
         assignedGroupName 
       };
     } catch (err) {
-      console.error("Approve Walk-in error:", err);
+      console.error("Failed to approve walk-in registration in Firestore:", err);
       return { success: false, error: err?.message || String(err) };
     }
   };

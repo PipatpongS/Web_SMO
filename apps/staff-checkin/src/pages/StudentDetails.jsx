@@ -57,7 +57,7 @@ export default function StudentDetails() {
           ...prev,
           walkin_status: 'APPROVED',
           walkin_verified: true,
-          group: res.assignedGroup || prev.group
+          group: groupName || prev.group
         }));
         setAlertNoticeModal({
           type: 'success',
