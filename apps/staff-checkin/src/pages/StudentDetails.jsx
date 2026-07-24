@@ -349,14 +349,16 @@ export default function StudentDetails() {
 
             {/* Status & Note Badges */}
             <div className="flex flex-col items-end gap-1.5 shrink-0">
-              {isReceived ? (
-                <span className="px-3 py-1.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 font-extrabold text-xs flex items-center gap-1.5 shadow-sm">
-                  <CheckCircle2 size={14} className="text-emerald-600" /> รับแล้ว
-                </span>
-              ) : (
-                <span className="px-3 py-1.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300 font-extrabold text-xs flex items-center gap-1.5 shadow-sm">
-                  ยังไม่ได้รับเสื้อ
-                </span>
+              {!isWalkinMode && (
+                isReceived ? (
+                  <span className="px-3 py-1.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 font-extrabold text-xs flex items-center gap-1.5 shadow-sm">
+                    <CheckCircle2 size={14} className="text-emerald-600" /> รับแล้ว
+                  </span>
+                ) : (
+                  <span className="px-3 py-1.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300 font-extrabold text-xs flex items-center gap-1.5 shadow-sm">
+                    ยังไม่ได้รับเสื้อ
+                  </span>
+                )
               )}
 
               {student.note && (student.note.includes('รอบพิเศษ') || student.note.includes('รอบหน้างาน')) && (
@@ -419,18 +421,32 @@ export default function StudentDetails() {
           </div>
         )}
 
-        {isWalkinApproved && (
-          <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-between text-xs text-emerald-950 font-bold">
-            <span className="flex items-center gap-1.5 text-emerald-800">
-              <ShieldCheck size={16} className="text-emerald-600 shrink-0" />
-              {isTH ? 'อนุมัติการลงทะเบียน Walk-in หน้างานเรียบร้อยแล้ว' : 'Walk-in Registration Approved On-site'}
-            </span>
-            {student.walkin_approved_by_staff_name && (
-              <span className="text-[11px] text-emerald-700 font-medium shrink-0">โดย {student.walkin_approved_by_staff_name}</span>
+        {(isWalkinApproved || (isWalkinMode && student.group)) && (
+          <div className="p-4 bg-emerald-50 border-2 border-emerald-300 rounded-2xl space-y-3 shadow-md">
+            <div className="flex items-center justify-between text-xs sm:text-sm text-emerald-950 font-black">
+              <span className="flex items-center gap-1.5 text-emerald-800">
+                <ShieldCheck size={18} className="text-emerald-600 shrink-0" />
+                {isTH ? 'อนุมัติการลงทะเบียน Walk-in หน้างานเรียบร้อยแล้ว' : 'Walk-in Registration Approved On-site'}
+              </span>
+              {student.walkin_approved_by_staff_name && (
+                <span className="text-[11px] text-emerald-700 font-medium shrink-0">โดย {student.walkin_approved_by_staff_name}</span>
+              )}
+            </div>
+
+            {student.group && (
+              <div className="mt-2 p-3 bg-white rounded-xl border border-emerald-200 text-center">
+                <p className="text-[11px] text-slate-500 font-bold uppercase tracking-wider mb-1">กลุ่มกิจกรรมที่ได้รับ</p>
+                <p className="text-xl sm:text-2xl font-black text-amber-600">
+                  {student.group.startsWith('กลุ่ม') ? student.group : `กลุ่ม ${student.group}`}
+                </p>
+              </div>
             )}
           </div>
         )}
-        {isReceived ? (
+
+        {/* SHIRT PICKUP SECTION (Only visible in Shirt Pickup Mode, hidden in Walk-in Approval Mode) */}
+        {!isWalkinMode && (
+          isReceived ? (
           <div className="space-y-3 bg-emerald-50/80 p-4 sm:p-5 rounded-2xl border border-emerald-200">
             {/* Header */}
             <div className="flex items-center gap-2.5 border-b border-emerald-200 pb-3 mb-1">
@@ -687,7 +703,8 @@ export default function StudentDetails() {
             </button>
 
           </div>
-        )}
+        )
+      )}
       </div>
 
       {/* CUSTOM CENTER-SCREEN ALERT/NOTICE MODAL */}
