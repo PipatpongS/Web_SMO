@@ -269,21 +269,7 @@ const Profile = () => {
                 </div>
               )}
 
-              {/* Group Name Badge if assigned */}
-              {displayRegData.group && (() => {
-                const str = String(displayRegData.group).trim();
-                const map = { '1': 'DREAM', '2': 'DESIGN', '3': 'BUILD', '4': 'BLOOM', '5': 'BEYOND' };
-                const gName = map[str] || str;
-                const displayGroup = gName.startsWith('กลุ่ม') ? gName : `กลุ่ม ${gName}`;
-                return (
-                  <div className="w-full bg-amber-50/90 rounded-2xl p-3.5 mb-4 border-2 border-amber-300 text-center shadow-sm">
-                    <p className="text-[11px] text-amber-900 font-extrabold uppercase tracking-wider mb-0.5">กลุ่มกิจกรรมที่ได้รับ</p>
-                    <p className="text-xl sm:text-2xl font-black text-amber-600">
-                      {displayGroup}
-                    </p>
-                  </div>
-                );
-              })()}
+
 
               {/* User Info */}
               <div className="w-full space-y-3 text-sm text-gray-800 mb-6">

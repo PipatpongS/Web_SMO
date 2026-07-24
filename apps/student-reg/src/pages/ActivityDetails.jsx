@@ -124,8 +124,28 @@ const ActivityDetails = () => {
   }
 
   const rawGroup = regData?.group ?? regData?.Group ?? null;
-  const userGroupNum = (rawGroup !== null && rawGroup !== undefined && rawGroup !== '') ? Number(rawGroup) : null;
-  const userGroupName = (userGroupNum && groupNames[userGroupNum]) ? groupNames[userGroupNum] : t.unassignedGroup;
+  const nameToNum = { 'DREAM': 1, 'DESIGN': 2, 'BUILD': 3, 'BLOOM': 4, 'BEYOND': 5 };
+  const numToName = { 1: 'DREAM', 2: 'DESIGN', 3: 'BUILD', 4: 'BLOOM', 5: 'BEYOND' };
+
+  let userGroupNum = null;
+  let userGroupName = t.unassignedGroup;
+
+  if (rawGroup !== null && rawGroup !== undefined && rawGroup !== '') {
+    const strGroup = String(rawGroup).trim().toUpperCase().replace(/^กลุ่ม\s*/, '');
+    if (nameToNum[strGroup]) {
+      userGroupNum = nameToNum[strGroup];
+      userGroupName = strGroup;
+    } else if (numToName[strGroup]) {
+      userGroupNum = Number(strGroup);
+      userGroupName = numToName[strGroup];
+    } else if (!isNaN(Number(strGroup))) {
+      userGroupNum = Number(strGroup);
+      userGroupName = strGroup;
+    } else {
+      userGroupName = strGroup;
+    }
+  }
+
   const userDept = regData?.department || '';
   const userDeptEN = deptTranslationsEN[userDept] || userDept;
   const deptDisplay = lang === 'EN' ? userDeptEN : userDept;
