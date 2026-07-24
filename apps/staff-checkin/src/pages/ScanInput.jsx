@@ -146,19 +146,8 @@ export default function ScanInput() {
 
   const handleCodeChange = (e) => {
     setError('');
-    const raw = e.target.value.toUpperCase();
-    let letters = '';
-    let digits = '';
-
-    for (let char of raw) {
-      if (letters.length < 2) {
-        if (/[A-Z]/.test(char)) letters += char;
-      } else if (digits.length < 2) {
-        if (/[0-9]/.test(char)) digits += char;
-      }
-    }
-
-    setCode((letters + digits).slice(0, 4));
+    const raw = e.target.value.toUpperCase().replace(/[^A-Z0-9-]/g, '');
+    setCode(raw.slice(0, 10));
   };
 
   const [isSearching, setIsSearching] = useState(false);
@@ -166,7 +155,7 @@ export default function ScanInput() {
   const executeSearch = async (searchCode, method = 'SHORT_CODE') => {
     const targetCode = searchCode.replace(/\s+/g, '').trim();
     if (!targetCode) {
-      setError(isTH ? 'กรุณากรอก Short Code 4 หลัก' : 'Please enter 4-digit Short Code');
+      setError(isTH ? 'กรุณากรอก Short Code (เช่น W-AI37 หรือ CP01)' : 'Please enter Short Code (e.g. W-AI37 or CP01)');
       return;
     }
 
@@ -278,15 +267,15 @@ export default function ScanInput() {
         <form onSubmit={handleSearchSubmit} className="w-full space-y-2 pt-2 border-t border-white/10 shrink-0">
           <div>
             <label className="block text-[11px] sm:text-xs font-medium text-white/80 mb-1 text-center">
-              {isTH ? 'หรือกรอก Short Code 4 หลัก (เช่น CP01)' : 'Or enter 4-digit Short Code (e.g. CP01)'}
+              {isTH ? 'หรือกรอก Short Code (เช่น W-AI37 หรือ CP01)' : 'Or enter Short Code (e.g. W-AI37 or CP01)'}
             </label>
             <input 
               type="text" 
               value={code}
-              maxLength={4}
+              maxLength={10}
               onChange={handleCodeChange}
-              className="w-full px-3.5 py-2 text-center text-lg sm:text-xl font-bold tracking-[0.25em] rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-magical-light uppercase font-mono"
-              placeholder="CP01"
+              className="w-full px-3.5 py-2 text-center text-lg sm:text-xl font-bold tracking-[0.15em] rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-amber-400 uppercase font-mono"
+              placeholder="W-AI37 / CP01"
             />
           </div>
 

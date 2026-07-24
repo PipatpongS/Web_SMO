@@ -255,74 +255,66 @@ export const FirebaseDataProvider = ({ children }) => {
   };
 
   // ⭐️ ULTRA LOW QUOTA LOOKUP (Consumes EXACTLY 1 Read or 0 Read if in Cache)
+  // ⭐️ ULTRA LOW QUOTA LOOKUP (Consumes EXACTLY 1 Read or 0 Read if in Cache)
   const findStudentByCodeDirect = async (rawCode) => {
     if (!rawCode) return null;
     const rawClean = rawCode.trim();
-    const searchUpper = rawClean.toUpperCase();
 
     let lineUidFromQr = null;
     let studentIdFromQr = null;
-    if (rawClean.includes(':')) {
+    let tempShortCode = null;
+    let cleanCode = rawClean;
+
+    if (rawClean.startsWith('WALKIN_TEMP:')) {
+      const parts = rawClean.split(':');
+      if (parts.length >= 3) {
+        lineUidFromQr = parts[1].trim();
+        tempShortCode = parts[2].trim();
+        cleanCode = parts[2].trim();
+      }
+    } else if (rawClean.includes(':')) {
       const parts = rawClean.split(':');
       lineUidFromQr = parts[0].trim();
       studentIdFromQr = parts[1].trim();
     }
 
-    // 1️⃣ Primary QR Code Search: Match by LINE UID (Document Key) and qr_code Field FIRST!
-    if (lineUidFromQr) {
-      const lineUidUpper = lineUidFromQr.toUpperCase();
-      
-      // Check local cache for exact line_uid / docId / qr_code match
-      const localUidMatch = students.find(s => {
-        const sId = (s.id || s.docId || '').toUpperCase();
-        const sLineUid = (s.line_uid || '').toUpperCase();
-        const sQrCode = (s.qr_code || s.qrCode || '').toUpperCase();
-        return sId === lineUidUpper || sLineUid === lineUidUpper || sQrCode === searchUpper;
-      });
-      if (localUidMatch) return localUidMatch;
+    const searchUpper = cleanCode.toUpperCase();
+    const tempShortUpper = tempShortCode ? tempShortCode.toUpperCase() : searchUpper;
+    const lineUidUpper = lineUidFromQr ? lineUidFromQr.toUpperCase() : null;
 
-      if (db) {
-        // Step 1a: Direct Document Key lookup (1 Read)
-        try {
-          const docRef = doc(db, 'users', lineUidFromQr);
-          const docSnap = await getDoc(docRef);
-          if (docSnap.exists()) {
-            const found = { docId: docSnap.id, id: docSnap.id, ...docSnap.data() };
-            setStudents(prev => [...prev.filter(x => x.docId !== found.docId), found]);
-            return found;
-          }
-        } catch (err) {
-          console.warn("Direct QR LINE UID doc get note:", err);
-        }
-
-        // Step 1b: Direct Query by qr_code field (1 Read)
-        try {
-          const qQr = query(collection(db, 'users'), where('qr_code', '==', rawClean), limit(1));
-          const snapQr = await getDocs(qQr);
-          if (!snapQr.empty) {
-            const dSnap = snapQr.docs[0];
-            const found = { docId: dSnap.id, id: dSnap.id, ...dSnap.data() };
-            setStudents(prev => [...prev.filter(x => x.docId !== found.docId), found]);
-            return found;
-          }
-        } catch (err) {
-          console.warn("Direct qr_code query note:", err);
-        }
-      }
-    }
-
-    // 2️⃣ Short Code & Document ID Search (for Short Code input e.g. "FG92")
-    const localCodeMatch = students.find(s => {
+    // 1️⃣ Primary QR Code & Local Cache Search
+    const localMatch = students.find(s => {
       const sId = (s.id || s.docId || '').toUpperCase();
-      const sShortCode = (s.shortCode || s.short_code || '').toUpperCase();
+      const sLineUid = (s.line_uid || '').toUpperCase();
+      const sShortCode = (s.shortCode || s.short_code || s.walkin_temp_short_code || '').toUpperCase();
       const sQrCode = (s.qrCode || s.qr_code || '').toUpperCase();
-      return sId === searchUpper || sShortCode === searchUpper || sQrCode === searchUpper;
+      const sStudentId = (s.studentId || '').toUpperCase();
+
+      if (lineUidUpper && (sId === lineUidUpper || sLineUid === lineUidUpper)) return true;
+      if (tempShortUpper && (sShortCode === tempShortUpper || sId === tempShortUpper)) return true;
+      if (searchUpper && (sId === searchUpper || sShortCode === searchUpper || sQrCode === searchUpper || sStudentId === searchUpper)) return true;
+      return false;
     });
-    if (localCodeMatch) return localCodeMatch;
+    if (localMatch) return localMatch;
 
     if (!db) return null;
 
-    // 3️⃣ Direct Get by Document Key
+    // 2️⃣ Direct Document Key Lookup by LINE UID
+    if (lineUidFromQr) {
+      try {
+        const docRef = doc(db, 'users', lineUidFromQr);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          const found = { docId: docSnap.id, id: docSnap.id, ...docSnap.data() };
+          setStudents(prev => [...prev.filter(x => x.docId !== found.docId), found]);
+          return found;
+        }
+      } catch (err) {
+        console.warn("Direct QR LINE UID doc get note:", err);
+      }
+    }
+
+    // 3️⃣ Direct Get by Document Key matching searchUpper (e.g. UID or Short Code as key)
     try {
       const docRef = doc(db, 'users', searchUpper);
       const docSnap = await getDoc(docRef);
@@ -337,7 +329,8 @@ export const FirebaseDataProvider = ({ children }) => {
 
     // 4️⃣ Lookup by used_short_codes/{shortCode} collection
     try {
-      const scRef = doc(db, 'used_short_codes', searchUpper);
+      const targetShortCode = tempShortUpper || searchUpper;
+      const scRef = doc(db, 'used_short_codes', targetShortCode);
       const scSnap = await getDoc(scRef);
       if (scSnap.exists()) {
         const scData = scSnap.data();
@@ -355,31 +348,34 @@ export const FirebaseDataProvider = ({ children }) => {
       console.warn("used_short_codes lookup note:", err);
     }
 
-    // 5️⃣ Targeted Query by short_code / shortCode field
-    try {
-      const qShort = query(collection(db, 'users'), where('short_code', '==', searchUpper), limit(1));
-      const snapShort = await getDocs(qShort);
-      if (!snapShort.empty) {
-        const dSnap = snapShort.docs[0];
-        const found = { docId: dSnap.id, id: dSnap.id, ...dSnap.data() };
-        setStudents(prev => [...prev.filter(x => x.docId !== found.docId), found]);
-        return found;
+    // 5️⃣ Targeted Query by short_code / walkin_temp_short_code field
+    const targetCodesToQuery = Array.from(new Set([searchUpper, tempShortUpper].filter(Boolean)));
+    for (const codeStr of targetCodesToQuery) {
+      try {
+        const qShort = query(collection(db, 'users'), where('short_code', '==', codeStr), limit(1));
+        const snapShort = await getDocs(qShort);
+        if (!snapShort.empty) {
+          const dSnap = snapShort.docs[0];
+          const found = { docId: dSnap.id, id: dSnap.id, ...dSnap.data() };
+          setStudents(prev => [...prev.filter(x => x.docId !== found.docId), found]);
+          return found;
+        }
+      } catch (err) {
+        console.warn("short_code query note:", err);
       }
-    } catch (err) {
-      console.warn("short_code query note:", err);
-    }
 
-    try {
-      const qShortCamel = query(collection(db, 'users'), where('shortCode', '==', searchUpper), limit(1));
-      const snapShortCamel = await getDocs(qShortCamel);
-      if (!snapShortCamel.empty) {
-        const dSnap = snapShortCamel.docs[0];
-        const found = { docId: dSnap.id, id: dSnap.id, ...dSnap.data() };
-        setStudents(prev => [...prev.filter(x => x.docId !== found.docId), found]);
-        return found;
+      try {
+        const qWalkinTemp = query(collection(db, 'users'), where('walkin_temp_short_code', '==', codeStr), limit(1));
+        const snapWalkinTemp = await getDocs(qWalkinTemp);
+        if (!snapWalkinTemp.empty) {
+          const dSnap = snapWalkinTemp.docs[0];
+          const found = { docId: dSnap.id, id: dSnap.id, ...dSnap.data() };
+          setStudents(prev => [...prev.filter(x => x.docId !== found.docId), found]);
+          return found;
+        }
+      } catch (err) {
+        console.warn("walkin_temp_short_code query note:", err);
       }
-    } catch (err) {
-      console.warn("shortCode query note:", err);
     }
 
     // 6️⃣ Targeted Query by studentId (ONLY if NOT placeholder "69070500000")
