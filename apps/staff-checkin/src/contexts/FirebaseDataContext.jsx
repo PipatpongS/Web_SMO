@@ -721,11 +721,31 @@ export const FirebaseDataProvider = ({ children }) => {
       targetStudent.nationality.trim() !== 'ไทย' && 
       targetStudent.nationality.trim().toLowerCase() !== 'thai';
 
+    const GROUP_NAMES_MAP = {
+      '1': 'DREAM',
+      '2': 'DESIGN',
+      '3': 'BUILD',
+      '4': 'BLOOM',
+      '5': 'BEYOND'
+    };
+
+    const REVERSE_GROUP_MAP = {
+      'DREAM': '1',
+      'DESIGN': '2',
+      'BUILD': '3',
+      'BLOOM': '4',
+      'BEYOND': '5'
+    };
+
     // 2. Count current group sizes across all students
     const groupCounts = { '1': 0, '2': 0, '3': 0, '4': 0, '5': 0 };
     students.forEach(s => {
-      if (s.group && groupCounts.hasOwnProperty(String(s.group).trim())) {
-        groupCounts[String(s.group).trim()]++;
+      if (s.group) {
+        const str = String(s.group).trim().toUpperCase();
+        const numKey = REVERSE_GROUP_MAP[str] || str;
+        if (groupCounts.hasOwnProperty(numKey)) {
+          groupCounts[numKey]++;
+        }
       }
     });
 
@@ -743,19 +763,14 @@ export const FirebaseDataProvider = ({ children }) => {
 
     // Tie-breaker: Equal-probability random choice among candidate minimum groups
     const assignedGroup = candidateGroups[Math.floor(Math.random() * candidateGroups.length)];
-    const GROUP_NAMES_MAP = {
-      '1': 'DREAM',
-      '2': 'DESIGN',
-      '3': 'BUILD',
-      '4': 'BLOOM',
-      '5': 'BEYOND'
-    };
     const assignedGroupName = GROUP_NAMES_MAP[assignedGroup] || assignedGroup;
 
     const updateFields = {
       walkin_status: 'APPROVED',
       walkin_verified: true,
       group: assignedGroupName,
+      Group: assignedGroupName,
+      status: 'APPROVED',
       walkin_approved_at: approvedAt,
       walkin_approved_by_staff_name: staffName,
       walkin_approved_by_staff_uid: staffUid,

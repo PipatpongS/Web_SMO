@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
 import { db } from '../config/firebase';
-import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, onSnapshot } from 'firebase/firestore';
 
 const RegContext = createContext();
 
@@ -93,33 +93,32 @@ export const RegProvider = ({ children }) => {
   useEffect(() => {
     let unsubscribe = null;
 
-    const checkRegistration = async () => {
-      if (!userProfile) {
-        setIsRegistered(false);
-        setRegData(null);
-        if (!authLoading) setLoading(false);
-        return;
-      }
+    if (!userProfile) {
+      setIsRegistered(false);
+      setRegData(null);
+      if (!authLoading) setLoading(false);
+      return;
+    }
 
-      const userId = userProfile.userId;
+    const userId = userProfile.userId;
 
-      // 1. Check LocalStorage (Fast Path)
-      const cachedReg = localStorage.getItem(`reg_${userId}`);
-      if (cachedReg) {
-        try {
-          const parsed = JSON.parse(cachedReg);
-          setRegData(parsed);
-          setIsRegistered(true);
-        } catch (e) {
-          console.error("Error parsing cached reg data", e);
-        }
-      }
-
-      // 2. Fetch from Firestore
+    // 1. Check LocalStorage (Fast Path)
+    const cachedReg = localStorage.getItem(`reg_${userId}`);
+    if (cachedReg) {
       try {
-        if (db) {
-          const docRef = doc(db, 'users', userId);
-          const docSnap = await getDoc(docRef);
+        const parsed = JSON.parse(cachedReg);
+        setRegData(parsed);
+        setIsRegistered(true);
+      } catch (e) {
+        console.error("Error parsing cached reg data", e);
+      }
+    }
+
+    // 2. Real-time Listener via onSnapshot
+    try {
+      if (db) {
+        const docRef = doc(db, 'users', userId);
+        unsubscribe = onSnapshot(docRef, async (docSnap) => {
           if (docSnap.exists()) {
             const data = docSnap.data();
             setIsRegistered(true);
@@ -174,15 +173,18 @@ export const RegProvider = ({ children }) => {
             setRegData(null);
             localStorage.removeItem(`reg_${userId}`);
           }
-        }
-      } catch (error) {
-        console.error("Error checking registration status:", error);
-      } finally {
+          setLoading(false);
+        }, (error) => {
+          console.error("Error in real-time registration listener:", error);
+          setLoading(false);
+        });
+      } else {
         setLoading(false);
       }
-    };
-
-    checkRegistration();
+    } catch (error) {
+      console.error("Error checking registration status:", error);
+      setLoading(false);
+    }
 
     return () => {
       if (unsubscribe) unsubscribe();
