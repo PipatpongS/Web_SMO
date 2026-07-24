@@ -198,13 +198,15 @@ export const FirebaseDataProvider = ({ children }) => {
       snapshot.forEach(docSnap => {
         const data = docSnap.data();
         studentList.push({
+          shirtSize: data.shirtSize || 'M',
+          ...data,
           docId: docSnap.id,
+          line_uid: data.line_uid || docSnap.id,
           id: data.studentId || data.id || docSnap.id,
           studentId: data.studentId || data.id || docSnap.id,
           firstName: data.firstName || data.first_name || '',
           lastName: data.lastName || data.last_name || '',
           department: data.department || '',
-          shirtSize: data.shirtSize || 'M',
           shortCode: data.shortCode || data.short_code || '',
           phone: data.phone || '',
           shirt_received_at: data.shirt_received_at || null,
@@ -217,7 +219,6 @@ export const FirebaseDataProvider = ({ children }) => {
           proxy_name: data.proxy_name || null,
           proxy_phone: data.proxy_phone || null,
           search_method: data.search_method || null,
-          ...data
         });
       });
 
@@ -305,7 +306,7 @@ export const FirebaseDataProvider = ({ children }) => {
         const docRef = doc(db, 'users', lineUidFromQr);
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
-          const found = { docId: docSnap.id, id: docSnap.id, ...docSnap.data() };
+          const found = { ...docSnap.data(), docId: docSnap.id, line_uid: docSnap.id };
           setStudents(prev => [...prev.filter(x => x.docId !== found.docId), found]);
           return found; // Return immediately — 1 Read consumed total!
         }
@@ -319,7 +320,7 @@ export const FirebaseDataProvider = ({ children }) => {
       const docRef = doc(db, 'users', searchUpper);
       const docSnap = await getDoc(docRef);
       if (docSnap.exists()) {
-        const found = { docId: docSnap.id, id: docSnap.id, ...docSnap.data() };
+        const found = { ...docSnap.data(), docId: docSnap.id, line_uid: docSnap.id };
         setStudents(prev => [...prev.filter(x => x.docId !== found.docId), found]);
         return found; // Return immediately — 1 Read consumed total!
       }
@@ -338,7 +339,7 @@ export const FirebaseDataProvider = ({ children }) => {
         if (studentUid) {
           const studentDocSnap = await getDoc(doc(db, 'users', studentUid));
           if (studentDocSnap.exists()) {
-            const found = { docId: studentDocSnap.id, id: studentDocSnap.id, ...studentDocSnap.data() };
+            const found = { ...studentDocSnap.data(), docId: studentDocSnap.id, line_uid: studentDocSnap.id };
             setStudents(prev => [...prev.filter(x => x.docId !== found.docId), found]);
             return found; // Return immediately!
           }
@@ -356,7 +357,7 @@ export const FirebaseDataProvider = ({ children }) => {
         const snapShort = await getDocs(qShort);
         if (!snapShort.empty) {
           const dSnap = snapShort.docs[0];
-          const found = { docId: dSnap.id, id: dSnap.id, ...dSnap.data() };
+          const found = { ...dSnap.data(), docId: dSnap.id, line_uid: dSnap.id };
           setStudents(prev => [...prev.filter(x => x.docId !== found.docId), found]);
           return found; // Return immediately!
         }
@@ -369,7 +370,7 @@ export const FirebaseDataProvider = ({ children }) => {
         const snapWalkinTemp = await getDocs(qWalkinTemp);
         if (!snapWalkinTemp.empty) {
           const dSnap = snapWalkinTemp.docs[0];
-          const found = { docId: dSnap.id, id: dSnap.id, ...dSnap.data() };
+          const found = { ...dSnap.data(), docId: dSnap.id, line_uid: dSnap.id };
           setStudents(prev => [...prev.filter(x => x.docId !== found.docId), found]);
           return found; // Return immediately!
         }
@@ -388,7 +389,7 @@ export const FirebaseDataProvider = ({ children }) => {
         const snapId = await getDocs(qId);
         if (!snapId.empty) {
           const dSnap = snapId.docs[0];
-          const found = { docId: dSnap.id, id: dSnap.id, ...dSnap.data() };
+          const found = { ...dSnap.data(), docId: dSnap.id, line_uid: dSnap.id };
           setStudents(prev => [...prev.filter(x => x.docId !== found.docId), found]);
           return found;
         }
