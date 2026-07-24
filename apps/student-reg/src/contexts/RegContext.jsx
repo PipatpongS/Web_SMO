@@ -102,13 +102,14 @@ export const RegProvider = ({ children }) => {
 
     const userId = userProfile.userId;
 
-    // 1. Check LocalStorage (Fast Path)
+    // 1. Check LocalStorage (Fast Path) — show UI immediately, Firebase will sync in background
     const cachedReg = localStorage.getItem(`reg_${userId}`);
     if (cachedReg) {
       try {
         const parsed = JSON.parse(cachedReg);
         setRegData(parsed);
         setIsRegistered(true);
+        setLoading(false); // ✅ Show UI immediately from cache, onSnapshot will update silently
       } catch (e) {
         console.error("Error parsing cached reg data", e);
       }
