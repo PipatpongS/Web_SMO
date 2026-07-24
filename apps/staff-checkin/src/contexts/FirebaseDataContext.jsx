@@ -707,21 +707,31 @@ export const FirebaseDataProvider = ({ children }) => {
   };
 
   // Approve Walk-in Registration On-site by Staff & Instant Group Assignment
-  const approveWalkinRegistration = async (studentDocId) => {
-    if (!studentDocId) return { success: false, error: 'Missing student document ID' };
+  // Accepts either a full student object OR a docId string (backward compatible)
+  const approveWalkinRegistration = async (studentOrDocId) => {
+    if (!studentOrDocId) return { success: false, error: 'Missing student document ID' };
 
-    const targetStudent = students.find(s => 
-      s.docId === studentDocId || 
-      s.id === studentDocId || 
-      s.studentId === studentDocId ||
-      (s.short_code && s.short_code.toUpperCase() === String(studentDocId).toUpperCase()) ||
-      (s.walkin_temp_short_code && s.walkin_temp_short_code.toUpperCase() === String(studentDocId).toUpperCase())
-    );
+    // Accept full student object or fallback to lookup by ID
+    let targetStudent = null;
+    if (typeof studentOrDocId === 'object' && studentOrDocId !== null) {
+      targetStudent = studentOrDocId;
+    } else {
+      const studentDocId = studentOrDocId;
+      targetStudent = students.find(s => 
+        s.docId === studentDocId || 
+        s.id === studentDocId || 
+        s.line_uid === studentDocId ||
+        s.studentId === studentDocId ||
+        (s.short_code && s.short_code.toUpperCase() === String(studentDocId).toUpperCase()) ||
+        (s.walkin_temp_short_code && s.walkin_temp_short_code.toUpperCase() === String(studentDocId).toUpperCase())
+      );
+    }
 
     if (!targetStudent) return { success: false, error: 'Student record not found' };
 
-    // Real Firestore Document Key (LINE UID)
-    const firestoreDocId = targetStudent.docId || targetStudent.id || targetStudent.line_uid || studentDocId;
+    // Real Firestore Document Key: prefer line_uid field (stored in Firestore doc) > docId > id
+    const firestoreDocId = targetStudent.line_uid || targetStudent.docId || studentOrDocId;
+    console.log('✅ approveWalkinRegistration → firestoreDocId:', firestoreDocId, '| targetStudent.line_uid:', targetStudent.line_uid, '| targetStudent.docId:', targetStudent.docId);
 
     const staffName = liffProfile?.displayName || staff?.displayName || staff?.name || 'Staff';
     const staffUid = liffProfile?.line_uid || staff?.username || 'STAFF_ANONYMOUS';

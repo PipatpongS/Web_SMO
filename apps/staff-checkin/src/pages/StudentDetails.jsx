@@ -50,7 +50,7 @@ export default function StudentDetails() {
     if (!student) return;
     setIsSubmitting(true);
     try {
-      const res = await approveWalkinRegistration(student.docId || student.id);
+      const res = await approveWalkinRegistration(student);
       if (res.success) {
         const groupName = res.assignedGroupName || res.assignedGroup || '';
         setStudent(prev => ({
