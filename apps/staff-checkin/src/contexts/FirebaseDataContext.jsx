@@ -60,7 +60,20 @@ export const FirebaseDataProvider = ({ children }) => {
   const [liffProfile, setLiffProfileState] = useState(() => {
     try {
       const saved = localStorage.getItem('liff_profile_session');
-      return saved ? JSON.parse(saved) : null;
+      if (saved) return JSON.parse(saved);
+      const savedStaff = localStorage.getItem('staff_session');
+      if (savedStaff) {
+        const parsedStaff = JSON.parse(savedStaff);
+        if (parsedStaff && parsedStaff.line_uid) {
+          return {
+            line_uid: parsedStaff.line_uid,
+            userId: parsedStaff.line_uid,
+            displayName: parsedStaff.displayName || parsedStaff.name || 'Staff',
+            pictureUrl: parsedStaff.pictureUrl || ''
+          };
+        }
+      }
+      return null;
     } catch (e) {
       return null;
     }
@@ -106,11 +119,16 @@ export const FirebaseDataProvider = ({ children }) => {
 
   const [loading, setLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [liffLoading, setLiffLoading] = useState(true);
 
   // Initialize LIFF on mount — safe, gets profile if opened inside LINE / LIFF
   useEffect(() => {
     initLiff().then(profile => {
       if (profile) saveLiffProfile(profile);
+    }).catch(err => {
+      console.warn("LIFF initialization note:", err);
+    }).finally(() => {
+      setLiffLoading(false);
     });
   }, []);
 
@@ -734,6 +752,7 @@ export const FirebaseDataProvider = ({ children }) => {
       physicalInventory,
       staff,
       liffProfile,
+      liffLoading,
       triggerLiffLogin,
       lang,
       setLang,

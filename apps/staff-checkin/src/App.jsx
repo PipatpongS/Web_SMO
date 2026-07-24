@@ -16,11 +16,19 @@ import logoLeft from './assets/b.png';
 
 // Protected Route Component — Strictly requires both Staff Auth AND LINE Auth (liffProfile)
 const ProtectedRoute = ({ children, requireSupervisor = false }) => {
-  const { staff, liffProfile, logout } = useData();
+  const { staff, liffProfile, liffLoading, logout } = useData();
+
+  if (liffLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full min-h-[300px] text-white">
+        <div className="w-10 h-10 border-4 border-amber-300 border-t-transparent rounded-full animate-spin mb-3"></div>
+      </div>
+    );
+  }
 
   // If not logged in to staff OR not logged in to LINE → kick out to login page!
   if (!staff || !liffProfile) {
-    if (staff) {
+    if (staff && !liffLoading) {
       logout();
     }
     return <Navigate to="/" replace />;

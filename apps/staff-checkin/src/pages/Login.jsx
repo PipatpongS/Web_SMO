@@ -8,7 +8,7 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { login, triggerLiffLogin, liffProfile, logout, lang, staff } = useData();
+  const { login, triggerLiffLogin, liffProfile, liffLoading, logout, lang, staff } = useData();
   const navigate = useNavigate();
 
   const isTH = lang === 'TH';
@@ -16,10 +16,10 @@ export default function Login() {
   useEffect(() => {
     if (staff && liffProfile) {
       navigate('/home', { replace: true });
-    } else if (staff && !liffProfile) {
+    } else if (staff && !liffProfile && !liffLoading) {
       logout();
     }
-  }, [staff, liffProfile, navigate, logout]);
+  }, [staff, liffProfile, liffLoading, navigate, logout]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
