@@ -11,6 +11,7 @@ export default function StudentDetails() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const method = searchParams.get('method') || 'DIRECT';
+  // Walkin mode check
 
   const { students, findStudentByCodeDirect, confirmShirtPickup, revokeShirtPickup, approveWalkinRegistration, lang } = useData();
   const isTH = lang === 'TH';
