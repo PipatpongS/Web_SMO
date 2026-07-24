@@ -5,7 +5,7 @@ import {
   BarChart2, Filter, LogOut, ArrowLeft, Clock, ShieldCheck, Shirt, RefreshCw, Search, Edit3, Save, X, CheckCircle2, User 
 } from 'lucide-react';
 
-const SHIRT_SIZES = ['SS', 'S', 'M', 'L', 'XL', '2XL', '3XL', '4XL', '5XL'];
+const SHIRT_SIZES = ['SS', 'S', 'M', 'L', 'XL', '2XL', '3XL', '4XL', '5XL', '6XL', '7XL'];
 
 export default function StockSummary() {
   const navigate = useNavigate();

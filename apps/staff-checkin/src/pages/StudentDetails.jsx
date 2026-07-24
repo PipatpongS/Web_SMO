@@ -4,7 +4,7 @@ import { useData } from '../contexts/FirebaseDataContext';
 import { ArrowLeft, CheckCircle2, ShieldCheck, AlertTriangle, XCircle, Shirt, Phone, Loader2, QrCode, User, Hash, Users } from 'lucide-react';
 import jsQR from 'jsqr';
 
-const SHIRT_SIZES = ['SS', 'S', 'M', 'L', 'XL', '2XL', '3XL', '4XL', '5XL'];
+const SHIRT_SIZES = ['SS', 'S', 'M', 'L', 'XL', '2XL', '3XL', '4XL', '5XL', '6XL', '7XL'];
 
 export default function StudentDetails() {
   const { id } = useParams();
