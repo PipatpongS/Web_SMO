@@ -5,7 +5,7 @@ import { Shirt, BarChart2, LogOut, ShieldCheck, User } from 'lucide-react';
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const { staff, liffProfile, logout, lang } = useData();
+  const { staff, liffProfile, triggerLiffLogin, logout, lang } = useData();
 
   const handleLogout = () => {
     logout();
@@ -35,13 +35,25 @@ export default function Dashboard() {
             </div>
             <div className="min-w-0">
               <p className="text-white text-sm font-extrabold truncate leading-tight">{displayName}</p>
-              <span className={`text-[10px] px-2 py-0.5 rounded-md font-extrabold border inline-block mt-0.5 ${
-                isSupervisor 
-                  ? 'bg-purple-500/30 text-purple-200 border-purple-400/40' 
-                  : 'bg-blue-500/30 text-blue-200 border-blue-400/40'
-              }`}>
-                {isSupervisor ? (isTH ? 'ผู้ดูแลระบบ' : 'Admin') : (isTH ? 'สตาฟฟ์' : 'Staff')}
-              </span>
+              <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
+                <span className={`text-[10px] px-2 py-0.5 rounded-md font-extrabold border inline-block ${
+                  isSupervisor 
+                    ? 'bg-purple-500/30 text-purple-200 border-purple-400/40' 
+                    : 'bg-blue-500/30 text-blue-200 border-blue-400/40'
+                }`}>
+                  {isSupervisor ? (isTH ? 'ผู้ดูแลระบบ' : 'Admin') : (isTH ? 'สตาฟฟ์' : 'Staff')}
+                </span>
+
+                {!liffProfile && (
+                  <button 
+                    onClick={triggerLiffLogin} 
+                    className="text-[10px] px-2 py-0.5 rounded-md font-extrabold bg-emerald-500/30 hover:bg-emerald-500/50 text-emerald-200 border border-emerald-400/40 transition-all cursor-pointer inline-flex items-center gap-1 shadow-sm"
+                    title={isTH ? "คลิกเพื่อดึงรูปและชื่อจาก LINE" : "Click to connect LINE profile"}
+                  >
+                    <span>🟢 {isTH ? 'เชื่อมต่อ LINE' : 'Connect LINE'}</span>
+                  </button>
+                )}
+              </div>
             </div>
           </div>
 
