@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useData, ROLES } from '../contexts/FirebaseDataContext';
-import { Shirt, BarChart2, LogOut, ShieldCheck, User, UserCheck } from 'lucide-react';
+import { Shirt, BarChart2, LogOut, ShieldCheck, User, UserCheck, Search, History } from 'lucide-react';
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -72,7 +72,7 @@ export default function Dashboard() {
       </div>
 
       {/* Main Menu Cards Container */}
-      <div className="w-full space-y-4">
+      <div className="w-full space-y-3.5">
         <h2 className="text-base sm:text-lg font-black text-center text-white text-glow mb-2 uppercase tracking-wide">
           {isTH ? 'เลือกรายการเมนูสตาฟ' : 'Staff Action Menu'}
         </h2>
@@ -84,7 +84,7 @@ export default function Dashboard() {
             className="w-full glass-panel p-4 sm:p-5 flex items-center gap-4 hover:bg-white/15 transition-all cursor-pointer group text-left shadow-2xl border border-white/20 hover:border-amber-400/50 rounded-3xl"
           >
             <div className="bg-amber-400/20 p-3.5 rounded-2xl text-amber-300 group-hover:scale-110 transition-transform shrink-0 border border-amber-400/40 shadow-inner">
-              <UserCheck size={32} />
+              <UserCheck size={30} />
             </div>
             <div className="space-y-0.5">
               <span className="text-base sm:text-lg font-black block text-white group-hover:text-amber-200 transition-colors">
@@ -99,18 +99,62 @@ export default function Dashboard() {
           </button>
         )}
 
-        {/* Menu 2: Shirt Distribution */}
+        {/* Menu 2: Student Information Lookup */}
+        {canDoWalkin && (
+          <button 
+            onClick={() => navigate('/student-lookup')}
+            className="w-full glass-panel p-4 sm:p-5 flex items-center gap-4 hover:bg-white/15 transition-all cursor-pointer group text-left shadow-2xl border border-white/20 hover:border-blue-400/50 rounded-3xl"
+          >
+            <div className="bg-blue-500/20 p-3.5 rounded-2xl text-blue-300 group-hover:scale-110 transition-transform shrink-0 border border-blue-400/40 shadow-inner">
+              <Search size={30} />
+            </div>
+            <div className="space-y-0.5">
+              <span className="text-base sm:text-lg font-black block text-white group-hover:text-blue-200 transition-colors">
+                {isTH ? '2. ค้นหาข้อมูลส่วนตัวน้อง' : '2. Student Information Lookup'}
+              </span>
+              <span className="text-xs text-white/70 block font-medium leading-relaxed">
+                {isTH 
+                  ? 'ค้นหาชื่อ-นามสกุล, รหัสนักศึกษา, ภาควิชา, กลุ่มกิจกรรม และรอบการสมัคร' 
+                  : 'Lookup name, student ID, department, activity group, and round'}
+              </span>
+            </div>
+          </button>
+        )}
+
+        {/* Menu 3: Recent 10 Approval Logs */}
+        {canDoWalkin && (
+          <button 
+            onClick={() => navigate('/walkin-logs')}
+            className="w-full glass-panel p-4 sm:p-5 flex items-center gap-4 hover:bg-white/15 transition-all cursor-pointer group text-left shadow-2xl border border-white/20 hover:border-cyan-400/50 rounded-3xl"
+          >
+            <div className="bg-cyan-500/20 p-3.5 rounded-2xl text-cyan-300 group-hover:scale-110 transition-transform shrink-0 border border-cyan-400/40 shadow-inner">
+              <History size={30} />
+            </div>
+            <div className="space-y-0.5">
+              <span className="text-base sm:text-lg font-black block text-white group-hover:text-cyan-200 transition-colors">
+                {isTH ? '3. ประวัติการอนุมัติ 10 รายการล่าสุด' : '3. Recent 10 Approval Logs'}
+              </span>
+              <span className="text-xs text-white/70 block font-medium leading-relaxed">
+                {isTH 
+                  ? 'ดูประวัติการอนุมัติสิทธิ์ Walk-in 10 รายการล่าสุด พร้อมกลุ่มกิจกรรมและเวลา' 
+                  : 'View recent 10 Walk-in approvals with assigned groups and timestamp'}
+              </span>
+            </div>
+          </button>
+        )}
+
+        {/* Shirt Check-in Menu */}
         {canDoShirt && (
           <button 
             onClick={() => navigate('/scan?mode=shirt')}
             className="w-full glass-panel p-4 sm:p-5 flex items-center gap-4 hover:bg-white/15 transition-all cursor-pointer group text-left shadow-2xl border border-white/20 hover:border-purple-400/50 rounded-3xl"
           >
             <div className="bg-purple-500/20 p-3.5 rounded-2xl text-purple-300 group-hover:scale-110 transition-transform shrink-0 border border-purple-400/40 shadow-inner">
-              <Shirt size={32} />
+              <Shirt size={30} />
             </div>
             <div className="space-y-0.5">
               <span className="text-base sm:text-lg font-black block text-white group-hover:text-purple-200 transition-colors">
-                {isTH ? '2. เช็ครับเสื้อ' : '2. Shirt Check-in'}
+                {isTH ? 'เช็ครับเสื้อ' : 'Shirt Check-in'}
               </span>
               <span className="text-xs text-white/70 block font-medium leading-relaxed">
                 {isTH ? 'สแกน QR Code หรือพิมพ์ Short Code เพื่อเช็ครับเสื้อและบันทึกข้อมูล' : 'Scan QR Code or Short Code for shirt check-in'}
@@ -119,18 +163,18 @@ export default function Dashboard() {
           </button>
         )}
 
-        {/* Menu 3: Stock & Summary Dashboard (Available for Admin/Supervisor) */}
+        {/* Stock & Summary Dashboard (Available for Admin/Supervisor) */}
         {isSupervisor && (
           <button 
             onClick={() => navigate('/stock-summary')}
             className="w-full glass-panel p-4 sm:p-5 flex items-center gap-4 hover:bg-white/15 transition-all cursor-pointer group text-left shadow-2xl border border-white/20 hover:border-emerald-400/50 rounded-3xl"
           >
             <div className="bg-emerald-500/20 p-3.5 rounded-2xl text-emerald-300 group-hover:scale-110 transition-transform shrink-0 border border-emerald-400/40 shadow-inner">
-              <BarChart2 size={32} />
+              <BarChart2 size={30} />
             </div>
             <div className="space-y-0.5">
               <span className="text-base sm:text-lg font-black block text-white group-hover:text-emerald-200 transition-colors">
-                {isTH ? '3. Dashboard สรุปยอดและสต็อกเสื้อ' : '3. Stock Summary Dashboard'}
+                {isTH ? 'Dashboard สรุปยอดและสต็อกเสื้อ' : 'Stock Summary Dashboard'}
               </span>
               <span className="text-xs text-white/70 block font-medium leading-relaxed">
                 {isTH ? 'ดูรายงานสต็อกคงเหลือและการรับเสื้อ Real-time' : 'View real-time stock balance & distribution report'}
