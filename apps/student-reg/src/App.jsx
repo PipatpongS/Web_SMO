@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 
 const ScrollToTop = () => {
@@ -23,10 +23,6 @@ import StaffRegister from './pages/StaffRegister';
 import StaffProfile from './pages/StaffProfile';
 import ActivityDetails from './pages/ActivityDetails';
 
-import bgImg from './assets/bg.jpg';
-import logoImg from './assets/Logo.png';
-import textHeaderEng from './assets/text-header-eng.png';
-import textHeaderThai from './assets/text-header-thai.png';
 import LoadingScreen from './components/LoadingScreen';
 
 // Guard component to redirect if already registered (BYPASSED)
@@ -42,32 +38,9 @@ const ProtectedRoute = ({ children }) => {
 function AppContent() {
   const { loading: authLoading, userProfile, error: authError } = useAuth();
   const { loading: regLoading } = useRegistration();
-  const [imagesLoaded, setImagesLoaded] = React.useState(false);
-
-
-  useEffect(() => {
-    // Preload critical images
-    const imagesToPreload = [bgImg, logoImg, textHeaderEng, textHeaderThai, '/icon.png'];
-    let loadedCount = 0;
-
-    const checkAllLoaded = () => {
-      loadedCount++;
-      if (loadedCount === imagesToPreload.length) {
-        setImagesLoaded(true);
-      }
-    };
-
-    imagesToPreload.forEach(src => {
-      const img = new Image();
-      img.src = src;
-      img.onload = checkAllLoaded;
-      img.onerror = checkAllLoaded; // ถ้ารูปพังก็ให้ข้ามไปเลย ระบบจะได้ไม่ค้าง
-    });
-  }, []);
-
-  // Show Loading Screen until Auth, Registration states, AND critical images are fully loaded
-  // to prevent flashing of missing images when entering the site.
-  const isReady = !authLoading && !regLoading && imagesLoaded;
+  // Show Loading Screen until Auth and Registration states are fully loaded.
+  // Images load in the background after app is shown (non-blocking) for faster perceived performance.
+  const isReady = !authLoading && !regLoading;
 
   if (!isReady) {
     return <LoadingScreen />;
