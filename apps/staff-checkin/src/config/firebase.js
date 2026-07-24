@@ -47,7 +47,7 @@ export const initLiff = async () => {
   return null;
 };
 
-// Explicit LINE Login Trigger — called only by authenticated staff who want to link LINE profile
+// Explicit LINE Login Trigger — uses exact registered root Callback URL
 export const liffLogin = async () => {
   const liffId = import.meta.env.VITE_LIFF_ID || "2010390110-fPHy5j81";
   try {
@@ -62,8 +62,9 @@ export const liffLogin = async () => {
         statusMessage: profile.statusMessage
       };
     } else {
-      // Redirect to LINE login — safe because this is explicitly triggered by user action
-      liff.login({ redirectUri: window.location.href });
+      // Use exact root Callback URL matching LINE Developers console
+      const callbackUrl = `${window.location.origin}/`;
+      liff.login({ redirectUri: callbackUrl });
     }
   } catch (err) {
     console.error("liffLogin error:", err);

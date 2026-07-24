@@ -57,7 +57,24 @@ export const FirebaseDataProvider = ({ children }) => {
     return saved ? JSON.parse(saved) : null;
   });
 
-  const [liffProfile, setLiffProfile] = useState(null);
+  const [liffProfile, setLiffProfileState] = useState(() => {
+    try {
+      const saved = localStorage.getItem('liff_profile_session');
+      return saved ? JSON.parse(saved) : null;
+    } catch (e) {
+      return null;
+    }
+  });
+
+  const saveLiffProfile = (profile) => {
+    setLiffProfileState(profile);
+    if (profile) {
+      localStorage.setItem('liff_profile_session', JSON.stringify(profile));
+    } else {
+      localStorage.removeItem('liff_profile_session');
+    }
+  };
+
   const [lang, setLangState] = useState(() => localStorage.getItem('preferredLang') || 'TH');
   
   // Physical inventory stock (from shirt_inventory collection)
@@ -93,14 +110,14 @@ export const FirebaseDataProvider = ({ children }) => {
   // Initialize LIFF on mount — safe, gets profile if opened inside LINE / LIFF
   useEffect(() => {
     initLiff().then(profile => {
-      if (profile) setLiffProfile(profile);
+      if (profile) saveLiffProfile(profile);
     });
   }, []);
 
   const triggerLiffLogin = async () => {
     const profile = await liffLogin();
     if (profile) {
-      setLiffProfile(profile);
+      saveLiffProfile(profile);
       return profile;
     }
     return null;
@@ -461,7 +478,9 @@ export const FirebaseDataProvider = ({ children }) => {
 
   const logout = () => {
     setStaff(null);
+    setLiffProfileState(null);
     localStorage.removeItem('staff_session');
+    localStorage.removeItem('liff_profile_session');
   };
 
   // Confirm Shirt Pickup & Write Audit Logs
