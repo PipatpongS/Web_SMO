@@ -755,7 +755,7 @@ export const FirebaseDataProvider = ({ children }) => {
     const updateFields = {
       walkin_status: 'APPROVED',
       walkin_verified: true,
-      group: assignedGroup,
+      group: assignedGroupName,
       walkin_approved_at: approvedAt,
       walkin_approved_by_staff_name: staffName,
       walkin_approved_by_staff_uid: staffUid,

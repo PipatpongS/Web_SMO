@@ -323,62 +323,80 @@ export default function StudentDetails() {
     <div className="w-full max-w-2xl mx-auto flex flex-col items-center justify-start overflow-y-auto py-2 px-3 sm:px-4 min-h-0">
       
       {/* Top Navigation */}
-      <div className="w-full flex items-center justify-between mb-3 shrink-0">
+      <div className="w-full flex items-center justify-between mb-3.5 shrink-0">
         <button 
           onClick={() => navigate(`/scan?mode=${mode}`)} 
-          className="text-white hover:text-white flex items-center gap-2 text-xs sm:text-sm font-bold px-4 py-2 rounded-2xl bg-white/10 hover:bg-white/20 backdrop-blur-md transition-all border border-white/20 shadow-md cursor-pointer"
+          className="text-white hover:bg-white/20 flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-md transition-all border border-white/20 shadow-xs cursor-pointer active:scale-95"
         >
-          <ArrowLeft size={16} /> {isTH ? 'กลับไปหน้าสแกน' : 'Back to Scan'}
+          <ArrowLeft size={14} /> {isTH ? 'กลับไปหน้าสแกน' : 'Back to Scan'}
         </button>
 
-        <span className={`text-[10px] sm:text-xs px-3 py-1 rounded-full font-black border uppercase tracking-wider ${
+        <div className={`text-xs px-3 py-1.5 rounded-full font-bold border flex items-center gap-1.5 shadow-xs ${
           isWalkinMode 
-            ? 'bg-amber-400/30 text-amber-200 border-amber-400/50' 
-            : 'bg-purple-500/30 text-purple-200 border-purple-400/50'
+            ? 'bg-amber-400/20 text-amber-200 border-amber-400/40' 
+            : 'bg-purple-500/20 text-purple-200 border-purple-400/40'
         }`}>
-          {isWalkinMode 
-            ? (isTH ? '📋 โหมดอนุมัติ Walk-in สุ่มกลุ่ม' : '📋 Walk-in Mode') 
-            : (isTH ? '👕 โหมดเช็ครับเสื้อ' : '👕 Shirt Pickup Mode')}
-        </span>
+          {isWalkinMode ? (
+            <>
+              <ShieldCheck size={14} className="text-amber-400 shrink-0" />
+              <span>{isTH ? 'โหมดอนุมัติ Walk-in (สุ่มกลุ่ม)' : 'Walk-in Approval Mode'}</span>
+            </>
+          ) : (
+            <>
+              <Shirt size={14} className="text-purple-400 shrink-0" />
+              <span>{isTH ? 'โหมดเช็ครับเสื้อ' : 'Shirt Pickup Mode'}</span>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Main Solid White Content Card */}
       <div className="bg-white rounded-3xl p-5 sm:p-7 md:p-8 w-full shadow-2xl border border-slate-200/80 text-slate-800 space-y-5 my-auto">
         
         {/* Student Profile Overview Header */}
-        <div className="border-b border-slate-100 pb-4">
+        <div className="border-b border-slate-100 pb-4 space-y-3">
+          {/* Top Row: Name on Left, Badges on Right */}
           <div className="flex items-start justify-between gap-3">
-            <div>
-              <h2 className="text-xl sm:text-2xl font-black text-slate-900 leading-snug">
-                {student.firstName} {student.lastName}
-              </h2>
-              <p className="text-xs sm:text-sm text-slate-600 font-semibold mt-1">
-                รหัสนักศึกษา: <span className={`text-slate-900 font-bold ${(student.studentId === '69070500000' || String(student.studentId).includes('ยังไม่ได้รับ')) ? '' : 'font-mono'}`}>{formatStudentId(student.studentId || student.id)}</span>
-              </p>
-              <p className="text-xs sm:text-sm text-slate-600 font-semibold mt-1">
-                ภาควิชา: <span className="text-slate-900 font-bold">{student.department || 'วิศวกรรมคอมพิวเตอร์'}</span>
-              </p>
-            </div>
+            <h2 className="text-xl sm:text-2xl font-black text-slate-900 leading-snug">
+              {student.firstName} {student.lastName}
+            </h2>
 
             {/* Status & Note Badges */}
             <div className="flex flex-col items-end gap-1.5 shrink-0">
               {!isWalkinMode && (
                 isReceived ? (
-                  <span className="px-3 py-1.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 font-extrabold text-xs flex items-center gap-1.5 shadow-sm">
-                    <CheckCircle2 size={14} className="text-emerald-600" /> รับแล้ว
+                  <span className="px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 font-extrabold text-xs flex items-center gap-1.5 shadow-xs">
+                    <CheckCircle2 size={13} className="text-emerald-600" /> รับแล้ว
                   </span>
                 ) : (
-                  <span className="px-3 py-1.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300 font-extrabold text-xs flex items-center gap-1.5 shadow-sm">
+                  <span className="px-3 py-1 rounded-full bg-amber-100 text-amber-900 border border-amber-300 font-extrabold text-xs flex items-center gap-1.5 shadow-xs">
                     ยังไม่ได้รับเสื้อ
                   </span>
                 )
               )}
 
               {student.note && (student.note.includes('รอบพิเศษ') || student.note.includes('รอบหน้างาน')) && (
-                <span className="px-2.5 py-1 rounded-full bg-purple-100 text-purple-900 border border-purple-300 font-bold text-[11px] shadow-sm">
+                <span className="px-2.5 py-1 rounded-full bg-purple-100 text-purple-900 border border-purple-300 font-bold text-[11px] shadow-xs whitespace-nowrap">
                   {isTH ? `หมายเหตุ: ${student.note}` : `Note: ${student.note}`}
                 </span>
               )}
+            </div>
+          </div>
+
+          {/* Details Section: Spans Full Width of Container */}
+          <div className="w-full bg-slate-50/80 rounded-2xl p-3 sm:p-4 border border-slate-200/80 space-y-2.5 text-xs sm:text-sm">
+            <div className="flex items-center justify-between gap-2 border-b border-slate-200/60 pb-2">
+              <span className="text-slate-500 font-semibold shrink-0">รหัสนักศึกษา:</span>
+              <span className={`text-slate-900 font-bold text-right truncate ${(student.studentId === '69070500000' || String(student.studentId).includes('ยังไม่ได้รับ')) ? '' : 'font-mono'}`}>
+                {formatStudentId(student.studentId || student.id)}
+              </span>
+            </div>
+
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-slate-500 font-semibold shrink-0">ภาควิชา:</span>
+              <span className="text-slate-900 font-bold text-right truncate">
+                {student.department || 'วิศวกรรมคอมพิวเตอร์'}
+              </span>
             </div>
           </div>
         </div>
@@ -446,14 +464,20 @@ export default function StudentDetails() {
               )}
             </div>
 
-            {student.group && (
-              <div className="mt-2 p-3 bg-white rounded-xl border border-emerald-200 text-center">
-                <p className="text-[11px] text-slate-500 font-bold uppercase tracking-wider mb-1">กลุ่มกิจกรรมที่ได้รับ</p>
-                <p className="text-xl sm:text-2xl font-black text-amber-600">
-                  {student.group.startsWith('กลุ่ม') ? student.group : `กลุ่ม ${student.group}`}
-                </p>
-              </div>
-            )}
+            {student.group && (() => {
+              const str = String(student.group).trim();
+              const map = { '1': 'DREAM', '2': 'DESIGN', '3': 'BUILD', '4': 'BLOOM', '5': 'BEYOND' };
+              const groupName = map[str] || str;
+              const displayGroup = groupName.startsWith('กลุ่ม') ? groupName : `กลุ่ม ${groupName}`;
+              return (
+                <div className="mt-2 p-3 bg-white rounded-xl border border-emerald-200 text-center">
+                  <p className="text-[11px] text-slate-500 font-bold uppercase tracking-wider mb-1">กลุ่มกิจกรรมที่ได้รับ</p>
+                  <p className="text-xl sm:text-2xl font-black text-amber-600">
+                    {displayGroup}
+                  </p>
+                </div>
+              );
+            })()}
           </div>
         )}
 
