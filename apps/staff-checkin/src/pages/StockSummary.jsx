@@ -37,6 +37,18 @@ export default function StockSummary() {
     fetchStudentsFromFirestore(false);
   }, [fetchStudentsFromFirestore]);
 
+  // Lock body scrolling when modal is open
+  useEffect(() => {
+    if (showEditStockModal) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [showEditStockModal]);
+
   // Open Edit Stock Modal
   const handleOpenEditStockModal = () => {
     const initial = {};
@@ -661,19 +673,23 @@ export default function StockSummary() {
 
       {/* Modal: Edit Physical Stock Inventory */}
       {showEditStockModal && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl p-6 w-full max-w-lg text-gray-900 shadow-2xl space-y-5 border border-purple-200 animate-in fade-in zoom-in duration-200">
-            <div className="flex items-center justify-between border-b border-gray-200 pb-3">
+        <div 
+          className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 cursor-pointer"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowEditStockModal(false);
+            }
+          }}
+        >
+          <div 
+            className="bg-white rounded-3xl p-6 w-full max-w-lg text-gray-900 shadow-2xl space-y-5 border border-purple-200 animate-in fade-in zoom-in duration-200 cursor-default"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-center border-b border-gray-200 pb-3">
               <h3 className="text-lg font-black text-purple-900 flex items-center gap-2">
                 <Edit3 size={20} className="text-purple-700" />
                 <span>{isTH ? 'ตั้งค่าสต็อกเสื้อในคลังจริง' : 'Set Physical Inventory Stock'}</span>
               </h3>
-              <button 
-                onClick={() => setShowEditStockModal(false)}
-                className="text-gray-400 hover:text-gray-700 text-lg font-bold p-1 rounded-lg hover:bg-gray-100"
-              >
-                <X size={20} />
-              </button>
             </div>
 
             {stockSaveSuccess ? (

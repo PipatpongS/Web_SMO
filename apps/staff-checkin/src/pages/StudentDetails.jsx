@@ -29,6 +29,23 @@ export default function StudentDetails() {
 
   const [alertNoticeModal, setAlertNoticeModal] = useState(null); // { type: 'success' | 'error', title: '', message: '', groupName?: '' }
 
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [showProxyScanModal, setShowProxyScanModal] = useState(false);
+
+  // Lock body scrolling whenever any popup/modal is open
+  useEffect(() => {
+    const isAnyModalOpen = !!(alertNoticeModal || showConfirmModal || showSuccessModal || showProxyScanModal);
+    if (isAnyModalOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [alertNoticeModal, showConfirmModal, showSuccessModal, showProxyScanModal]);
+
   const handleApproveWalkin = async () => {
     if (!student) return;
     setIsSubmitting(true);
@@ -67,10 +84,6 @@ export default function StudentDetails() {
     }
   };
 
-  const [showConfirmModal, setShowConfirmModal] = useState(false);
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [showProxyScanModal, setShowProxyScanModal] = useState(false);
-  
   const [proxyCodeInput, setProxyCodeInput] = useState('');
   const [proxyError, setProxyError] = useState('');
 
@@ -721,15 +734,6 @@ export default function StudentDetails() {
             className="bg-white rounded-3xl p-6 w-full max-w-sm border border-slate-200 text-center space-y-4 shadow-2xl text-slate-800 relative cursor-default transform transition-all animate-in fade-in zoom-in-95 duration-200"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Close Button Top Right */}
-            <button 
-              type="button"
-              onClick={() => setAlertNoticeModal(null)}
-              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 p-1.5 rounded-full hover:bg-slate-100 transition-colors cursor-pointer"
-            >
-              <XCircle size={22} />
-            </button>
-
             {/* Icon Header */}
             <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto shadow-md border-2 ${
               alertNoticeModal.type === 'success' 
@@ -913,11 +917,8 @@ export default function StudentDetails() {
             className="bg-white rounded-3xl p-5 sm:p-6 w-full max-w-md border border-slate-200 space-y-4 shadow-2xl text-slate-800 cursor-default"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-black text-slate-900">สแกน QR / ค้นหาผู้รับแทน</h3>
-              <button onClick={() => setShowProxyScanModal(false)} className="text-slate-400 hover:text-slate-600 cursor-pointer">
-                <XCircle size={22} />
-              </button>
+            <div className="flex items-center justify-center">
+              <h3 className="text-sm font-black text-slate-900 text-center">สแกน QR / ค้นหาผู้รับแทน</h3>
             </div>
 
             {/* Camera Frame */}
