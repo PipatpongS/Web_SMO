@@ -587,7 +587,7 @@ export const FirebaseDataProvider = ({ children }) => {
         console.log("✅ Shirt pickup committed to Firestore for:", firestoreDocId);
       } catch (err) {
         console.error("Firestore batch update error:", err);
-        // Still update local state below even if Firestore fails
+        return { success: false, error: err?.message || String(err) };
       }
     }
 
@@ -602,21 +602,22 @@ export const FirebaseDataProvider = ({ children }) => {
       return updatedList;
     });
 
-    return true;
+    return { success: true };
   };
 
-  // Revoke Shirt Pickup
+  // Revoke Shirt Pickup & Write Audit Logs
   const revokeShirtPickup = async (studentDocId) => {
     const timestamp = getThaiISOString();
     const currentStudent = students.find(s => s.docId === studentDocId || s.id === studentDocId);
 
-    if (!currentStudent) return false;
+    if (!currentStudent) return { success: false, error: 'Student record not found' };
 
     const resetPayload = {
       shirt_received_at: null,
       shirt_received_by_staff_uid: null,
       shirt_received_by_staff_name: null,
       shirt_received_by_staff_pic: null,
+      search_method: null,
       shirt_size_received: null,
       is_shirt_size_changed: false,
       proxy_type: null,
@@ -625,39 +626,44 @@ export const FirebaseDataProvider = ({ children }) => {
       proxy_phone: null
     };
 
-    if (db) {
-      const batch = writeBatch(db);
-      const userRef = doc(db, 'users', currentStudent.docId || studentDocId);
+    try {
+      if (db) {
+        const batch = writeBatch(db);
+        const userRef = doc(db, 'users', currentStudent.docId || studentDocId);
 
-      batch.update(userRef, resetPayload);
+        batch.update(userRef, resetPayload);
 
-      const logRef = doc(collection(db, 'shirt_checkin_logs'));
-      batch.set(logRef, {
-        log_id: logRef.id,
-        student_id: currentStudent.studentId || currentStudent.id,
-        student_name: `${currentStudent.firstName} ${currentStudent.lastName}`.trim(),
-        department: currentStudent.department || '',
-        action: 'REVOKE_SHIRT',
-        timestamp: timestamp,
-        staff_line_uid: liffProfile?.line_uid || staff?.line_uid || 'LINE_ANONYMOUS',
-        staff_display_name: liffProfile?.displayName || staff?.name || 'Staff Operator'
+        const logRef = doc(collection(db, 'shirt_checkin_logs'));
+        batch.set(logRef, {
+          log_id: logRef.id,
+          student_id: currentStudent.studentId || currentStudent.id,
+          student_name: `${currentStudent.firstName} ${currentStudent.lastName}`.trim(),
+          department: currentStudent.department || '',
+          action: 'REVOKE_SHIRT',
+          timestamp: timestamp,
+          staff_line_uid: liffProfile?.line_uid || staff?.line_uid || 'LINE_ANONYMOUS',
+          staff_display_name: liffProfile?.displayName || staff?.name || 'Staff Operator'
+        });
+
+        await batch.commit();
+      }
+
+      setStudents(prev => {
+        const updatedList = prev.map(s => {
+          if (s.docId === studentDocId || s.id === studentDocId) {
+            return { ...s, ...resetPayload };
+          }
+          return s;
+        });
+        localStorage.setItem(CACHE_KEY, JSON.stringify(updatedList));
+        return updatedList;
       });
 
-      await batch.commit();
+      return { success: true };
+    } catch (err) {
+      console.error("Failed to revoke shirt pickup:", err);
+      return { success: false, error: err?.message || String(err) };
     }
-
-    setStudents(prev => {
-      const updatedList = prev.map(s => {
-        if (s.docId === studentDocId || s.id === studentDocId) {
-          return { ...s, ...resetPayload };
-        }
-        return s;
-      });
-      localStorage.setItem(CACHE_KEY, JSON.stringify(updatedList));
-      return updatedList;
-    });
-
-    return true;
   };
 
   // Approve Walk-in Registration On-site by Staff

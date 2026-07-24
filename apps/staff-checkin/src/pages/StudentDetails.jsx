@@ -212,9 +212,12 @@ export default function StudentDetails() {
   };
 
   // Confirm Submit Handler
+  const [firebaseErrorMsg, setFirebaseErrorMsg] = useState(null);
+
   const handleConfirmSubmit = async () => {
     if (!student) return;
     setIsSubmitting(true);
+    setFirebaseErrorMsg(null);
 
     const payload = {
       studentDocId: student.docId || student.id,
@@ -228,13 +231,16 @@ export default function StudentDetails() {
     };
 
     try {
-      const success = await confirmShirtPickup(payload);
-      if (success) {
+      const res = await confirmShirtPickup(payload);
+      if (res && (res === true || res.success)) {
         setShowConfirmModal(false);
         setShowSuccessModal(true);
+      } else {
+        setFirebaseErrorMsg(res?.error || 'ไม่สามารถบันทึกข้อมูลลง Firebase ได้');
       }
     } catch (err) {
       console.error('confirmShirtPickup error:', err);
+      setFirebaseErrorMsg(err?.message || String(err));
     } finally {
       setIsSubmitting(false);
     }
@@ -246,11 +252,14 @@ export default function StudentDetails() {
     if (!window.confirm(isTH ? 'คุณต้องการยกเลิกการแจกเสื้อรายการนี้ใช่หรือไม่?' : 'Are you sure you want to revoke this shirt pickup?')) return;
 
     setIsSubmitting(true);
-    const success = await revokeShirtPickup(student.docId || student.id);
+    setFirebaseErrorMsg(null);
+    const res = await revokeShirtPickup(student.docId || student.id);
     setIsSubmitting(false);
 
-    if (success) {
+    if (res && (res === true || res.success)) {
       navigate('/scan');
+    } else {
+      setFirebaseErrorMsg(res?.error || 'ไม่สามารถยกเลิกรายการใน Firebase ได้');
     }
   };
 
@@ -325,6 +334,33 @@ export default function StudentDetails() {
             </div>
           </div>
         </div>
+
+        {/* Firebase Error Message Alert Banner */}
+        {firebaseErrorMsg && (
+          <div className="p-4 bg-rose-50 border-2 border-rose-300 rounded-2xl space-y-2 mb-4 shadow-md">
+            <div className="flex items-center justify-between text-rose-900 font-extrabold text-sm sm:text-base">
+              <div className="flex items-center gap-2">
+                <XCircle className="text-rose-600 shrink-0" size={20} />
+                <span>{isTH ? 'เกิดข้อผิดพลาดจาก Firebase (บันทึกไม่สำเร็จ)' : 'Firebase Error (Save Failed)'}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setFirebaseErrorMsg(null)}
+                className="text-rose-600 hover:text-rose-800 text-xs font-black px-2 py-0.5 rounded bg-rose-100 cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+            <p className="text-xs text-rose-800 font-mono bg-rose-100/80 p-2.5 rounded-xl border border-rose-200 leading-relaxed overflow-x-auto">
+              {firebaseErrorMsg}
+            </p>
+            <p className="text-[11px] text-rose-700 font-medium">
+              {isTH
+                ? '💡 ข้อแนะนำ: ตรวจสอบการเชื่อมต่ออินเทอร์เน็ต โควตาการใช้งานของ Firebase หรือลองอีกครั้ง'
+                : '💡 Tip: Please check your internet connection or Firebase quota limits.'}
+            </p>
+          </div>
+        )}
 
         {/* Walk-in Approval Banner Section */}
         {isWalkinPending && (

@@ -7,7 +7,7 @@ import { getFirestore } from 'firebase-admin/firestore';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Locate service account JSON
+// Service Account Path
 const serviceAccountPath = path.join(__dirname, 'local-scripts', 'smo-vidva-bangmod-firebase-adminsdk-fbsvc-247d2f79cd.json');
 
 if (!fs.existsSync(serviceAccountPath)) {
@@ -19,6 +19,50 @@ const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, 'utf8'));
 initializeApp({ credential: cert(serviceAccount) });
 const db = getFirestore();
 
+async function findStudent(code) {
+  // 1. Fast lookup: used_short_codes collection
+  try {
+    const scDoc = await db.collection('used_short_codes').doc(code).get();
+    if (scDoc.exists && scDoc.data()?.uid) {
+      const uid = scDoc.data().uid;
+      const uDoc = await db.collection('users').doc(uid).get();
+      if (uDoc.exists) return { id: uDoc.id, data: uDoc.data() };
+    }
+  } catch (err) {}
+
+  // 2. Query walkin_temp_short_code
+  try {
+    const q1 = await db.collection('users').where('walkin_temp_short_code', '==', code).limit(1).get();
+    if (!q1.empty) return { id: q1.docs[0].id, data: q1.docs[0].data() };
+  } catch (err) {}
+
+  // 3. Query short_code
+  try {
+    const q2 = await db.collection('users').where('short_code', '==', code).limit(1).get();
+    if (!q2.empty) return { id: q2.docs[0].id, data: q2.docs[0].data() };
+  } catch (err) {}
+
+  // 4. Query shortCode
+  try {
+    const q3 = await db.collection('users').where('shortCode', '==', code).limit(1).get();
+    if (!q3.empty) return { id: q3.docs[0].id, data: q3.docs[0].data() };
+  } catch (err) {}
+
+  // 5. Query studentId
+  try {
+    const q4 = await db.collection('users').where('studentId', '==', code).limit(1).get();
+    if (!q4.empty) return { id: q4.docs[0].id, data: q4.docs[0].data() };
+  } catch (err) {}
+
+  // 6. Direct docId
+  try {
+    const uDoc = await db.collection('users').doc(code).get();
+    if (uDoc.exists) return { id: uDoc.id, data: uDoc.data() };
+  } catch (err) {}
+
+  return null;
+}
+
 async function approveWalkinByCode(inputCode) {
   if (!inputCode) {
     console.log(`
@@ -29,85 +73,49 @@ Usage:
   node approve_walkin.js <SHORT_CODE>
 
 Example:
-  node approve_walkin.js BR78
+  node approve_walkin.js II50
 ==================================================
     `);
     process.exit(1);
   }
 
-  const cleanCode = inputCode.trim().toUpperCase();
-  console.log(`\n🔍 Searching for student with code: "${cleanCode}"...`);
+  const rawCode = inputCode.trim().toUpperCase();
+  console.log(`\n🔍 Searching for student with code: "${rawCode}"...`);
 
-  let targetDocId = null;
-  let targetData = null;
+  // Generate candidate variants (e.g. II50 -> LL50, 1150)
+  const candidateCodes = [rawCode];
+  if (rawCode.includes('I')) {
+    candidateCodes.push(rawCode.replace(/I/g, 'L'));
+    candidateCodes.push(rawCode.replace(/I/g, '1'));
+  }
+  if (rawCode.includes('L')) {
+    candidateCodes.push(rawCode.replace(/L/g, 'I'));
+    candidateCodes.push(rawCode.replace(/L/g, '1'));
+  }
+  if (rawCode.includes('1')) {
+    candidateCodes.push(rawCode.replace(/1/g, 'I'));
+    candidateCodes.push(rawCode.replace(/1/g, 'L'));
+  }
 
-  // 1. Search in used_short_codes collection
-  const scDoc = await db.collection('used_short_codes').doc(cleanCode).get();
-  if (scDoc.exists && scDoc.data()?.uid) {
-    const uid = scDoc.data().uid;
-    const uDoc = await db.collection('users').doc(uid).get();
-    if (uDoc.exists) {
-      targetDocId = uDoc.id;
-      targetData = uDoc.data();
-      console.log(`✓ Found student profile via used_short_codes map.`);
+  let match = null;
+  let matchedCode = rawCode;
+
+  for (const candidate of candidateCodes) {
+    match = await findStudent(candidate);
+    if (match) {
+      matchedCode = candidate;
+      break;
     }
   }
 
-  // 2. Search in users by walkin_temp_short_code
-  if (!targetDocId) {
-    const qTemp = await db.collection('users').where('walkin_temp_short_code', '==', cleanCode).limit(1).get();
-    if (!qTemp.empty) {
-      targetDocId = qTemp.docs[0].id;
-      targetData = qTemp.docs[0].data();
-      console.log(`✓ Found student profile via walkin_temp_short_code query.`);
-    }
-  }
-
-  // 3. Search in users by short_code
-  if (!targetDocId) {
-    const q1 = await db.collection('users').where('short_code', '==', cleanCode).limit(1).get();
-    if (!q1.empty) {
-      targetDocId = q1.docs[0].id;
-      targetData = q1.docs[0].data();
-      console.log(`✓ Found student profile via short_code query.`);
-    }
-  }
-
-  // 4. Search in users by shortCode
-  if (!targetDocId) {
-    const q2 = await db.collection('users').where('shortCode', '==', cleanCode).limit(1).get();
-    if (!q2.empty) {
-      targetDocId = q2.docs[0].id;
-      targetData = q2.docs[0].data();
-      console.log(`✓ Found student profile via shortCode query.`);
-    }
-  }
-
-  // 5. Search in users by studentId
-  if (!targetDocId) {
-    const q3 = await db.collection('users').where('studentId', '==', cleanCode).limit(1).get();
-    if (!q3.empty) {
-      targetDocId = q3.docs[0].id;
-      targetData = q3.docs[0].data();
-      console.log(`✓ Found student profile via studentId query.`);
-    }
-  }
-
-  // 6. Direct docId lookup
-  if (!targetDocId) {
-    const uDoc = await db.collection('users').doc(cleanCode).get();
-    if (uDoc.exists) {
-      targetDocId = uDoc.id;
-      targetData = uDoc.data();
-      console.log(`✓ Found student profile via document ID.`);
-    }
-  }
-
-  if (!targetDocId || !targetData) {
-    console.error(`❌ NOT FOUND: No student record matching "${cleanCode}" was found in Firestore.`);
+  if (!match) {
+    console.error(`❌ NOT FOUND: No student record matching "${rawCode}" (or variants: ${candidateCodes.join(', ')}) was found in Firestore.`);
+    console.error(`Please verify that the student has completed Walk-in registration on the website.`);
     process.exit(1);
   }
 
+  const targetDocId = match.id;
+  const targetData = match.data;
   const studentName = `${targetData.firstName || ''} ${targetData.lastName || ''}`.trim() || 'N/A';
   const studentId = targetData.studentId || 'N/A';
   const department = targetData.department || 'N/A';
@@ -136,6 +144,16 @@ Updating Walk-in status to APPROVED...
   // Perform Update
   await db.collection('users').doc(targetDocId).update(updatePayload);
 
+  // Auto-sync used_short_codes map
+  try {
+    if (matchedCode.length === 4) {
+      await db.collection('used_short_codes').doc(matchedCode).set({
+        uid: targetDocId,
+        timestamp: approvedAt
+      }, { merge: true });
+    }
+  } catch (err) {}
+
   // Record Audit Log
   try {
     await db.collection('staff_access_logs').add({
@@ -146,11 +164,9 @@ Updating Walk-in status to APPROVED...
       student_name: studentName,
       staff_line_uid: 'ADMIN_SCRIPT',
       staff_name: 'Admin Script CLI',
-      search_code: cleanCode
+      search_code: matchedCode
     });
-  } catch (err) {
-    console.warn('Note on audit log:', err.message);
-  }
+  } catch (err) {}
 
   console.log(`
 ==================================================
@@ -158,7 +174,7 @@ Updating Walk-in status to APPROVED...
 ==================================================
   • Student Name: ${studentName}
   • Student ID:   ${studentId}
-  • Short Code:   ${cleanCode}
+  • Short Code:   ${matchedCode}
   • Walk-in Status: APPROVED
   • Verified:     true
 ==================================================
