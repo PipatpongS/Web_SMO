@@ -1,0 +1,103 @@
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useData, ROLES } from '../contexts/FirebaseDataContext';
+import { Shirt, BarChart2, LogOut, ShieldCheck, User } from 'lucide-react';
+
+export default function Dashboard() {
+  const navigate = useNavigate();
+  const { staff, liffProfile, logout, lang } = useData();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
+  const isTH = lang === 'TH';
+  const isSupervisor = staff?.role === ROLES.SUPERVISOR;
+
+  const displayName = liffProfile?.displayName || staff?.displayName || staff?.name || (isSupervisor ? 'Admin Staff' : 'Staff');
+  const profilePic = liffProfile?.pictureUrl || staff?.pictureUrl || null;
+
+  return (
+    <div className="w-full max-w-md sm:max-w-lg flex flex-col items-center justify-center relative z-10 py-2 px-3 sm:px-4 animate-fadeIn transition-all duration-300 ease-in-out my-auto space-y-6 sm:space-y-8">
+      
+      {/* Staff Status Bar */}
+      <div className="w-full flex justify-between items-center bg-black/30 p-4 sm:p-5 rounded-3xl backdrop-blur-md border border-white/15 shadow-xl mb-4 sm:mb-6">
+        <div className="flex items-center gap-3 sm:gap-4">
+          <div className="bg-purple-500/20 w-11 h-11 sm:w-12 sm:h-12 rounded-2xl border border-purple-400/30 text-purple-300 flex items-center justify-center overflow-hidden shrink-0 shadow-inner">
+            {profilePic ? (
+              <img src={profilePic} alt="LINE Profile" className="w-full h-full object-cover rounded-2xl" />
+            ) : (
+              <User size={22} />
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <p className="text-white text-sm sm:text-base font-extrabold">{displayName}</p>
+            <span className={`text-[10px] px-2.5 py-0.5 rounded-md font-extrabold border ${
+              isSupervisor 
+                ? 'bg-purple-500/30 text-purple-200 border-purple-400/40' 
+                : 'bg-blue-500/30 text-blue-200 border-blue-400/40'
+            }`}>
+              {isSupervisor ? (isTH ? 'ผู้ดูแลระบบ' : 'Admin') : (isTH ? 'สตาฟฟ์' : 'Staff')}
+            </span>
+          </div>
+        </div>
+
+        <button 
+          onClick={handleLogout} 
+          className="flex items-center gap-1.5 text-xs text-red-300 hover:text-red-100 font-bold px-3.5 py-2 rounded-xl bg-red-500/20 hover:bg-red-500/30 border border-red-400/30 transition-all cursor-pointer shadow-sm"
+          title={isTH ? "ออกจากระบบ" : "Log out"}
+        >
+          <LogOut size={16} />
+          <span>{isTH ? 'ออกจากระบบ' : 'Log out'}</span>
+        </button>
+      </div>
+
+      {/* Main Menu Cards Container */}
+      <div className="w-full space-y-4">
+        <h2 className="text-base sm:text-lg font-black text-center text-white text-glow mb-2 uppercase tracking-wide">
+          {isTH ? 'เลือกรายการเมนูสตาฟ' : 'Staff Action Menu'}
+        </h2>
+        
+        {/* Menu 1: Shirt Distribution */}
+        <button 
+          onClick={() => navigate('/scan')}
+          className="w-full glass-panel p-4 sm:p-5 flex items-center gap-4 hover:bg-white/15 transition-all cursor-pointer group text-left shadow-2xl border border-white/20 hover:border-amber-400/50 rounded-3xl"
+        >
+          <div className="bg-amber-400/20 p-3.5 rounded-2xl text-amber-300 group-hover:scale-110 transition-transform shrink-0 border border-amber-400/40 shadow-inner">
+            <Shirt size={32} />
+          </div>
+          <div className="space-y-0.5">
+            <span className="text-base sm:text-lg font-black block text-white group-hover:text-amber-200 transition-colors">
+              {isTH ? '1. เช็ครับเสื้อ' : '1. Shirt Check-in'}
+            </span>
+            <span className="text-xs text-white/70 block font-medium">
+              {isTH ? 'สแกน QR Code หรือพิมพ์ Short Code เพื่อเช็ครับเสื้อ' : 'Scan QR Code or Short Code for shirt check-in'}
+            </span>
+          </div>
+        </button>
+
+        {/* Menu 2: Stock & Summary Dashboard (Available for Admin/Supervisor) */}
+        {isSupervisor && (
+          <button 
+            onClick={() => navigate('/stock-summary')}
+            className="w-full glass-panel p-4 sm:p-5 flex items-center gap-4 hover:bg-white/15 transition-all cursor-pointer group text-left shadow-2xl border border-white/20 hover:border-emerald-400/50 rounded-3xl"
+          >
+            <div className="bg-emerald-500/20 p-3.5 rounded-2xl text-emerald-300 group-hover:scale-110 transition-transform shrink-0 border border-emerald-400/40 shadow-inner">
+              <BarChart2 size={32} />
+            </div>
+            <div className="space-y-0.5">
+              <span className="text-base sm:text-lg font-black block text-white group-hover:text-emerald-200 transition-colors">
+                {isTH ? '2. Dashboard สรุปยอดและสต็อกเสื้อ' : '2. Stock Summary Dashboard'}
+              </span>
+              <span className="text-xs text-white/70 block font-medium">
+                {isTH ? 'ดูรายงานสต็อกคงเหลือและการรับเสื้อ Real-time' : 'View real-time stock balance & distribution report'}
+              </span>
+            </div>
+          </button>
+        )}
+
+      </div>
+    </div>
+  );
+}
