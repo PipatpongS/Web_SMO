@@ -194,6 +194,7 @@ export default function StudentDetails() {
 
     const payload = {
       studentDocId: student.docId || student.id,
+      studentData: student,           // ← pass full object to avoid stale closure
       shirtSizeReceived: selectedSize,
       proxyType: isProxy ? proxyType : null,
       proxyStudentId: isProxy ? proxyStudentId : null,

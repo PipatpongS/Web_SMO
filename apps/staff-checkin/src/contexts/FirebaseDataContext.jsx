@@ -468,10 +468,11 @@ export const FirebaseDataProvider = ({ children }) => {
 
   // Confirm Shirt Pickup & Write Audit Logs
   const confirmShirtPickup = async (docIdOrOptions, options = {}) => {
-    let studentDocId, shirtSizeReceived, proxyType, proxyStudentId, proxyName, proxyPhone, searchMethod;
+    let studentDocId, studentData, shirtSizeReceived, proxyType, proxyStudentId, proxyName, proxyPhone, searchMethod;
 
     if (typeof docIdOrOptions === 'object' && docIdOrOptions !== null) {
       studentDocId = docIdOrOptions.studentDocId || docIdOrOptions.id;
+      studentData = docIdOrOptions.studentData || null;
       shirtSizeReceived = docIdOrOptions.shirtSizeReceived;
       proxyType = docIdOrOptions.proxyType || null;
       proxyStudentId = docIdOrOptions.proxyStudentId || null;
@@ -480,6 +481,7 @@ export const FirebaseDataProvider = ({ children }) => {
       searchMethod = docIdOrOptions.searchMethod || 'QR_CODE';
     } else {
       studentDocId = docIdOrOptions;
+      studentData = options.studentData || null;
       shirtSizeReceived = options.shirtSizeReceived;
       proxyType = options.proxyType || null;
       proxyStudentId = options.proxyStudentId || null;
@@ -489,14 +491,20 @@ export const FirebaseDataProvider = ({ children }) => {
     }
 
     const timestamp = getThaiISOString();
-    const currentStudent = students.find(s => s.docId === studentDocId || s.id === studentDocId || s.studentId === studentDocId);
+
+    // Use passed studentData directly (most reliable), fallback to students array
+    const currentStudent = studentData
+      || students.find(s => s.docId === studentDocId || s.id === studentDocId || s.studentId === studentDocId);
 
     if (!currentStudent) {
       console.error("Student not found for docId:", studentDocId);
       return false;
     }
 
-    const registeredSize = currentStudent.shirtSize || 'M';
+    // Use currentStudent.docId as the Firestore document key (LINE UID)
+    const firestoreDocId = currentStudent.docId || studentDocId;
+
+    const registeredSize = currentStudent.shirtSize || currentStudent.shirt_size || 'M';
     const isSizeChanged = (shirtSizeReceived !== registeredSize);
 
     const staffUid = liffProfile?.line_uid || staff?.line_uid || 'LINE_ANONYMOUS';
@@ -520,14 +528,13 @@ export const FirebaseDataProvider = ({ children }) => {
     if (db) {
       try {
         const batch = writeBatch(db);
-        const userRef = doc(db, 'users', currentStudent.docId || studentDocId);
-
+        const userRef = doc(db, 'users', firestoreDocId);
         batch.update(userRef, updatePayload);
 
         const logRef = doc(collection(db, 'shirt_checkin_logs'));
         batch.set(logRef, {
           log_id: logRef.id,
-          student_id: currentStudent.studentId || currentStudent.id,
+          student_id: currentStudent.studentId || currentStudent.id || '',
           student_name: `${currentStudent.firstName || ''} ${currentStudent.lastName || ''}`.trim(),
           department: currentStudent.department || '',
           search_method: searchMethod,
@@ -546,14 +553,16 @@ export const FirebaseDataProvider = ({ children }) => {
         });
 
         await batch.commit();
+        console.log("✅ Shirt pickup committed to Firestore for:", firestoreDocId);
       } catch (err) {
         console.error("Firestore batch update error:", err);
+        // Still update local state below even if Firestore fails
       }
     }
 
     setStudents(prev => {
       const updatedList = prev.map(s => {
-        if (s.docId === (currentStudent.docId || studentDocId) || s.id === (currentStudent.id || studentDocId)) {
+        if (s.docId === firestoreDocId || s.id === firestoreDocId) {
           return { ...s, ...updatePayload };
         }
         return s;
