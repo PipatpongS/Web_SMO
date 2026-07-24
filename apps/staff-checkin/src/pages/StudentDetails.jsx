@@ -27,6 +27,8 @@ export default function StudentDetails() {
   const isWalkinPending = student?.walkin_status === 'PENDING_APPROVAL' || (student?.note === 'รอบหน้างาน' && !student?.walkin_verified);
   const isWalkinApproved = student?.walkin_status === 'APPROVED' || student?.walkin_verified === true;
 
+  const [alertNoticeModal, setAlertNoticeModal] = useState(null); // { type: 'success' | 'error', title: '', message: '', groupName?: '' }
+
   const handleApproveWalkin = async () => {
     if (!student) return;
     setIsSubmitting(true);
@@ -40,14 +42,26 @@ export default function StudentDetails() {
           walkin_verified: true,
           group: res.assignedGroup || prev.group
         }));
-        alert(isTH 
-          ? `✅ อนุมัติการลงทะเบียนสำเร็จ!\nได้รับกลุ่ม ${groupName}` 
-          : `✅ Registration Approved Successfully!\nAssigned Group ${groupName}`);
+        setAlertNoticeModal({
+          type: 'success',
+          title: isTH ? 'อนุมัติการลงทะเบียนสำเร็จ!' : 'Registration Approved!',
+          message: isTH ? `ได้รับกลุ่ม ${groupName}` : `Assigned Group ${groupName}`,
+          groupName
+        });
       } else {
-        alert(isTH ? `เกิดข้อผิดพลาด: ${res.error}` : `Error: ${res.error}`);
+        setAlertNoticeModal({
+          type: 'error',
+          title: isTH ? 'เกิดข้อผิดพลาด' : 'Error',
+          message: res.error
+        });
       }
     } catch (err) {
       console.error("Approve Walk-in error:", err);
+      setAlertNoticeModal({
+        type: 'error',
+        title: isTH ? 'เกิดข้อผิดพลาด' : 'Error',
+        message: String(err?.message || err)
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -662,10 +676,84 @@ export default function StudentDetails() {
         )}
       </div>
 
+      {/* CUSTOM CENTER-SCREEN ALERT/NOTICE MODAL */}
+      {alertNoticeModal && (
+        <div 
+          className="fixed inset-0 z-50 overflow-y-auto p-4 flex items-center justify-center bg-slate-950/70 backdrop-blur-xs transition-opacity cursor-pointer"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setAlertNoticeModal(null);
+            }
+          }}
+        >
+          <div 
+            className="bg-white rounded-3xl p-6 w-full max-w-sm border border-slate-200 text-center space-y-4 shadow-2xl text-slate-800 relative cursor-default transform transition-all animate-in fade-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close Button Top Right */}
+            <button 
+              type="button"
+              onClick={() => setAlertNoticeModal(null)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 p-1.5 rounded-full hover:bg-slate-100 transition-colors cursor-pointer"
+            >
+              <XCircle size={22} />
+            </button>
+
+            {/* Icon Header */}
+            <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto shadow-md border-2 ${
+              alertNoticeModal.type === 'success' 
+                ? 'bg-emerald-100 text-emerald-600 border-emerald-300' 
+                : 'bg-rose-100 text-rose-600 border-rose-300'
+            }`}>
+              {alertNoticeModal.type === 'success' ? (
+                <CheckCircle2 size={36} strokeWidth={2.5} />
+              ) : (
+                <XCircle size={36} strokeWidth={2.5} />
+              )}
+            </div>
+
+            {/* Title & Message */}
+            <div className="space-y-1.5 pt-1">
+              <h3 className="text-lg font-black text-slate-900 leading-snug">{alertNoticeModal.title}</h3>
+              {alertNoticeModal.groupName ? (
+                <div className="inline-block px-4 py-1.5 bg-amber-100 text-amber-950 border border-amber-300 rounded-full font-black text-base shadow-xs mt-2">
+                  {alertNoticeModal.message}
+                </div>
+              ) : (
+                <p className="text-xs text-slate-600 font-medium">{alertNoticeModal.message}</p>
+              )}
+            </div>
+
+            {/* Action Dismiss Button */}
+            <button
+              type="button"
+              onClick={() => setAlertNoticeModal(null)}
+              className={`w-full py-3 rounded-2xl font-extrabold text-sm shadow-md cursor-pointer transition-colors ${
+                alertNoticeModal.type === 'success'
+                  ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                  : 'bg-slate-800 hover:bg-slate-900 text-white'
+              }`}
+            >
+              {isTH ? 'ตกลง / ปิดหน้าต่าง' : 'OK / Close'}
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* CONFIRMATION MODAL */}
       {showConfirmModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm">
-          <div className="bg-white rounded-3xl p-6 w-full max-w-sm border border-slate-200 shadow-2xl text-slate-800 space-y-5">
+        <div 
+          className="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm cursor-pointer"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowConfirmModal(false);
+            }
+          }}
+        >
+          <div 
+            className="bg-white rounded-3xl p-6 w-full max-w-sm border border-slate-200 shadow-2xl text-slate-800 space-y-5 cursor-default"
+            onClick={(e) => e.stopPropagation()}
+          >
             {/* Header */}
             <div className="flex items-center gap-3 pb-1 border-b border-slate-100">
               <div className="w-10 h-10 rounded-2xl bg-purple-100 flex items-center justify-center shrink-0">
@@ -740,8 +828,19 @@ export default function StudentDetails() {
 
       {/* SUCCESS MODAL */}
       {showSuccessModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
-          <div className="bg-white rounded-3xl p-7 w-full max-w-sm border border-slate-200 text-center space-y-4 shadow-2xl text-slate-800">
+        <div 
+          className="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm cursor-pointer"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowSuccessModal(false);
+              navigate('/scan');
+            }
+          }}
+        >
+          <div 
+            className="bg-white rounded-3xl p-7 w-full max-w-sm border border-slate-200 text-center space-y-4 shadow-2xl text-slate-800 cursor-default"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="w-20 h-20 rounded-full bg-emerald-100 text-emerald-600 border-2 border-emerald-300 flex items-center justify-center mx-auto shadow-md">
               <CheckCircle2 size={44} strokeWidth={2} />
             </div>
@@ -762,8 +861,18 @@ export default function StudentDetails() {
 
       {/* PROXY SCANNER MODAL */}
       {showProxyScanModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
-          <div className="bg-white rounded-3xl p-5 sm:p-6 w-full max-w-md border border-slate-200 space-y-4 shadow-2xl text-slate-800">
+        <div 
+          className="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm cursor-pointer"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowProxyScanModal(false);
+            }
+          }}
+        >
+          <div 
+            className="bg-white rounded-3xl p-5 sm:p-6 w-full max-w-md border border-slate-200 space-y-4 shadow-2xl text-slate-800 cursor-default"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-black text-slate-900">สแกน QR / ค้นหาผู้รับแทน</h3>
               <button onClick={() => setShowProxyScanModal(false)} className="text-slate-400 hover:text-slate-600 cursor-pointer">
