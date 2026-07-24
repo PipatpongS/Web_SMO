@@ -18,24 +18,29 @@ export default function Login() {
       navigate('/home', { replace: true });
     } else if (staff && !liffProfile && !liffLoading) {
       logout();
+      setError(isTH 
+        ? '⚠️ การเชื่อมต่อ LINE หลุดออกจากระบบ กรุณายืนยันตัวตนด้วย LINE ใหม่อีกครั้งเพื่อความปลอดภัย' 
+        : '⚠️ LINE Session Disconnected. Please re-authenticate with LINE for security.');
     }
-  }, [staff, liffProfile, liffLoading, navigate, logout]);
+  }, [staff, liffProfile, liffLoading, navigate, logout, isTH]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
 
     if (!liffProfile) {
-      setError(isTH ? 'ไม่อนุญาตให้เข้าสู่ระบบ: ต้องเปิดใช้งานผ่านแอป LINE (LIFF) เท่านั้นเพื่อยืนยันตัวตน' : 'Login rejected: Must open via LINE app (LIFF) first.');
+      setError(isTH ? 'ไม่อนุญาตให้เข้าสู่ระบบ: ต้องยืนยันตัวตนด้วย LINE ก่อนเท่านั้นเพื่อความปลอดภัย' : 'Login rejected: Must authenticate with LINE first.');
       return;
     }
 
     setIsSubmitting(true);
 
     try {
-      const success = await login(username, password);
-      if (success) {
+      const res = await login(username, password);
+      if (res && res.success) {
         navigate('/home');
+      } else if (res && res.reason === 'NO_LINE_PROFILE') {
+        setError(isTH ? 'ไม่พบข้อมูลการยืนยันตัวตนด้วย LINE กรุณากดปุ่มเชื่อมต่อ LINE ด้านบนก่อน' : 'LINE profile missing. Please authenticate with LINE first.');
       } else {
         setError(isTH ? 'ไอดีหรือรหัสผ่านไม่ถูกต้อง' : 'Invalid ID or Password');
       }

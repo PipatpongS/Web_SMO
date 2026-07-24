@@ -430,10 +430,23 @@ export const FirebaseDataProvider = ({ children }) => {
 
   // Username & Password Authentication (Strict Env & Firestore Verification)
   const login = async (username, password) => {
-    // ⚠️ Security Policy: LINE Authentication (LIFF) MUST be successful first!
-    if (!liffProfile) {
-      console.warn("Login rejected: LINE profile (LIFF) is required.");
-      return false;
+    if (!username || !password) return { success: false, reason: 'MISSING_FIELDS' };
+
+    // STRICT SAFETY CHECK: Must have authenticated LINE Profile (LIFF) first
+    if (!liffProfile || !liffProfile.line_uid) {
+      if (db) {
+        try {
+          await addDoc(collection(db, 'staff_access_logs'), {
+            timestamp: getThaiISOString(),
+            event: 'LOGIN_REJECTED_NO_LINE',
+            username: username,
+            user_agent: navigator.userAgent
+          });
+        } catch (err) {
+          console.error("Failed to write staff_access_logs:", err);
+        }
+      }
+      return { success: false, reason: 'NO_LINE_PROFILE' };
     }
 
     let role = null;
@@ -485,9 +498,9 @@ export const FirebaseDataProvider = ({ children }) => {
       username,
       name: name || username,
       role,
-      line_uid: liffProfile?.line_uid || 'LINE_ANONYMOUS',
-      displayName: liffProfile?.displayName || name,
-      pictureUrl: liffProfile?.pictureUrl || '',
+      line_uid: liffProfile.line_uid,
+      displayName: liffProfile.displayName || name,
+      pictureUrl: liffProfile.pictureUrl || '',
       loginAt: getThaiISOString()
     } : null;
 
@@ -496,6 +509,7 @@ export const FirebaseDataProvider = ({ children }) => {
       localStorage.setItem('staff_session', JSON.stringify(sessionData));
     }
 
+    // 3. Write Audit Log to Firestore
     if (db) {
       try {
         await addDoc(collection(db, 'staff_access_logs'), {
@@ -503,9 +517,9 @@ export const FirebaseDataProvider = ({ children }) => {
           event: isSuccess ? 'LOGIN_SUCCESS' : 'LOGIN_FAILED',
           username: username,
           role_granted: role || 'NONE',
-          staff_line_uid: liffProfile?.line_uid || 'UNKNOWN',
-          staff_display_name: liffProfile?.displayName || name,
-          staff_picture_url: liffProfile?.pictureUrl || '',
+          staff_line_uid: liffProfile.line_uid,
+          staff_display_name: liffProfile.displayName || name,
+          staff_picture_url: liffProfile.pictureUrl || '',
           user_agent: navigator.userAgent
         });
       } catch (err) {
@@ -513,7 +527,10 @@ export const FirebaseDataProvider = ({ children }) => {
       }
     }
 
-    return isSuccess;
+    return { 
+      success: isSuccess, 
+      reason: isSuccess ? null : 'INVALID_CREDENTIALS' 
+    };
   };
 
   const logout = () => {
