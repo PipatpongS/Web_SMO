@@ -184,6 +184,8 @@ export const RegProvider = ({ children }) => {
       }
     }
 
+    const walkinTempQr = `WALKIN_TEMP:${userId}:${short_code}:${Date.now()}`;
+
     const registrationPayload = {
       qr_code,
       short_code,
@@ -201,7 +203,11 @@ export const RegProvider = ({ children }) => {
       is_shirt_ordered: false,
       is_verified: false,
       editCount: 0,
-      note: 'รอบพิเศษ',
+      note: 'รอบหน้างาน',
+      walkin_status: 'PENDING_APPROVAL',
+      walkin_verified: false,
+      walkin_temp_qr: walkinTempQr,
+      walkin_temp_short_code: short_code,
       shirtSize: data.shirtSize || 'XL',
       group: null
     };

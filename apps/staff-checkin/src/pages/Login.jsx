@@ -1,27 +1,35 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useData } from '../contexts/FirebaseDataContext';
-import { Lock, User, KeyRound, MessageCircle, CheckCircle2 } from 'lucide-react';
+import { Lock, User, KeyRound, CheckCircle2, AlertTriangle } from 'lucide-react';
 
 export default function Login() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { login, triggerLiffLogin, liffProfile, lang, staff } = useData();
+  const { login, triggerLiffLogin, liffProfile, logout, lang, staff } = useData();
   const navigate = useNavigate();
 
   const isTH = lang === 'TH';
 
   useEffect(() => {
-    if (staff) {
+    if (staff && liffProfile) {
       navigate('/home', { replace: true });
+    } else if (staff && !liffProfile) {
+      logout();
     }
-  }, [staff, navigate]);
+  }, [staff, liffProfile, navigate, logout]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
+
+    if (!liffProfile) {
+      setError(isTH ? 'ไม่อนุญาตให้เข้าสู่ระบบ: ต้องเปิดใช้งานผ่านแอป LINE (LIFF) เท่านั้นเพื่อยืนยันตัวตน' : 'Login rejected: Must open via LINE app (LIFF) first.');
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -54,7 +62,7 @@ export default function Login() {
           </p>
         </div>
 
-        {/* LINE Profile Indicator */}
+        {/* LINE Profile Status Indicator */}
         {liffProfile ? (
           <div className="mb-4 p-2.5 rounded-2xl bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-between gap-2 text-xs text-emerald-200">
             <div className="flex items-center gap-2 min-w-0">
@@ -66,10 +74,31 @@ export default function Login() {
               <span className="font-bold truncate">{liffProfile.displayName}</span>
             </div>
             <span className="flex items-center gap-1 text-[10px] bg-emerald-500/30 px-2 py-0.5 rounded-md font-black shrink-0">
-              <CheckCircle2 size={12} /> {isTH ? 'เชื่อม LINE แล้ว' : 'LINE Connected'}
+              <CheckCircle2 size={12} /> {isTH ? 'ยืนยัน LINE แล้ว' : 'LINE Verified'}
             </span>
           </div>
-        ) : null}
+        ) : (
+          <div className="mb-4 p-3.5 rounded-2xl bg-amber-500/20 border border-amber-400/40 space-y-2.5 text-xs text-amber-200">
+            <div className="flex items-center gap-2">
+              <AlertTriangle size={18} className="text-amber-400 shrink-0" />
+              <div className="min-w-0">
+                <p className="font-extrabold">{isTH ? 'ยังไม่ได้ยืนยันตัวตนด้วย LINE' : 'LINE Profile Required'}</p>
+                <p className="text-[11px] text-amber-200/80 leading-tight">
+                  {isTH ? 'กดปุ่มด้านล่างเพื่อยืนยันตัวตนด้วย LINE ก่อนเข้าสู่ระบบ' : 'Click button below to authenticate with LINE first'}
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={async () => {
+                await triggerLiffLogin();
+              }}
+              className="w-full py-2.5 px-3 rounded-xl bg-[#06C755] hover:bg-[#05b34c] text-white text-xs font-black shadow-md flex items-center justify-center gap-2 cursor-pointer transition-all active:scale-95"
+            >
+              <span>💬 {isTH ? 'ยืนยันตัวตนด้วย LINE (LINE Login)' : 'Authenticate with LINE'}</span>
+            </button>
+          </div>
+        )}
         
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
@@ -82,8 +111,9 @@ export default function Login() {
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               onFocus={(e) => setTimeout(() => e.target.scrollIntoView({ behavior: 'smooth', block: 'center' }), 300)}
-              className="w-full px-4 py-2.5 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-purple-400 text-sm font-semibold transition-all"
+              className="w-full px-4 py-2.5 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-purple-400 text-sm font-semibold transition-all disabled:opacity-50"
               placeholder={isTH ? 'กรอกไอดี' : 'Enter Username'}
+              disabled={!liffProfile}
               required
             />
           </div>
@@ -97,8 +127,9 @@ export default function Login() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               onFocus={(e) => setTimeout(() => e.target.scrollIntoView({ behavior: 'smooth', block: 'center' }), 300)}
-              className="w-full px-4 py-2.5 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-purple-400 text-sm font-semibold transition-all"
+              className="w-full px-4 py-2.5 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-purple-400 text-sm font-semibold transition-all disabled:opacity-50"
               placeholder={isTH ? 'กรอกรหัสผ่าน' : 'Enter Password'}
+              disabled={!liffProfile}
               required
             />
           </div>
@@ -111,10 +142,18 @@ export default function Login() {
           
           <button 
             type="submit" 
-            disabled={isSubmitting}
-            className="w-full glass-button mt-4 py-3 text-sm font-extrabold cursor-pointer hover:scale-[1.02] active:scale-95 transition-all shadow-lg text-white bg-purple-600/50 hover:bg-purple-600/70 border border-purple-400/40 rounded-xl"
+            disabled={isSubmitting || !liffProfile}
+            className={`w-full glass-button mt-4 py-3 text-sm font-extrabold cursor-pointer hover:scale-[1.02] active:scale-95 transition-all shadow-lg border rounded-xl ${
+              !liffProfile 
+                ? 'bg-gray-600/30 text-white/50 border-gray-500/30 cursor-not-allowed hover:scale-100 active:scale-100'
+                : 'bg-purple-600/50 hover:bg-purple-600/70 text-white border-purple-400/40'
+            }`}
           >
-            {isSubmitting ? (isTH ? 'กำลังเข้าสู่ระบบ...' : 'Logging in...') : (isTH ? 'เข้าสู่ระบบ' : 'Login')}
+            {!liffProfile 
+              ? (isTH ? 'ต้องเข้าผ่านแอป LINE เท่านั้น' : 'Must open via LINE App') 
+              : isSubmitting 
+                ? (isTH ? 'กำลังเข้าสู่ระบบ...' : 'Logging in...') 
+                : (isTH ? 'เข้าสู่ระบบ' : 'Login')}
           </button>
         </form>
       </div>

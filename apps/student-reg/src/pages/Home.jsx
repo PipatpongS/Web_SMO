@@ -14,7 +14,7 @@ import { useStaffRegistration } from '../contexts/StaffRegContext';
 const content = {
   TH: {
     langBtn: 'TH',
-    registerBtn: 'ลงทะเบียนรอบพิเศษ',
+    registerBtn: 'ลงทะเบียนรอบหน้างาน (Walk-in)',
     profileBtn: 'โปรไฟล์ของฉัน',
     staffProfileBtn: 'สถานะใบสมัคร Staff',
     detailsTitle: 'รายละเอียดงาน',
@@ -134,24 +134,14 @@ const Home = () => {
               onClick={() => {
                 if (isParticipantRegistered) {
                   navigate('/profile');
-                } else if (!isBeforeRegistration() && !isAfterRegistration()) {
+                } else {
                   navigate('/register');
                 }
               }}
-              className={`w-full max-w-[250px] mx-auto text-[14px] py-2 flex justify-center items-center space-x-2 mb-12 min-h-[40px] ${(!isParticipantRegistered && (isBeforeRegistration() || isAfterRegistration()))
-                ? 'bg-gray-500/50 cursor-not-allowed rounded-full border border-white/20'
-                : 'glass-button'
-                }`}
-              disabled={!isParticipantRegistered && (isBeforeRegistration() || isAfterRegistration())}
+              className="w-full max-w-[250px] mx-auto text-[14px] py-2 flex justify-center items-center space-x-2 mb-12 min-h-[40px] glass-button cursor-pointer"
             >
               <span>
-                {isParticipantRegistered
-                  ? t.profileBtn
-                  : isBeforeRegistration()
-                    ? (lang === 'TH' ? `เปิดรับสมัคร ${new Date(REGISTRATION_START_DATE).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' })}` : `Opens ${new Date(REGISTRATION_START_DATE).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`)
-                    : isAfterRegistration()
-                      ? (lang === 'TH' ? 'ปิดรับลงทะเบียนแล้ว' : 'Registration Closed')
-                      : t.registerBtn}
+                {isParticipantRegistered ? t.profileBtn : t.registerBtn}
               </span>
             </button>
           )}

@@ -14,11 +14,15 @@ import bgImg from './assets/bg.jpg';
 import logoTop from './assets/Logo.png';
 import logoLeft from './assets/b.png';
 
-// Protected Route Component
+// Protected Route Component — Strictly requires both Staff Auth AND LINE Auth (liffProfile)
 const ProtectedRoute = ({ children, requireSupervisor = false }) => {
-  const { staff } = useData();
+  const { staff, liffProfile, logout } = useData();
 
-  if (!staff) {
+  // If not logged in to staff OR not logged in to LINE → kick out to login page!
+  if (!staff || !liffProfile) {
+    if (staff) {
+      logout();
+    }
     return <Navigate to="/" replace />;
   }
 

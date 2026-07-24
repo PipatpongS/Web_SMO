@@ -12,7 +12,7 @@ export default function StudentDetails() {
   const [searchParams] = useSearchParams();
   const method = searchParams.get('method') || 'DIRECT';
 
-  const { students, findStudentByCodeDirect, confirmShirtPickup, revokeShirtPickup, lang } = useData();
+  const { students, findStudentByCodeDirect, confirmShirtPickup, revokeShirtPickup, approveWalkinRegistration, lang } = useData();
   const isTH = lang === 'TH';
 
   const [student, setStudent] = useState(null);
@@ -22,12 +22,36 @@ export default function StudentDetails() {
   const [proxyStudentId, setProxyStudentId] = useState('');
   const [proxyName, setProxyName] = useState('');
   const [proxyPhone, setProxyPhone] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const isWalkinPending = student?.walkin_status === 'PENDING_APPROVAL' || (student?.note === 'รอบหน้างาน' && !student?.walkin_verified);
+  const isWalkinApproved = student?.walkin_status === 'APPROVED' || student?.walkin_verified === true;
+
+  const handleApproveWalkin = async () => {
+    if (!student) return;
+    setIsSubmitting(true);
+    try {
+      const res = await approveWalkinRegistration(student.docId || student.id);
+      if (res.success) {
+        setStudent(prev => ({
+          ...prev,
+          walkin_status: 'APPROVED',
+          walkin_verified: true
+        }));
+      } else {
+        alert(isTH ? `เกิดข้อผิดพลาด: ${res.error}` : `Error: ${res.error}`);
+      }
+    } catch (err) {
+      console.error("Approve Walk-in error:", err);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showProxyScanModal, setShowProxyScanModal] = useState(false);
   
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [proxyCodeInput, setProxyCodeInput] = useState('');
   const [proxyError, setProxyError] = useState('');
 
@@ -302,7 +326,41 @@ export default function StudentDetails() {
           </div>
         </div>
 
-        {/* IF ALREADY RECEIVED -> Display Detailed Receipt info */}
+        {/* Walk-in Approval Banner Section */}
+        {isWalkinPending && (
+          <div className="p-4 bg-amber-50 border-2 border-amber-300 rounded-2xl space-y-3">
+            <div className="flex items-center gap-2 text-amber-900 font-extrabold text-sm sm:text-base">
+              <AlertTriangle className="text-amber-600 shrink-0" size={20} />
+              <span>{isTH ? 'รอยืนยันอนุมัติการลงทะเบียนรอบหน้างาน (Walk-in)' : 'Pending Walk-in Registration Approval'}</span>
+            </div>
+            <p className="text-xs text-amber-800 font-medium leading-relaxed">
+              {isTH
+                ? 'นักศึกษายังอยู่ในสถานะรออนุมัติการลงทะเบียนหน้างาน โปรดตรวจบัตรประชาชน/บัตรรอบตรงหน้า แล้วกดปุ่มอนุมัติเพื่อเปิดสิทธิ์ลงทะเบียนฉบับจริง'
+                : 'Student is pending on-site registration approval. Please verify ID card and click approve button below.'}
+            </p>
+            <button
+              type="button"
+              onClick={handleApproveWalkin}
+              disabled={isSubmitting}
+              className="w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-xs sm:text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95 disabled:opacity-50"
+            >
+              <CheckCircle2 size={18} />
+              <span>{isSubmitting ? (isTH ? 'กำลังอนุมัติ...' : 'Approving...') : (isTH ? 'อนุมัติการลงทะเบียน Walk-in (ตรวจบัตรแล้ว)' : 'Approve Walk-in Registration')}</span>
+            </button>
+          </div>
+        )}
+
+        {isWalkinApproved && (
+          <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-between text-xs text-emerald-950 font-bold">
+            <span className="flex items-center gap-1.5 text-emerald-800">
+              <ShieldCheck size={16} className="text-emerald-600 shrink-0" />
+              {isTH ? 'อนุมัติการลงทะเบียน Walk-in หน้างานเรียบร้อยแล้ว' : 'Walk-in Registration Approved On-site'}
+            </span>
+            {student.walkin_approved_by_staff_name && (
+              <span className="text-[11px] text-emerald-700 font-medium shrink-0">โดย {student.walkin_approved_by_staff_name}</span>
+            )}
+          </div>
+        )}
         {isReceived ? (
           <div className="space-y-3 bg-emerald-50/80 p-4 sm:p-5 rounded-2xl border border-emerald-200">
             {/* Header */}

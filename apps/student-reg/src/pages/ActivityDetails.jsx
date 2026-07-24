@@ -77,7 +77,7 @@ const contentLang = {
 
     mapBtn: 'นำทางไปยังสถานที่',
     moreBtn: 'รายละเอียดกิจกรรมเพิ่มเติม',
-    unassignedGroup: 'ไม่ระบุกลุ่ม'
+    unassignedGroup: 'รออัพเดตภายในวันนี้'
   },
   EN: {
     langBtn: 'EN',
@@ -99,7 +99,7 @@ const contentLang = {
 
     mapBtn: 'Navigate to Location',
     moreBtn: 'More Activity Details',
-    unassignedGroup: 'Unassigned Group'
+    unassignedGroup: 'Pending update today'
   }
 };
 
@@ -131,8 +131,8 @@ const ActivityDetails = () => {
   const deptDisplay = lang === 'EN' ? userDeptEN : userDept;
 
   const day25LocData = (userGroupNum && day25Info[userGroupNum]) ? day25Info[userGroupNum] : {
-    TH: 'โปรดสอบถามจุดลงทะเบียน ณ หน้างาน',
-    EN: 'Please check registration desk at event',
+    TH: 'รออัพเดตภายในวันนี้',
+    EN: 'Pending update today',
     map: 'https://maps.app.goo.gl/aof7XDdYLioapv2H6?g_st=ic'
   };
 

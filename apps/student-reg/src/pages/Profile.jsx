@@ -177,62 +177,133 @@ const Profile = () => {
           <span>{lang === 'TH' ? 'รายละเอียดกิจกรรม' : 'Activity Details'}</span>
         </button>
 
-        {/* QR Code */}
-        <div className="bg-white p-3.5 rounded-2xl mb-3 shadow-lg border border-gray-100 flex justify-center w-full max-w-[280px]">
-          <QRCodeSVG
-            value={qrValue}
-            size={260}
-            level="H"
-            includeMargin={false}
-            className="w-full h-auto rounded-xl"
-          />
-        </div>
+        {/* Check Walk-in Status */}
+        {(() => {
+          const isWalkinPending = displayRegData?.walkin_status === 'PENDING_APPROVAL' || (displayRegData?.note === 'รอบหน้างาน' && !displayRegData?.walkin_verified);
+          const tempQrValue = displayRegData?.walkin_temp_qr || `WALKIN_TEMP:${userProfile?.userId}:${displayRegData?.short_code}:${Date.now()}`;
+          const tempShortCode = displayRegData?.walkin_temp_short_code || displayRegData?.short_code;
 
-        {/* Short Code Badge right under QR Code */}
-        {displayRegData.short_code && (
-          <div className="mb-5 px-4 py-1 bg-purple-50 text-purple-900 border border-purple-200/80 shadow-sm rounded-full flex items-center justify-center font-mono font-extrabold text-xs sm:text-sm tracking-[0.15em]">
-            {displayRegData.short_code}
-          </div>
-        )}
+          if (isWalkinPending) {
+            return (
+              <div className="w-full flex flex-col items-center">
+                {/* Pending Warning Banner */}
+                <div className="w-full bg-amber-50 border-2 border-amber-300 rounded-2xl p-4 mb-5 text-center space-y-1.5 shadow-sm">
+                  <span className="text-2xl block mb-1">⏳</span>
+                  <h2 className="text-base sm:text-lg font-black text-amber-900 leading-tight">
+                    {lang === 'TH' ? 'รอสตาฟอนุมัติการลงทะเบียน (หน้างานเท่านั้น)' : 'Pending Staff On-site Approval'}
+                  </h2>
+                  <p className="text-xs text-amber-800 font-medium">
+                    {lang === 'TH'
+                      ? 'โปรดแสดง QR Code นี้ให้สตาฟฟ์ที่โต๊ะลงทะเบียนเพื่อตรวจบัตรและอนุมัติการเข้างาน'
+                      : 'Please show this QR Code to staff at the registration desk for verification'}
+                  </p>
+                </div>
 
-        {/* User Info */}
-        <div className="w-full space-y-3 text-sm text-gray-800 mb-6">
-          <div className="flex justify-between border-b border-gray-100 pb-2">
-            <span className="text-gray-500 whitespace-nowrap">{t.fullName}</span>
-            <span className="font-semibold text-right ml-4">
-              {displayRegData.firstName} {displayRegData.middleName ? `${displayRegData.middleName} ` : ''}{displayRegData.lastName}
-            </span>
-          </div>
-          <div className="flex justify-between border-b border-gray-100 pb-2">
-            <span className="text-gray-500 whitespace-nowrap">{t.studentId}</span>
-            <span className="font-semibold text-right ml-4">
-              {displayRegData.studentId === '69070500000'
-                ? (lang === 'TH' ? 'ยังไม่ได้รับรหัสนักศึกษา' : 'Not yet received')
-                : displayRegData.studentId}
-            </span>
-          </div>
-          <div className="flex justify-between border-b border-gray-100 pb-2">
-            <span className="text-gray-500 whitespace-nowrap">{t.department}</span>
-            <span className="font-semibold text-right ml-4">
-              {lang === 'EN' ? (deptTranslationsEN[displayRegData.department] || displayRegData.department) : displayRegData.department}
-            </span>
-          </div>
-          <div className="flex justify-between border-b border-gray-100 pb-2 items-center">
-            <span className="text-gray-500 whitespace-nowrap">{t.shirtSize}</span>
-            <div className="flex items-center gap-2">
-              {((displayRegData.note && displayRegData.note.includes('รอบพิเศษ')) || (displayRegData.Note && displayRegData.Note.includes('รอบพิเศษ'))) && (
-                <button
-                  type="button"
-                  onClick={() => setShowSpecialShirtModal(true)}
-                  className="text-[11px] text-amber-600 bg-amber-50 hover:bg-amber-100 active:scale-95 transition-all px-2 py-0.5 rounded-full border border-amber-200 cursor-pointer flex items-center gap-1 font-medium"
-                >
-                  ⚠️ {lang === 'TH' ? 'เงื่อนไขพิเศษ' : 'Special Terms'}
-                </button>
+                {/* Temporary Walk-in QR Code */}
+                <div className="bg-white p-3.5 rounded-2xl mb-2 shadow-lg border-2 border-amber-200 flex justify-center w-full max-w-[280px]">
+                  <QRCodeSVG
+                    value={tempQrValue}
+                    size={260}
+                    level="H"
+                    includeMargin={false}
+                    className="w-full h-auto rounded-xl"
+                  />
+                </div>
+
+                {/* Temp Short Code Badge */}
+                {tempShortCode && (
+                  <div className="mb-5 px-4 py-1 bg-amber-100 text-amber-900 border border-amber-300 shadow-sm rounded-full flex items-center justify-center font-mono font-extrabold text-xs sm:text-sm tracking-[0.15em]">
+                    รหัสสำรอง: {tempShortCode}
+                  </div>
+                )}
+
+                {/* User Basic Info Preview */}
+                <div className="w-full space-y-2.5 text-sm text-gray-800 mb-6 bg-gray-50 p-4 rounded-xl border border-gray-200">
+                  <div className="flex justify-between border-b border-gray-200 pb-2">
+                    <span className="text-gray-500 whitespace-nowrap">{t.fullName}</span>
+                    <span className="font-bold text-right ml-4">
+                      {displayRegData.firstName} {displayRegData.lastName}
+                    </span>
+                  </div>
+                  <div className="flex justify-between border-b border-gray-200 pb-2">
+                    <span className="text-gray-500 whitespace-nowrap">{t.studentId}</span>
+                    <span className="font-bold text-right ml-4">
+                      {displayRegData.studentId === '69070500000'
+                        ? (lang === 'TH' ? 'ยังไม่ได้รับรหัสนักศึกษา' : 'Not yet received')
+                        : displayRegData.studentId}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500 whitespace-nowrap">รอบการลงทะเบียน</span>
+                    <span className="font-bold text-amber-700 text-right ml-4">รอบหน้างาน (รออนุมัติ)</span>
+                  </div>
+                </div>
+              </div>
+            );
+          }
+
+          {/* Official Registration Ticket (Unlocked after approval) */}
+          return (
+            <>
+              {/* Official QR Code */}
+              <div className="bg-white p-3.5 rounded-2xl mb-3 shadow-lg border border-gray-100 flex justify-center w-full max-w-[280px]">
+                <QRCodeSVG
+                  value={qrValue}
+                  size={260}
+                  level="H"
+                  includeMargin={false}
+                  className="w-full h-auto rounded-xl"
+                />
+              </div>
+
+              {/* Short Code Badge right under QR Code */}
+              {displayRegData.short_code && (
+                <div className="mb-5 px-4 py-1 bg-purple-50 text-purple-900 border border-purple-200/80 shadow-sm rounded-full flex items-center justify-center font-mono font-extrabold text-xs sm:text-sm tracking-[0.15em]">
+                  {displayRegData.short_code}
+                </div>
               )}
-              <span className="font-semibold text-[#1e3a5f] text-right ml-4">{displayRegData.shirtSize}</span>
-            </div>
-          </div>
-        </div>
+
+              {/* User Info */}
+              <div className="w-full space-y-3 text-sm text-gray-800 mb-6">
+                <div className="flex justify-between border-b border-gray-100 pb-2">
+                  <span className="text-gray-500 whitespace-nowrap">{t.fullName}</span>
+                  <span className="font-semibold text-right ml-4">
+                    {displayRegData.firstName} {displayRegData.middleName ? `${displayRegData.middleName} ` : ''}{displayRegData.lastName}
+                  </span>
+                </div>
+                <div className="flex justify-between border-b border-gray-100 pb-2">
+                  <span className="text-gray-500 whitespace-nowrap">{t.studentId}</span>
+                  <span className="font-semibold text-right ml-4">
+                    {displayRegData.studentId === '69070500000'
+                      ? (lang === 'TH' ? 'ยังไม่ได้รับรหัสนักศึกษา' : 'Not yet received')
+                      : displayRegData.studentId}
+                  </span>
+                </div>
+                <div className="flex justify-between border-b border-gray-100 pb-2">
+                  <span className="text-gray-500 whitespace-nowrap">{t.department}</span>
+                  <span className="font-semibold text-right ml-4">
+                    {lang === 'EN' ? (deptTranslationsEN[displayRegData.department] || displayRegData.department) : displayRegData.department}
+                  </span>
+                </div>
+                <div className="flex justify-between border-b border-gray-100 pb-2 items-center">
+                  <span className="text-gray-500 whitespace-nowrap">{t.shirtSize}</span>
+                  <div className="flex items-center gap-2">
+                    {((displayRegData.note && displayRegData.note.includes('รอบพิเศษ')) || (displayRegData.Note && displayRegData.Note.includes('รอบพิเศษ'))) && (
+                      <button
+                        type="button"
+                        onClick={() => setShowSpecialShirtModal(true)}
+                        className="text-[11px] text-amber-600 bg-amber-50 hover:bg-amber-100 active:scale-95 transition-all px-2 py-0.5 rounded-full border border-amber-200 cursor-pointer flex items-center gap-1 font-medium"
+                      >
+                        ⚠️ {lang === 'TH' ? 'เงื่อนไขพิเศษ' : 'Special Terms'}
+                      </button>
+                    )}
+                    <span className="font-semibold text-[#1e3a5f] text-right ml-4">{displayRegData.shirtSize}</span>
+                  </div>
+                </div>
+              </div>
+            </>
+          );
+        })()}
 
         {/* Edit Button */}
         <div className="w-full flex flex-col items-center">

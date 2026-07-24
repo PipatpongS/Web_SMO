@@ -211,8 +211,8 @@ const Register = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { registerUser, updateUser, loading, isRegistered, regData } = useRegistration();
-  // ถ้าลงทะเบียนแล้ว ให้ใช้วันหมดเขตแก้ไข, ถ้ายัง ให้ใช้วันหมดเขตลงทะเบียน
-  const isPastDeadline = isRegistered ? isEditClosed() : isAfterRegistration();
+  // ถ้าลงทะเบียนแล้ว ให้ใช้วันหมดเขตแก้ไข, ถ้ายังลงทะเบียนใหม่ (Walk-in) ให้แก้ไขและกดถัดไปได้เสมอ
+  const isPastDeadline = isRegistered ? isEditClosed() : false;
   const readOnly = location.state?.readOnly || isPastDeadline || (regData?.editCount >= 2);
   const [lang, setLangState] = useState(() => localStorage.getItem('preferredLang') || 'TH');
   const setLang = (newLang) => {
@@ -314,8 +314,8 @@ const Register = () => {
   }, [formData, regData, isEditMode]);
 
   useEffect(() => {
-    // Redirect if they try to access registration when it's closed (and they aren't registered yet)
-    if (!loading && !isRegistered && (isBeforeRegistration() || isAfterRegistration())) {
+    // Allow Walk-in registration access
+    if (!loading && !isRegistered && isBeforeRegistration()) {
       navigate('/', { replace: true });
     }
   }, [loading, isRegistered, navigate]);

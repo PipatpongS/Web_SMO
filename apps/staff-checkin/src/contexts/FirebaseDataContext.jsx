@@ -387,13 +387,21 @@ export const FirebaseDataProvider = ({ children }) => {
   const findStudentByCode = (rawCode) => {
     if (!rawCode) return null;
     let cleanCode = rawCode.trim();
-    if (cleanCode.includes(':')) {
+    if (cleanCode.startsWith('WALKIN_TEMP:')) {
+      const parts = cleanCode.split(':');
+      if (parts.length >= 3) {
+        cleanCode = parts[2];
+      }
+    } else if (cleanCode.includes(':')) {
       cleanCode = cleanCode.split(':').pop().trim();
     }
     const searchUpper = cleanCode.toUpperCase();
 
     return students.find(s => 
       (s.shortCode && s.shortCode.toUpperCase() === searchUpper) ||
+      (s.short_code && s.short_code.toUpperCase() === searchUpper) ||
+      (s.walkin_temp_short_code && s.walkin_temp_short_code.toUpperCase() === searchUpper) ||
+      (s.walkin_temp_qr && s.walkin_temp_qr.toUpperCase().includes(searchUpper)) ||
       (s.studentId && s.studentId.toUpperCase() === searchUpper) ||
       (s.id && s.id.toUpperCase() === searchUpper) ||
       (s.docId && s.docId.toUpperCase() === searchUpper)
@@ -402,6 +410,12 @@ export const FirebaseDataProvider = ({ children }) => {
 
   // Username & Password Authentication (Strict Env & Firestore Verification)
   const login = async (username, password) => {
+    // ⚠️ Security Policy: LINE Authentication (LIFF) MUST be successful first!
+    if (!liffProfile) {
+      console.warn("Login rejected: LINE profile (LIFF) is required.");
+      return false;
+    }
+
     let role = null;
     let name = '';
 
@@ -646,6 +660,65 @@ export const FirebaseDataProvider = ({ children }) => {
     return true;
   };
 
+  // Approve Walk-in Registration On-site by Staff
+  const approveWalkinRegistration = async (studentDocId) => {
+    if (!studentDocId) return { success: false, error: 'Missing student document ID' };
+
+    const targetStudent = students.find(s => s.docId === studentDocId || s.id === studentDocId);
+    if (!targetStudent) return { success: false, error: 'Student record not found' };
+
+    const staffName = liffProfile?.displayName || staff?.displayName || staff?.name || 'Staff';
+    const staffUid = liffProfile?.line_uid || staff?.username || 'STAFF_ANONYMOUS';
+    const approvedAt = getThaiISOString();
+
+    const updateFields = {
+      walkin_status: 'APPROVED',
+      walkin_verified: true,
+      walkin_approved_at: approvedAt,
+      walkin_approved_by_staff_name: staffName,
+      walkin_approved_by_staff_uid: staffUid,
+      updatedAt: approvedAt
+    };
+
+    try {
+      if (db) {
+        const studentRef = doc(db, 'users', studentDocId);
+        await updateDoc(studentRef, updateFields);
+
+        try {
+          await addDoc(collection(db, 'staff_access_logs'), {
+            timestamp: approvedAt,
+            event: 'WALKIN_APPROVED',
+            student_doc_id: studentDocId,
+            student_id: targetStudent.studentId || '',
+            student_name: `${targetStudent.firstName || ''} ${targetStudent.lastName || ''}`.trim(),
+            staff_line_uid: staffUid,
+            staff_name: staffName,
+            user_agent: navigator.userAgent
+          });
+        } catch (e) {
+          console.warn("Audit log note:", e);
+        }
+      }
+
+      setStudents(prev => {
+        const updated = prev.map(s => {
+          if (s.docId === studentDocId || s.id === studentDocId) {
+            return { ...s, ...updateFields };
+          }
+          return s;
+        });
+        localStorage.setItem(CACHE_KEY, JSON.stringify(updated));
+        return updated;
+      });
+
+      return { success: true };
+    } catch (err) {
+      console.error("Failed to approve walk-in:", err);
+      return { success: false, error: err.message };
+    }
+  };
+
   return (
     <FirebaseDataContext.Provider value={{
       students,
@@ -664,6 +737,7 @@ export const FirebaseDataProvider = ({ children }) => {
       findStudentByCodeDirect,
       confirmShirtPickup,
       revokeShirtPickup,
+      approveWalkinRegistration,
       fetchStudentsFromFirestore,
       updatePhysicalInventory
     }}>

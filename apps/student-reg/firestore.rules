@@ -6,7 +6,7 @@ service cloud.firestore {
       return request.auth != null && request.auth.uid == userId;
     }
 
-    // Helper: ตรวจสอบว่าเป็นการอัปเดตเฉพาะฟิลด์เช็ครับเสื้อ หรือฟิลด์ Short Code/QR Code ของสตาฟฟ์
+    // Helper: ตรวจสอบว่าเป็นการอัปเดตเฉพาะฟิลด์เช็ครับเสื้อ, อนุมัติ Walk-in หรือฟิลด์ Short Code/QR Code ของสตาฟฟ์
     function isStaffShirtCheckinUpdate() {
       return request.resource.data.diff(resource.data).affectedKeys()
         .hasOnly([
@@ -24,7 +24,16 @@ service cloud.firestore {
           'short_code',
           'shortCode',
           'qr_code',
-          'qrCode'
+          'qrCode',
+          'walkin_status',
+          'walkin_verified',
+          'walkin_approved_at',
+          'walkin_approved_by_staff_name',
+          'walkin_approved_by_staff_uid',
+          'walkin_temp_qr',
+          'walkin_temp_short_code',
+          'note',
+          'updatedAt'
         ]);
     }
 
