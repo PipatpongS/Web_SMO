@@ -50,15 +50,15 @@ const LayoutContent = ({ children }) => {
 
   const outerWrapperClass = isScrollablePage
     ? 'min-h-screen w-screen font-sans text-white bg-black/40 backdrop-blur-[2px] overflow-y-auto'
-    : 'h-[100dvh] max-h-[100dvh] w-screen font-sans text-white bg-black/40 backdrop-blur-[2px] overflow-hidden';
+    : 'min-h-[100dvh] sm:h-[100dvh] w-screen font-sans text-white bg-black/40 backdrop-blur-[2px] overflow-y-auto sm:overflow-hidden';
 
   const innerFlexClass = isScrollablePage
     ? 'flex flex-col items-center min-h-screen px-3 sm:px-6 pb-8 relative'
-    : 'flex flex-col items-center justify-between h-full px-3 sm:px-6 pb-4 overflow-hidden relative';
+    : 'flex flex-col items-center justify-between min-h-[100dvh] sm:h-full px-3 sm:px-6 pb-4 relative';
 
   const contentAreaClass = isScrollablePage
     ? 'w-full flex-1 flex flex-col'
-    : 'w-full flex-1 flex flex-col justify-center items-center overflow-hidden min-h-0';
+    : 'w-full flex-1 flex flex-col justify-center items-center py-2 min-h-0';
 
   return (
     <div className={outerWrapperClass}>
@@ -70,23 +70,25 @@ const LayoutContent = ({ children }) => {
           className="fixed top-0 left-0 m-0 p-0 w-20 md:w-28 z-50 pointer-events-none" 
         />
 
-        <div className={`w-full ${containerWidthClass} flex flex-col items-center ${isScrollablePage ? 'min-h-screen' : 'h-full overflow-hidden'} transition-all duration-300`}>
+        <div className={`w-full ${containerWidthClass} flex flex-col items-center ${isScrollablePage ? 'min-h-screen' : 'min-h-full sm:h-full'} transition-all duration-300`}>
           {/* Top Header Section */}
-          <div className="w-full flex justify-between items-center pt-2 pb-2 px-3 sm:px-4 relative z-10 shrink-0 min-h-[4rem] sm:min-h-[5.5rem]">
+          <div className="w-full flex justify-center sm:justify-between items-center pt-2 pb-2 px-3 sm:px-4 relative z-10 shrink-0 min-h-[4rem] sm:min-h-[5.5rem]">
             <img 
               src={logoTop} 
               alt="KMUTT ENG Logo" 
-              className="h-24 sm:h-32 md:h-36 object-contain drop-shadow-lg" 
+              className="h-20 sm:h-28 md:h-36 object-contain drop-shadow-lg" 
             />
             
             {/* Language Switcher Button */}
-            <button 
-              onClick={() => setLang(lang === 'TH' ? 'EN' : 'TH')} 
-              className="bg-white/20 hover:bg-white/30 transition-all duration-200 active:scale-75 px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold backdrop-blur-sm flex items-center cursor-pointer border border-white/10 shrink-0 shadow-sm"
-            >
-              <span className="mr-1">🌐</span> 
-              <span className="w-6 text-center inline-block">{lang}</span>
-            </button>
+            <div className="absolute right-3 sm:relative sm:right-auto z-20">
+              <button 
+                onClick={() => setLang(lang === 'TH' ? 'EN' : 'TH')} 
+                className="bg-white/20 hover:bg-white/30 transition-all duration-200 active:scale-75 px-3 py-1.5 rounded-full text-xs sm:text-sm font-semibold backdrop-blur-sm flex items-center cursor-pointer border border-white/10 shrink-0 shadow-sm"
+              >
+                <span className="mr-1">🌐</span> 
+                <span className="w-6 text-center inline-block">{lang}</span>
+              </button>
+            </div>
           </div>
 
           {/* Main Content Area */}

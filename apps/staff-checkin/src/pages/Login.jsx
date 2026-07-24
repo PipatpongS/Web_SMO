@@ -64,6 +64,7 @@ export default function Login() {
               type="text" 
               value={username}
               onChange={(e) => setUsername(e.target.value)}
+              onFocus={(e) => setTimeout(() => e.target.scrollIntoView({ behavior: 'smooth', block: 'center' }), 300)}
               className="w-full px-4 py-2.5 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-purple-400 text-sm font-semibold transition-all"
               placeholder={isTH ? 'กรอกไอดี' : 'Enter Username'}
               required
@@ -78,6 +79,7 @@ export default function Login() {
               type="password" 
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              onFocus={(e) => setTimeout(() => e.target.scrollIntoView({ behavior: 'smooth', block: 'center' }), 300)}
               className="w-full px-4 py-2.5 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-purple-400 text-sm font-semibold transition-all"
               placeholder={isTH ? 'กรอกรหัสผ่าน' : 'Enter Password'}
               required
