@@ -117,20 +117,6 @@ export default function Login() {
             {isSubmitting ? (isTH ? 'กำลังเข้าสู่ระบบ...' : 'Logging in...') : (isTH ? 'เข้าสู่ระบบ' : 'Login')}
           </button>
         </form>
-
-        {/* LINE Profile Sync Button (If not yet connected) */}
-        {!liffProfile && (
-          <div className="mt-4 pt-3 border-t border-white/15 text-center">
-            <button
-              type="button"
-              onClick={triggerLiffLogin}
-              className="w-full py-2.5 px-4 rounded-xl bg-[#06C755] hover:bg-[#05b34c] text-white text-xs font-bold transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer active:scale-95"
-            >
-              <MessageCircle size={16} />
-              <span>{isTH ? 'เชื่อมต่อโปรไฟล์ LINE (ดึงชื่อ/รูป)' : 'Sync LINE Profile'}</span>
-            </button>
-          </div>
-        )}
       </div>
     </div>
   );
