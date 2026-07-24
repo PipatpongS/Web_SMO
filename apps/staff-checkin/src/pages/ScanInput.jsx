@@ -183,7 +183,7 @@ export default function ScanInput() {
       const student = await findStudentByCodeDirect(targetCode);
       
       if (student) {
-        navigate(`/student/${student.docId || student.id}?method=${method}`);
+        navigate(`/student/${student.docId || student.id}?method=${method}&mode=${mode}`);
       } else {
         setError(isTH ? `ไม่พบข้อมูลนักศึกษาด้วยรหัส "${targetCode}"` : `Student not found with code "${targetCode}"`);
         if (method === 'QR_CODE') {

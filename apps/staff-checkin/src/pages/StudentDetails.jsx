@@ -265,6 +265,10 @@ export default function StudentDetails() {
     }
   };
 
+  const modeParam = searchParams.get('mode');
+  const mode = modeParam || (isWalkinPending ? 'walkin' : 'shirt');
+  const isWalkinMode = mode === 'walkin';
+
   // Revoke Handler
   const handleRevoke = async () => {
     if (!student) return;
@@ -276,7 +280,7 @@ export default function StudentDetails() {
     setIsSubmitting(false);
 
     if (res && (res === true || res.success)) {
-      navigate('/scan');
+      navigate(`/scan?mode=${mode}`);
     } else {
       setFirebaseErrorMsg(res?.error || 'ไม่สามารถยกเลิกรายการใน Firebase ได้');
     }
@@ -308,11 +312,21 @@ export default function StudentDetails() {
       {/* Top Navigation */}
       <div className="w-full flex items-center justify-between mb-3 shrink-0">
         <button 
-          onClick={() => navigate('/scan')} 
+          onClick={() => navigate(`/scan?mode=${mode}`)} 
           className="text-white hover:text-white flex items-center gap-2 text-xs sm:text-sm font-bold px-4 py-2 rounded-2xl bg-white/10 hover:bg-white/20 backdrop-blur-md transition-all border border-white/20 shadow-md cursor-pointer"
         >
           <ArrowLeft size={16} /> {isTH ? 'กลับไปหน้าสแกน' : 'Back to Scan'}
         </button>
+
+        <span className={`text-[10px] sm:text-xs px-3 py-1 rounded-full font-black border uppercase tracking-wider ${
+          isWalkinMode 
+            ? 'bg-amber-400/30 text-amber-200 border-amber-400/50' 
+            : 'bg-purple-500/30 text-purple-200 border-purple-400/50'
+        }`}>
+          {isWalkinMode 
+            ? (isTH ? '📋 โหมดอนุมัติ Walk-in สุ่มกลุ่ม' : '📋 Walk-in Mode') 
+            : (isTH ? '👕 โหมดเช็ครับเสื้อ' : '👕 Shirt Pickup Mode')}
+        </span>
       </div>
 
       {/* Main Solid White Content Card */}
@@ -725,17 +739,26 @@ export default function StudentDetails() {
             </div>
 
             {/* Action Dismiss Button */}
-            <button
-              type="button"
-              onClick={() => setAlertNoticeModal(null)}
-              className={`w-full py-3 rounded-2xl font-extrabold text-sm shadow-md cursor-pointer transition-colors ${
-                alertNoticeModal.type === 'success'
-                  ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
-                  : 'bg-slate-800 hover:bg-slate-900 text-white'
-              }`}
-            >
-              {isTH ? 'ตกลง / ปิดหน้าต่าง' : 'OK / Close'}
-            </button>
+            <div className="flex flex-col gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => {
+                  setAlertNoticeModal(null);
+                  if (alertNoticeModal.type === 'success') {
+                    navigate(`/scan?mode=${mode}`);
+                  }
+                }}
+                className={`w-full py-3 rounded-2xl font-extrabold text-sm shadow-md cursor-pointer transition-colors ${
+                  alertNoticeModal.type === 'success'
+                    ? 'bg-amber-500 hover:bg-amber-600 text-slate-950'
+                    : 'bg-slate-800 hover:bg-slate-900 text-white'
+                }`}
+              >
+                {alertNoticeModal.type === 'success' 
+                  ? (isTH ? '📷 สแกนอนุมัติคนถัดไป' : 'Scan Next Student') 
+                  : (isTH ? 'ตกลง / ปิดหน้าต่าง' : 'OK / Close')}
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -833,7 +856,7 @@ export default function StudentDetails() {
           onClick={(e) => {
             if (e.target === e.currentTarget) {
               setShowSuccessModal(false);
-              navigate('/scan');
+              navigate(`/scan?mode=${mode}`);
             }
           }}
         >
@@ -850,7 +873,7 @@ export default function StudentDetails() {
             </div>
             <button
               type="button"
-              onClick={() => { setShowSuccessModal(false); navigate('/scan'); }}
+              onClick={() => { setShowSuccessModal(false); navigate(`/scan?mode=${mode}`); }}
               className="w-full py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-sm shadow-lg cursor-pointer transition-colors flex items-center justify-center gap-2"
             >
               <QrCode size={16} /> สแกนคนถัดไป
