@@ -826,7 +826,7 @@ export const FirebaseDataProvider = ({ children }) => {
 
       setStudents(prev => {
         const updated = prev.map(s => {
-          if (s.docId === firestoreDocId || s.id === firestoreDocId || s.docId === studentDocId || s.id === studentDocId) {
+          if (s.docId === firestoreDocId || s.line_uid === firestoreDocId) {
             return { ...s, ...updateFields };
           }
           return s;
@@ -842,7 +842,15 @@ export const FirebaseDataProvider = ({ children }) => {
       };
     } catch (err) {
       console.error("Failed to approve walk-in registration in Firestore:", err);
-      return { success: false, error: err?.message || String(err) };
+      const errMsg = err?.message || String(err);
+      // Common errors and user-friendly messages
+      if (errMsg.includes('permission') || errMsg.includes('PERMISSION_DENIED')) {
+        return { success: false, error: `ไม่มีสิทธิ์แก้ไขข้อมูล (Permission Denied). กรุณาเข้าสู่ระบบใหม่` };
+      }
+      if (errMsg.includes('not-found') || errMsg.includes('NOT_FOUND')) {
+        return { success: false, error: `ไม่พบเอกสารใน Firebase (Doc ID: ${firestoreDocId}). กรุณา Refresh และลองใหม่` };
+      }
+      return { success: false, error: `Firebase Error: ${errMsg}` };
     }
   };
 
