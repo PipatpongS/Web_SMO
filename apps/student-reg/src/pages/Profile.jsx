@@ -20,6 +20,14 @@ const contentLang = {
     studentId: 'รหัสนักศึกษา',
     department: 'ภาควิชา',
     shirtSize: 'ไซซ์เสื้อ',
+    shirtStatus: 'สถานะการรับเสื้อ',
+    shirtReceived: 'ได้รับแล้ว',
+    shirtNotReceived: 'ยังไม่ได้รับ',
+    checkinDay1: 'สถานะเข้างาน (25 ก.ค. 2569)',
+    checkinDay2: 'สถานะเข้างาน (26 ก.ค. 2569)',
+    statusRegistered: 'ลงทะเบียนแล้ว',
+    statusNotRegistered: 'ยังไม่ลงทะเบียน',
+    statusNote: 'หมายเหตุ: หากข้อมูลสถานะไม่ถูกต้อง โปรดติดต่อ LINE OA',
     editBtn: 'แก้ไขข้อมูล',
     contactMsg: 'หากต้องการแก้ไขข้อมูลเพิ่มเติม สามารถติดต่อได้ที่',
     chatBtn: 'แชทกับเราเลย',
@@ -35,6 +43,14 @@ const contentLang = {
     studentId: 'Student ID',
     department: 'Department',
     shirtSize: 'Shirt Size',
+    shirtStatus: 'Shirt Received Status',
+    shirtReceived: 'Received',
+    shirtNotReceived: 'Not Received',
+    checkinDay1: 'Registration Status (July 25, 2026)',
+    checkinDay2: 'Registration Status (July 26, 2026)',
+    statusRegistered: 'Registered',
+    statusNotRegistered: 'Not Registered',
+    statusNote: 'Note: If the status information is incorrect, please contact LINE OA',
     editBtn: 'Edit Information',
     contactMsg: 'For further edits, please contact us via',
     chatBtn: 'Chat with us',
@@ -307,6 +323,41 @@ const Profile = () => {
                     )}
                     <span className="font-semibold text-[#1e3a5f] text-right ml-4">{displayRegData.shirtSize}</span>
                   </div>
+                </div>
+                <div className="flex justify-between border-b border-gray-100 pb-2 items-center">
+                  <span className="text-gray-500 whitespace-nowrap">{t.shirtStatus}</span>
+                  <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${
+                    displayRegData.shirt_received_at
+                      ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                      : 'bg-amber-50 text-amber-700 border border-amber-200'
+                  }`}>
+                    {displayRegData.shirt_received_at ? t.shirtReceived : t.shirtNotReceived}
+                  </span>
+                </div>
+                <div className="flex justify-between border-b border-gray-100 pb-2 items-center">
+                  <span className="text-gray-500 whitespace-nowrap">{t.checkinDay1}</span>
+                  <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${
+                    displayRegData.checkin_day1_morning
+                      ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                      : 'bg-rose-50 text-rose-700 border border-rose-200'
+                  }`}>
+                    {displayRegData.checkin_day1_morning ? t.statusRegistered : t.statusNotRegistered}
+                  </span>
+                </div>
+                <div className="flex justify-between border-b border-gray-100 pb-2 items-center">
+                  <span className="text-gray-500 whitespace-nowrap">{t.checkinDay2}</span>
+                  <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${
+                    displayRegData.checkin_day2_morning
+                      ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
+                      : 'bg-rose-50 text-rose-700 border border-rose-200'
+                  }`}>
+                    {displayRegData.checkin_day2_morning ? t.statusRegistered : t.statusNotRegistered}
+                  </span>
+                </div>
+                <div className="mt-2 pt-1 text-center">
+                  <p className="text-[11px] sm:text-xs text-gray-500 font-medium">
+                    {t.statusNote}
+                  </p>
                 </div>
               </div>
             </>
