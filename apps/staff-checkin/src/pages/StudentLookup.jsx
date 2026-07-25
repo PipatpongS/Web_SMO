@@ -169,7 +169,9 @@ export default function StudentLookup() {
 
                 {/* Round Badge */}
                 <div className="text-right shrink-0 space-y-1">
-                  <span className="text-[10px] text-slate-400 font-semibold block uppercase">รอบการสมัคร</span>
+                  <span className="text-[10px] text-slate-400 font-semibold block uppercase">
+                    {isTH ? 'รอบการสมัคร' : 'Registration Round'}
+                  </span>
                   <span className={`text-xs px-3 py-1 rounded-full font-black border inline-block ${getRoundBadgeColor(studentResult.note)}`}>
                     {getRoundLabel(studentResult.note)}
                   </span>

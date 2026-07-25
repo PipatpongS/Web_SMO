@@ -593,19 +593,31 @@ export default function StudentDetails() {
                   <ClipboardCheck className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <h3 className="font-extrabold text-teal-800 text-sm sm:text-base leading-tight">เช็คชื่อลงทะเบียนแล้ว</h3>
-                  <p className="text-[10px] text-teal-600 font-medium">บันทึกใน Firebase แล้ว</p>
+                  <h3 className="font-extrabold text-teal-800 text-sm sm:text-base leading-tight">
+                    {isTH ? 'เช็คชื่อลงทะเบียนแล้ว' : 'Checked In'}
+                  </h3>
+                  <p className="text-[10px] text-teal-600 font-medium">
+                    {isTH ? 'บันทึกใน Firebase แล้ว' : 'Recorded in system'}
+                  </p>
                 </div>
               </div>
               <div className="grid grid-cols-1 gap-2">
                 <div className="bg-white rounded-xl px-3 py-2.5 border border-teal-100 shadow-sm">
-                  <p className="text-[9px] text-slate-400 font-semibold uppercase tracking-wide mb-0.5">เวลาเช็คชื่อ (ไทย +07:00)</p>
-                  <p className="text-sm font-black text-teal-700 font-mono">{student.checkin_day1_morning}</p>
+                  <p className="text-[9px] text-slate-400 font-semibold uppercase tracking-wide mb-0.5">
+                    {isTH ? 'เวลาเช็คชื่อ (ไทย +07:00)' : 'Check-in Time (TH +07:00)'}
+                  </p>
+                  <p className="text-sm font-black text-teal-700 font-mono">
+                    {student.checkin_day2_morning || student.checkin_day1_morning}
+                  </p>
                 </div>
-                {student.checkin_day1_morning_by && (
+                {(student.checkin_day2_morning_by || student.checkin_day1_morning_by) && (
                   <div className="bg-white rounded-xl px-3 py-2.5 border border-teal-100 shadow-sm">
-                    <p className="text-[9px] text-slate-400 font-semibold uppercase tracking-wide mb-0.5">สตาฟผู้เช็ค</p>
-                    <p className="text-sm font-bold text-slate-800">{student.checkin_day1_morning_by}</p>
+                    <p className="text-[9px] text-slate-400 font-semibold uppercase tracking-wide mb-0.5">
+                      {isTH ? 'สตาฟผู้เช็ค' : 'Checked by'}
+                    </p>
+                    <p className="text-sm font-bold text-slate-800">
+                      {student.checkin_day2_morning_by || student.checkin_day1_morning_by}
+                    </p>
                   </div>
                 )}
               </div>
@@ -664,8 +676,12 @@ export default function StudentDetails() {
                   <ShieldCheck className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <h3 className="font-extrabold text-emerald-800 text-sm sm:text-base leading-tight">ประวัติการรับเสื้อเรียบร้อย</h3>
-                  <p className="text-[10px] text-emerald-600 font-medium">บันทึกข้อมูลในระบบแล้ว</p>
+                  <h3 className="font-extrabold text-emerald-800 text-sm sm:text-base leading-tight">
+                    {isTH ? 'ประวัติการรับเสื้อเรียบร้อย' : 'Shirt Pickup Completed'}
+                  </h3>
+                  <p className="text-[10px] text-emerald-600 font-medium">
+                    {isTH ? 'บันทึกข้อมูลในระบบแล้ว' : 'Recorded in system'}
+                  </p>
                 </div>
               </div>
 
@@ -676,7 +692,7 @@ export default function StudentDetails() {
                   const dt = new Date(dtStr);
                   const isValid = !isNaN(dt.getTime());
                   const dateStr = isValid
-                    ? dt.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' })
+                    ? dt.toLocaleDateString(isTH ? 'th-TH' : 'en-US', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' })
                     : dtStr.split('T')[0] || dtStr;
                   const timeStr = isValid
                     ? dt.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
@@ -684,11 +700,15 @@ export default function StudentDetails() {
                   return (
                     <div className="grid grid-cols-2 gap-2">
                       <div className="bg-white rounded-xl px-3 py-2.5 border border-emerald-100 shadow-sm">
-                        <p className="text-[9px] text-slate-400 font-semibold uppercase tracking-wide mb-0.5">วันที่รับ</p>
+                        <p className="text-[9px] text-slate-400 font-semibold uppercase tracking-wide mb-0.5">
+                          {isTH ? 'วันที่รับ' : 'Received Date'}
+                        </p>
                         <p className="text-xs font-bold text-slate-800 leading-tight">{dateStr}</p>
                       </div>
                       <div className="bg-white rounded-xl px-3 py-2.5 border border-emerald-100 shadow-sm">
-                        <p className="text-[9px] text-slate-400 font-semibold uppercase tracking-wide mb-0.5">เวลาที่รับ</p>
+                        <p className="text-[9px] text-slate-400 font-semibold uppercase tracking-wide mb-0.5">
+                          {isTH ? 'เวลาที่รับ' : 'Received Time'}
+                        </p>
                         <p className="text-sm font-black text-emerald-700 font-mono">{timeStr}</p>
                       </div>
                     </div>
@@ -697,7 +717,9 @@ export default function StudentDetails() {
 
                 {/* Shirt Size Received vs Reserved */}
                 <div className="bg-white rounded-xl px-3 py-2.5 border border-amber-200 shadow-sm">
-                  <p className="text-[9px] text-slate-400 font-semibold uppercase tracking-wide mb-1.5">ไซซ์เสื้อที่ได้รับ</p>
+                  <p className="text-[9px] text-slate-400 font-semibold uppercase tracking-wide mb-1.5">
+                    {isTH ? 'ไซซ์เสื้อที่ได้รับ' : 'Received Shirt Size'}
+                  </p>
                   <div className="flex items-center gap-2.5">
                     <span className="text-2xl font-black text-amber-700">{student.shirt_size_received || student.shirtSize}</span>
                     {student.is_shirt_size_changed && student.shirtSize && (
@@ -916,7 +938,7 @@ export default function StudentDetails() {
       {/* CUSTOM CENTER-SCREEN ALERT/NOTICE MODAL */}
       {alertNoticeModal && (
         <div
-          className="fixed inset-0 z-50 overflow-y-auto p-4 flex items-center justify-center bg-slate-950/70 backdrop-blur-xs transition-opacity cursor-pointer"
+          className="fixed inset-0 z-50 overflow-hidden p-4 flex items-center justify-center bg-slate-950/70 backdrop-blur-xs transition-opacity cursor-pointer select-none touch-none overscroll-none"
           onClick={(e) => {
             if (e.target === e.currentTarget) {
               setAlertNoticeModal(null);
@@ -978,7 +1000,7 @@ export default function StudentDetails() {
       {/* CONFIRMATION MODAL */}
       {showConfirmModal && (
         <div
-          className="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm cursor-pointer"
+          className="fixed inset-0 z-50 overflow-hidden flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm cursor-pointer select-none touch-none overscroll-none"
           onClick={(e) => {
             if (e.target === e.currentTarget) {
               setShowConfirmModal(false);
@@ -1000,9 +1022,13 @@ export default function StudentDetails() {
               </div>
               <div className="text-left">
                 <h3 className="text-base font-black text-slate-900 leading-tight">
-                  {isCheckinMode ? 'ยืนยันเช็คชื่อลงทะเบียน' : 'ยืนยันการรับเสื้อ'}
+                  {isTH
+                    ? (isCheckinMode ? 'ยืนยันเช็คชื่อลงทะเบียน' : 'ยืนยันการรับเสื้อ')
+                    : (isCheckinMode ? 'Confirm Check-in' : 'Confirm Shirt Pickup')}
                 </h3>
-                <p className="text-[11px] text-slate-500 font-medium">กรุณาตรวจสอบข้อมูลให้ถูกต้องก่อนยืนยัน</p>
+                <p className="text-[11px] text-slate-500 font-medium">
+                  {isTH ? 'กรุณาตรวจสอบข้อมูลให้ถูกต้องก่อนยืนยัน' : 'Please review details before confirming'}
+                </p>
               </div>
             </div>
 
@@ -1012,7 +1038,7 @@ export default function StudentDetails() {
                 <User size={15} className="text-slate-400 shrink-0" />
                 <div className="text-left min-w-0">
                   <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wide">
-                    {isCheckinMode ? 'ผู้เข้าร่วม' : 'ผู้รับเสื้อ'}
+                    {isTH ? (isCheckinMode ? 'ผู้เข้าร่วม' : 'ผู้รับเสื้อ') : (isCheckinMode ? 'Participant' : 'Recipient')}
                   </p>
                   <p className="text-sm font-bold text-slate-800 truncate">{student.firstName} {student.lastName}</p>
                 </div>
@@ -1020,7 +1046,9 @@ export default function StudentDetails() {
               <div className="flex items-center gap-3 bg-slate-50 px-4 py-2.5 rounded-xl border border-slate-100">
                 <Hash size={15} className="text-slate-400 shrink-0" />
                 <div className="text-left">
-                  <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wide">รหัสนักศึกษา</p>
+                  <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wide">
+                    {isTH ? 'รหัสนักศึกษา' : 'Student ID'}
+                  </p>
                   <p className="text-sm font-bold text-slate-800">{formatStudentId(student.studentId || student.id)}</p>
                 </div>
               </div>
@@ -1028,15 +1056,21 @@ export default function StudentDetails() {
                 <div className="flex items-center gap-3 bg-teal-50 px-4 py-2.5 rounded-xl border border-teal-200">
                   <Clock size={15} className="text-teal-500 shrink-0" />
                   <div className="text-left">
-                    <p className="text-[10px] text-teal-500 font-semibold uppercase tracking-wide">รอบเช็คชื่อ</p>
-                    <p className="text-sm font-black text-teal-700">วันที่ 2 — รอบเช้า (เวลาไทย +07:00)</p>
+                    <p className="text-[10px] text-teal-500 font-semibold uppercase tracking-wide">
+                      {isTH ? 'รอบเช็คชื่อ' : 'Check-in Round'}
+                    </p>
+                    <p className="text-sm font-black text-teal-700">
+                      {isTH ? 'วันที่ 26 ก.ค. 2569' : 'July 26, 2026'}
+                    </p>
                   </div>
                 </div>
               ) : (
                 <div className="flex items-center gap-3 bg-amber-50 px-4 py-2.5 rounded-xl border border-amber-200">
                   <Shirt size={15} className="text-amber-500 shrink-0" />
                   <div className="text-left">
-                    <p className="text-[10px] text-amber-500 font-semibold uppercase tracking-wide">ไซซ์เสื้อที่จะมอบ</p>
+                    <p className="text-[10px] text-amber-500 font-semibold uppercase tracking-wide">
+                      {isTH ? 'ไซซ์เสื้อที่จะมอบ' : 'Shirt Size to Hand Over'}
+                    </p>
                     <p className="text-lg font-black text-amber-700">{selectedSize}</p>
                   </div>
                 </div>
@@ -1045,8 +1079,10 @@ export default function StudentDetails() {
                 <div className="flex items-center gap-3 bg-blue-50 px-4 py-2.5 rounded-xl border border-blue-200">
                   <Users size={15} className="text-blue-500 shrink-0" />
                   <div className="text-left">
-                    <p className="text-[10px] text-blue-500 font-semibold uppercase tracking-wide">ผู้รับแทน</p>
-                    <p className="text-sm font-bold text-blue-700">{proxyName || proxyStudentId || 'ระบุผู้รับแทน'}</p>
+                    <p className="text-[10px] text-blue-500 font-semibold uppercase tracking-wide">
+                      {isTH ? 'ผู้รับแทน' : 'Proxy Recipient'}
+                    </p>
+                    <p className="text-sm font-bold text-blue-700">{proxyName || proxyStudentId || (isTH ? 'ระบุผู้รับแทน' : 'Proxy specified')}</p>
                   </div>
                 </div>
               )}
@@ -1060,7 +1096,7 @@ export default function StudentDetails() {
                 disabled={isSubmitting}
                 className="flex-1 py-3 rounded-2xl bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 text-sm font-bold cursor-pointer transition-colors disabled:opacity-50"
               >
-                ยกเลิก
+                {isTH ? 'ยกเลิก' : 'Cancel'}
               </button>
               <button
                 type="button"
@@ -1070,9 +1106,9 @@ export default function StudentDetails() {
                   }`}
               >
                 {isSubmitting ? (
-                  <><Loader2 size={16} className="animate-spin" /><span>กำลังบันทึก...</span></>
+                  <><Loader2 size={16} className="animate-spin" /><span>{isTH ? 'กำลังบันทึก...' : 'Saving...'}</span></>
                 ) : (
-                  <><CheckCircle2 size={16} /><span>ยืนยันบันทึก</span></>
+                  <><CheckCircle2 size={16} /><span>{isTH ? 'ยืนยันบันทึก' : 'Confirm'}</span></>
                 )}
               </button>
             </div>
@@ -1083,7 +1119,7 @@ export default function StudentDetails() {
       {/* SUCCESS MODAL */}
       {showSuccessModal && (
         <div
-          className="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm cursor-pointer"
+          className="fixed inset-0 z-50 overflow-hidden flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm cursor-pointer select-none touch-none overscroll-none"
           onClick={(e) => {
             if (e.target === e.currentTarget) {
               setShowSuccessModal(false);
@@ -1099,9 +1135,11 @@ export default function StudentDetails() {
               <CheckCircle2 size={44} strokeWidth={2} />
             </div>
             <div>
-              <h3 className="text-xl font-black text-slate-900">บันทึกสำเร็จ</h3>
+              <h3 className="text-xl font-black text-slate-900">{isTH ? 'บันทึกสำเร็จ' : 'Saved Successfully'}</h3>
               <p className="text-xs text-slate-500 font-medium mt-1">
-                {isCheckinMode ? 'เช็คชื่อลงทะเบียนและบันทึก log เรียบร้อยแล้ว' : 'จ่ายเสื้อและบันทึกข้อมูลเรียบร้อยแล้ว'}
+                {isTH
+                  ? (isCheckinMode ? 'เช็คชื่อลงทะเบียนและบันทึก log เรียบร้อยแล้ว' : 'จ่ายเสื้อและบันทึกข้อมูลเรียบร้อยแล้ว')
+                  : (isCheckinMode ? 'Check-in recorded and logged successfully.' : 'Shirt handed over and recorded successfully.')}
               </p>
             </div>
             <button
@@ -1109,7 +1147,7 @@ export default function StudentDetails() {
               onClick={() => { setShowSuccessModal(false); navigate(`/scan?mode=${mode}`); }}
               className="w-full py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-sm shadow-lg cursor-pointer transition-colors flex items-center justify-center gap-2"
             >
-              <QrCode size={16} /> สแกนคนถัดไป
+              <QrCode size={16} /> {isTH ? 'สแกนคนถัดไป' : 'Scan Next Student'}
             </button>
           </div>
         </div>
@@ -1118,7 +1156,7 @@ export default function StudentDetails() {
       {/* PROXY SCANNER MODAL */}
       {showProxyScanModal && (
         <div
-          className="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm cursor-pointer"
+          className="fixed inset-0 z-50 overflow-hidden flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm cursor-pointer select-none touch-none overscroll-none"
           onClick={(e) => {
             if (e.target === e.currentTarget) {
               setShowProxyScanModal(false);
@@ -1130,7 +1168,9 @@ export default function StudentDetails() {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-center">
-              <h3 className="text-sm font-black text-slate-900 text-center">สแกน QR / ค้นหาผู้รับแทน</h3>
+              <h3 className="text-sm font-black text-slate-900 text-center">
+                {isTH ? 'สแกน QR / ค้นหาผู้รับแทน' : 'Scan QR / Find Proxy'}
+              </h3>
             </div>
 
             {/* Camera Frame */}
@@ -1142,7 +1182,9 @@ export default function StudentDetails() {
 
             {/* Short Code Input for Proxy */}
             <div className="space-y-2 pt-1">
-              <label className="block text-xs text-slate-600 font-semibold text-center">หรือพิมพ์ Short Code ของผู้รับแทน (เช่น W-AB12)</label>
+              <label className="block text-xs text-slate-600 font-semibold text-center">
+                {isTH ? 'หรือพิมพ์ Short Code ของผู้รับแทน (เช่น W-AB12)' : 'Or enter Proxy Short Code (e.g. W-AB12)'}
+              </label>
               <div className="flex gap-2">
                 <input
                   type="text"
@@ -1171,7 +1213,7 @@ export default function StudentDetails() {
                   onClick={() => handleProxyLookup(proxyCodeInput, 'SHORT_CODE')}
                   className="px-5 py-2.5 bg-amber-400 text-slate-950 font-black text-xs rounded-xl hover:bg-amber-300 cursor-pointer shadow-sm"
                 >
-                  ตกลง
+                  {isTH ? 'ตกลง' : 'OK'}
                 </button>
               </div>
               {proxyError && <p className="text-red-500 text-xs font-bold text-center mt-1">{proxyError}</p>}

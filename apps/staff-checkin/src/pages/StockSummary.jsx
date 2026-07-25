@@ -391,15 +391,15 @@ export default function StockSummary() {
 
               <div className="grid grid-cols-3 gap-1.5 text-center text-xs">
                 <div className="bg-emerald-100/70 border border-emerald-200 p-2 rounded-xl">
-                  <span className="text-emerald-800 font-bold block text-[10px]">รับแล้ว</span>
+                  <span className="text-emerald-800 font-bold block text-[10px]">{isTH ? 'รับแล้ว' : 'Received'}</span>
                   <span className="font-black text-emerald-900 text-sm">{stats.normalReceived}</span>
                 </div>
                 <div className="bg-amber-100/70 border border-amber-200 p-2 rounded-xl">
-                  <span className="text-amber-800 font-bold block text-[10px]">ยังไม่ได้รับ</span>
+                  <span className="text-amber-800 font-bold block text-[10px]">{isTH ? 'ยังไม่ได้รับ' : 'Pending'}</span>
                   <span className="font-black text-amber-900 text-sm">{stats.normalRemaining}</span>
                 </div>
                 <div className="bg-purple-100/70 border border-purple-200 p-2 rounded-xl">
-                  <span className="text-purple-800 font-bold block text-[10px]">ไม่ตรงไซซ์</span>
+                  <span className="text-purple-800 font-bold block text-[10px]">{isTH ? 'ไม่ตรงไซซ์' : 'Mismatch'}</span>
                   <span className="font-black text-purple-900 text-sm">{stats.normalSizeMismatch}</span>
                 </div>
               </div>
@@ -419,15 +419,15 @@ export default function StockSummary() {
 
               <div className="grid grid-cols-3 gap-1.5 text-center text-xs">
                 <div className="bg-emerald-100/70 border border-emerald-200 p-2 rounded-xl">
-                  <span className="text-emerald-800 font-bold block text-[10px]">รับแล้ว</span>
+                  <span className="text-emerald-800 font-bold block text-[10px]">{isTH ? 'รับแล้ว' : 'Received'}</span>
                   <span className="font-black text-emerald-900 text-sm">{stats.specialReceived}</span>
                 </div>
                 <div className="bg-amber-100/70 border border-amber-200 p-2 rounded-xl">
-                  <span className="text-amber-800 font-bold block text-[10px]">ยังไม่ได้รับ</span>
+                  <span className="text-amber-800 font-bold block text-[10px]">{isTH ? 'ยังไม่ได้รับ' : 'Pending'}</span>
                   <span className="font-black text-amber-900 text-sm">{stats.specialRemaining}</span>
                 </div>
                 <div className="bg-purple-100/70 border border-purple-200 p-2 rounded-xl">
-                  <span className="text-purple-800 font-bold block text-[10px]">ไม่ตรงไซซ์</span>
+                  <span className="text-purple-800 font-bold block text-[10px]">{isTH ? 'ไม่ตรงไซซ์' : 'Mismatch'}</span>
                   <span className="font-black text-purple-900 text-sm">{stats.specialSizeMismatch}</span>
                 </div>
               </div>
@@ -447,15 +447,15 @@ export default function StockSummary() {
 
               <div className="grid grid-cols-3 gap-1.5 text-center text-xs">
                 <div className="bg-emerald-100/70 border border-emerald-200 p-2 rounded-xl">
-                  <span className="text-emerald-800 font-bold block text-[10px]">รับแล้ว</span>
+                  <span className="text-emerald-800 font-bold block text-[10px]">{isTH ? 'รับแล้ว' : 'Received'}</span>
                   <span className="font-black text-emerald-900 text-sm">{stats.onsiteReceived}</span>
                 </div>
                 <div className="bg-amber-100/70 border border-amber-200 p-2 rounded-xl">
-                  <span className="text-amber-800 font-bold block text-[10px]">ยังไม่ได้รับ</span>
+                  <span className="text-amber-800 font-bold block text-[10px]">{isTH ? 'ยังไม่ได้รับ' : 'Pending'}</span>
                   <span className="font-black text-amber-900 text-sm">{stats.onsiteRemaining}</span>
                 </div>
                 <div className="bg-purple-100/70 border border-purple-200 p-2 rounded-xl">
-                  <span className="text-purple-800 font-bold block text-[10px]">ไม่ตรงไซซ์</span>
+                  <span className="text-purple-800 font-bold block text-[10px]">{isTH ? 'ไม่ตรงไซซ์' : 'Mismatch'}</span>
                   <span className="font-black text-purple-900 text-sm">{stats.onsiteSizeMismatch}</span>
                 </div>
               </div>
@@ -474,15 +474,15 @@ export default function StockSummary() {
 
               <div className="grid grid-cols-3 gap-1.5 text-center text-xs">
                 <div className="bg-emerald-100/70 border border-emerald-200 p-2 rounded-xl">
-                  <span className="text-emerald-800 font-bold block text-[10px]">รับแล้ว</span>
+                  <span className="text-emerald-800 font-bold block text-[10px]">{isTH ? 'รับแล้ว' : 'Received'}</span>
                   <span className="font-black text-emerald-900 text-sm">{stats.combinedSpecialReceived}</span>
                 </div>
                 <div className="bg-amber-100/70 border border-amber-200 p-2 rounded-xl">
-                  <span className="text-amber-800 font-bold block text-[10px]">ยังไม่ได้รับ</span>
+                  <span className="text-amber-800 font-bold block text-[10px]">{isTH ? 'ยังไม่ได้รับ' : 'Pending'}</span>
                   <span className="font-black text-amber-900 text-sm">{stats.combinedSpecialRemaining}</span>
                 </div>
                 <div className="bg-purple-100/70 border border-purple-200 p-2 rounded-xl">
-                  <span className="text-purple-800 font-bold block text-[10px]">ไม่ตรงไซซ์</span>
+                  <span className="text-purple-800 font-bold block text-[10px]">{isTH ? 'ไม่ตรงไซซ์' : 'Mismatch'}</span>
                   <span className="font-black text-purple-900 text-sm">{stats.combinedSpecialSizeMismatch}</span>
                 </div>
               </div>

@@ -351,40 +351,35 @@ const Profile = () => {
                     <span className="font-semibold text-[#1e3a5f] text-right ml-4">{displayRegData.shirtSize}</span>
                   </div>
                 </div>
-                <div className="flex justify-between border-b border-gray-100 pb-2 items-center">
+                <div className="flex justify-between border-b border-gray-100 pb-2.5 items-center">
                   <span className="text-gray-500 whitespace-nowrap">{t.shirtStatus}</span>
-                  <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${
+                  <span className={`inline-flex items-center justify-center text-center px-3 py-1 text-xs font-bold rounded-full border whitespace-nowrap min-w-[100px] ${
                     displayRegData.shirt_received_at
-                      ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
-                      : 'bg-amber-50 text-amber-700 border border-amber-200'
+                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                      : 'bg-amber-50 text-amber-700 border-amber-200'
                   }`}>
                     {displayRegData.shirt_received_at ? t.shirtReceived : t.shirtNotReceived}
                   </span>
                 </div>
-                <div className="flex justify-between border-b border-gray-100 pb-2 items-center">
+                <div className="flex justify-between border-b border-gray-100 pb-2.5 items-center">
                   <span className="text-gray-500 whitespace-nowrap">{t.checkinDay1}</span>
-                  <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${
+                  <span className={`inline-flex items-center justify-center text-center px-3 py-1 text-xs font-bold rounded-full border whitespace-nowrap min-w-[100px] ${
                     displayRegData.checkin_day1_morning
-                      ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
-                      : 'bg-rose-50 text-rose-700 border border-rose-200'
+                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                      : 'bg-rose-50 text-rose-700 border-rose-200'
                   }`}>
                     {displayRegData.checkin_day1_morning ? t.statusRegistered : t.statusNotRegistered}
                   </span>
                 </div>
-                <div className="flex justify-between border-b border-gray-100 pb-2 items-center">
+                <div className="flex justify-between border-b border-gray-100 pb-2.5 items-center">
                   <span className="text-gray-500 whitespace-nowrap">{t.checkinDay2}</span>
-                  <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${
+                  <span className={`inline-flex items-center justify-center text-center px-3 py-1 text-xs font-bold rounded-full border whitespace-nowrap min-w-[100px] ${
                     displayRegData.checkin_day2_morning
-                      ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
-                      : 'bg-rose-50 text-rose-700 border border-rose-200'
+                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                      : 'bg-rose-50 text-rose-700 border-rose-200'
                   }`}>
                     {displayRegData.checkin_day2_morning ? t.statusRegistered : t.statusNotRegistered}
                   </span>
-                </div>
-                <div className="mt-2 pt-1 text-center">
-                  <p className="text-[11px] sm:text-xs text-gray-500 font-medium">
-                    {t.statusNote}
-                  </p>
                 </div>
               </div>
             </>
