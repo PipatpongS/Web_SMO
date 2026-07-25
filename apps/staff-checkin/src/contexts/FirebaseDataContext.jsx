@@ -408,10 +408,11 @@ export const FirebaseDataProvider = ({ children }) => {
     return true;
   };
 
-  // ⭐️ ULTRA LOW QUOTA LOOKUP (Consumes 0 Read if in Local Cache, or EXACTLY 1 Read on QR scan)
-  const findStudentByCodeDirect = async (rawCode) => {
+  // ⭐️ REALTIME FIRESTORE LOOKUP (Fetches fresh data directly from Firestore)
+  const findStudentByCodeDirect = async (rawCode, options = {}) => {
     if (!rawCode) return null;
     const rawClean = rawCode.trim();
+    const forceFresh = options.forceFresh === true || options.bypassCache === true;
 
     let lineUidFromQr = null;
     let studentIdFromQr = null;
@@ -433,7 +434,6 @@ export const FirebaseDataProvider = ({ children }) => {
 
     const searchUpper = cleanCode.toUpperCase();
     const tempShortUpper = tempShortCode ? tempShortCode.toUpperCase() : searchUpper;
-    const lineUidUpper = lineUidFromQr ? lineUidFromQr.toUpperCase() : null;
 
     const shortCodeCandidates = new Set([searchUpper]);
     if (/^[A-Z0-9]{4}$/.test(searchUpper)) {
@@ -446,28 +446,30 @@ export const FirebaseDataProvider = ({ children }) => {
       shortCodeCandidates.add(searchUpper.slice(1));
     }
 
-    // 1️⃣ Step 1: Check Local Cache FIRST (Case-insensitive LINE UID matching)
-    if (lineUidFromQr) {
-      const targetUidLower = lineUidFromQr.toLowerCase();
-      const localUidMatch = students.find(s => {
-        const sDocIdLower = (s.docId || '').toLowerCase();
-        const sLineUidLower = (s.line_uid || '').toLowerCase();
-        const sIdLower = (s.id || '').toLowerCase();
-        return sDocIdLower === targetUidLower || sLineUidLower === targetUidLower || sIdLower === targetUidLower;
-      });
-      if (localUidMatch) return localUidMatch;
-    } else {
-      const localMatch = students.find(s => {
-        const sShortCode = (s.shortCode || s.short_code || s.walkin_temp_short_code || '').toUpperCase();
-        const sQrCode = (s.qrCode || s.qr_code || '').toUpperCase();
-        const sStudentId = String(s.studentId || s.id || s.student_id || '').trim().toUpperCase();
-        const isPlaceholder = sStudentId === '69070500000';
+    // 1️⃣ Step 1: Check Local Cache ONLY if not forcing fresh data
+    if (!forceFresh) {
+      if (lineUidFromQr) {
+        const targetUidLower = lineUidFromQr.toLowerCase();
+        const localUidMatch = students.find(s => {
+          const sDocIdLower = (s.docId || '').toLowerCase();
+          const sLineUidLower = (s.line_uid || '').toLowerCase();
+          const sIdLower = (s.id || '').toLowerCase();
+          return sDocIdLower === targetUidLower || sLineUidLower === targetUidLower || sIdLower === targetUidLower;
+        });
+        if (localUidMatch) return localUidMatch;
+      } else {
+        const localMatch = students.find(s => {
+          const sShortCode = (s.shortCode || s.short_code || s.walkin_temp_short_code || '').toUpperCase();
+          const sQrCode = (s.qrCode || s.qr_code || '').toUpperCase();
+          const sStudentId = String(s.studentId || s.id || s.student_id || '').trim().toUpperCase();
+          const isPlaceholder = sStudentId === '69070500000';
 
-        if (tempShortUpper && sShortCode === tempShortUpper) return true;
-        if (searchUpper && (shortCodeCandidates.has(sShortCode) || sQrCode === searchUpper || (!isPlaceholder && sStudentId === searchUpper))) return true;
-        return false;
-      });
-      if (localMatch) return localMatch;
+          if (tempShortUpper && sShortCode === tempShortUpper) return true;
+          if (searchUpper && (shortCodeCandidates.has(sShortCode) || sQrCode === searchUpper || (!isPlaceholder && sStudentId === searchUpper))) return true;
+          return false;
+        });
+        if (localMatch) return localMatch;
+      }
     }
 
     if (!db) return null;

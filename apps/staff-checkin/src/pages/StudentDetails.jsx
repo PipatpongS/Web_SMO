@@ -102,42 +102,43 @@ export default function StudentDetails() {
     let isMounted = true;
     setIsNotFound(false);
 
-    // 1. Search in local state (0 Reads)
-    const found = students.find(s => s.docId === id || s.id === id || s.studentId === id || (s.short_code && s.short_code.toUpperCase() === id.toUpperCase()));
-    if (found) {
-      setStudent(found);
-      const regSize = found.shirtSize || 'M';
-      setSelectedSize(found.shirt_size_received || regSize);
-      setIsProxy(!!found.proxy_name);
-      setProxyType(found.proxy_type || 'QR_CODE');
-      setProxyStudentId(found.proxy_student_id || '');
-      setProxyName(found.proxy_name || '');
-      setProxyPhone(found.proxy_phone || '');
-    } else {
-      // 2. Single-Doc Targeted Fetch from Firestore (1 Read)
-      findStudentByCodeDirect(id).then(directMatch => {
-        if (!isMounted) return;
-        if (directMatch) {
-          setStudent(directMatch);
-          const regSize = directMatch.shirtSize || 'M';
-          setSelectedSize(directMatch.shirt_size_received || regSize);
-          setIsProxy(!!directMatch.proxy_name);
-          setProxyType(directMatch.proxy_type || 'QR_CODE');
-          setProxyStudentId(directMatch.proxy_student_id || '');
-          setProxyName(directMatch.proxy_name || '');
-          setProxyPhone(directMatch.proxy_phone || '');
-        } else {
-          setIsNotFound(true);
-        }
-      }).catch(err => {
-        if (isMounted) setIsNotFound(true);
-      });
+    // 1. Render fast local match first if available
+    const cachedMatch = students.find(s => s.docId === id || s.id === id || s.studentId === id || (s.short_code && s.short_code.toUpperCase() === id.toUpperCase()));
+    if (cachedMatch) {
+      setStudent(cachedMatch);
+      const regSize = cachedMatch.shirtSize || 'M';
+      setSelectedSize(cachedMatch.shirt_size_received || regSize);
+      setIsProxy(!!cachedMatch.proxy_name);
+      setProxyType(cachedMatch.proxy_type || 'QR_CODE');
+      setProxyStudentId(cachedMatch.proxy_student_id || '');
+      setProxyName(cachedMatch.proxy_name || '');
+      setProxyPhone(cachedMatch.proxy_phone || '');
     }
+
+    // 2. ALWAYS fetch 100% fresh real-time document directly from Firestore
+    findStudentByCodeDirect(id, { forceFresh: true }).then(freshMatch => {
+      if (!isMounted) return;
+      if (freshMatch) {
+        setStudent(freshMatch);
+        const regSize = freshMatch.shirtSize || 'M';
+        setSelectedSize(freshMatch.shirt_size_received || regSize);
+        setIsProxy(!!freshMatch.proxy_name);
+        setProxyType(freshMatch.proxy_type || 'QR_CODE');
+        setProxyStudentId(freshMatch.proxy_student_id || '');
+        setProxyName(freshMatch.proxy_name || '');
+        setProxyPhone(freshMatch.proxy_phone || '');
+        setIsNotFound(false);
+      } else if (!cachedMatch) {
+        setIsNotFound(true);
+      }
+    }).catch(err => {
+      if (isMounted && !cachedMatch) setIsNotFound(true);
+    });
 
     return () => {
       isMounted = false;
     };
-  }, [id, students]);
+  }, [id]);
 
   // Camera handling for scanning Proxy QR
   const startProxyCamera = async () => {
