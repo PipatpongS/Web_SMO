@@ -4,8 +4,9 @@ import { useNavigate } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
 import { useAuth } from '../contexts/AuthContext';
 import { useRegistration } from '../contexts/RegContext';
-import { FaArrowLeft, FaClipboardList } from 'react-icons/fa';
+import { FaArrowLeft, FaClipboardList, FaLine } from 'react-icons/fa';
 import LoadingScreen from '../components/LoadingScreen';
+import SponsorsSection from '../components/SponsorsSection';
 import { isEditClosed, EDIT_DEADLINE } from '../config/timeConfig';
 
 import bImg from '../assets/b.png';
@@ -81,6 +82,7 @@ const Profile = () => {
   const [lang, setLangState] = useState(() => localStorage.getItem('preferredLang') || 'TH');
   const [showVerifiedModal, setShowVerifiedModal] = useState(false);
   const [showSpecialShirtModal, setShowSpecialShirtModal] = useState(false);
+  const [showSecondVisitModal, setShowSecondVisitModal] = useState(false);
   const setLang = (newLang) => {
     localStorage.setItem('preferredLang', newLang);
     setLangState(newLang);
@@ -94,7 +96,30 @@ const Profile = () => {
   }, []);
 
   useEffect(() => {
-    if (showVerifiedModal || showSpecialShirtModal) {
+    if (!loading && isRegistered) {
+      const hideNotice = localStorage.getItem('hide_profile_attendance_notice');
+      if (hideNotice === 'true') {
+        return;
+      }
+
+      const rawCount = localStorage.getItem('profile_visit_count');
+      const currentCount = rawCount ? parseInt(rawCount, 10) : 0;
+      const newCount = currentCount + 1;
+      localStorage.setItem('profile_visit_count', newCount.toString());
+
+      if (newCount >= 2) {
+        setShowSecondVisitModal(true);
+      }
+    }
+  }, [loading, isRegistered]);
+
+  const handleNeverShowAgain = () => {
+    localStorage.setItem('hide_profile_attendance_notice', 'true');
+    setShowSecondVisitModal(false);
+  };
+
+  useEffect(() => {
+    if (showVerifiedModal || showSpecialShirtModal || showSecondVisitModal) {
       document.body.style.overflow = 'hidden';
     } else {
       document.body.style.overflow = 'unset';
@@ -102,7 +127,7 @@ const Profile = () => {
     return () => {
       document.body.style.overflow = 'unset';
     };
-  }, [showVerifiedModal, showSpecialShirtModal]);
+  }, [showVerifiedModal, showSpecialShirtModal, showSecondVisitModal]);
 
   const displayRegData = regData && regData.firstName ? regData : {
     firstName: "",
@@ -427,6 +452,9 @@ const Profile = () => {
         </div>
       </div>
 
+      {/* Sponsors Section */}
+      <SponsorsSection lang={lang} />
+
       {/* Verified Beautiful Modal - Rendered via Portal to avoid CSS transform issues */}
       {showVerifiedModal && createPortal(
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm transition-opacity" onClick={() => setShowVerifiedModal(false)}>
@@ -492,6 +520,42 @@ const Profile = () => {
             >
               {lang === 'TH' ? 'ตกลง' : 'OK'}
             </button>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {/* Second Visit Attendance & Shirt Notification Modal */}
+      {showSecondVisitModal && createPortal(
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm transition-opacity" onClick={() => setShowSecondVisitModal(false)}>
+          <div className="bg-white rounded-2xl p-6 shadow-2xl flex flex-col items-center max-w-[320px] w-full transform transition-all scale-100 animate-fade-in-up" onClick={e => e.stopPropagation()}>
+            <div className="w-14 h-14 bg-indigo-50 rounded-full flex items-center justify-center mb-3 ring-8 ring-indigo-50/50">
+              <svg className="w-7 h-7 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-extrabold text-gray-800 mb-2 text-center leading-tight">
+              {lang === 'TH' ? 'แจ้งเตือนสถานะ' : 'Notice'}
+            </h3>
+            <p className="text-gray-600 text-center text-sm mb-5 leading-relaxed font-medium">
+              {lang === 'TH'
+                ? 'โปรดตรวจสอบสถานะการเข้าร่วมงานและรับเสื้อ หากมีข้อผิดพลาดโปรดติดต่อ Line OA'
+                : 'Please check your event attendance status and collect your shirt. If there is an error, please contact our Line OA.'}
+            </p>
+            <div className="w-full space-y-2">
+              <button 
+                onClick={() => setShowSecondVisitModal(false)}
+                className="w-full py-2.5 bg-[#1e3a5f] hover:bg-[#152b47] text-white font-bold text-sm rounded-xl shadow-md transition-all active:scale-95 cursor-pointer"
+              >
+                {lang === 'TH' ? 'ตกลง' : 'OK'}
+              </button>
+              <button 
+                onClick={handleNeverShowAgain}
+                className="w-full py-2 bg-gray-100 hover:bg-gray-200 text-gray-600 font-semibold text-xs rounded-xl transition-all active:scale-95 cursor-pointer"
+              >
+                {lang === 'TH' ? 'ไม่ต้องแสดงอีก' : "Don't show again"}
+              </button>
+            </div>
           </div>
         </div>,
         document.body

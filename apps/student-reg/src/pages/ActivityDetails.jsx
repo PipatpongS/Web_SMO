@@ -7,6 +7,7 @@ import LoadingScreen from '../components/LoadingScreen';
 import bImg from '../assets/b.png';
 import logoImg from '../assets/Logo.png';
 import sponsorLogo from '../assets/Sponser/Daimond/cropped_logo_white.png';
+import SponsorsSection from '../components/SponsorsSection';
 
 const groupNames = {
   1: 'DREAM',
@@ -307,6 +308,9 @@ const ActivityDetails = () => {
           </a>
         </div>
       </div>
+
+      {/* Sponsors Section */}
+      <SponsorsSection lang={lang} />
     </div>
   );
 };

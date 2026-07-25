@@ -8,6 +8,7 @@ import textHeaderImgThai from '../assets/text-header-thai.png';
 import textHeaderImgEng from '../assets/text-header-eng.png';
 import bImg from '../assets/b.png';
 import LoadingScreen from '../components/LoadingScreen';
+import SponsorsSection from '../components/SponsorsSection';
 import { isBeforeRegistration, isAfterRegistration, REGISTRATION_START_DATE, isAfterStaffRegistration } from '../config/timeConfig';
 import { useRegistration } from '../contexts/RegContext';
 import { useStaffRegistration } from '../contexts/StaffRegContext';
@@ -232,6 +233,9 @@ const Home = () => {
             <div className="text-[10px] sm:text-xs bg-white/10 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-white/80 group-hover:bg-[#bc1888] group-hover:text-white transition-all shrink-0">{t.igProfile}</div>
           </a>
         </div>
+
+        {/* Sponsors Section */}
+        <SponsorsSection lang={lang} />
 
         <div className="flex flex-col items-center border-t border-white/10 pt-6 mb-6">
           <img src="/icon.png" alt="SMO Icon" className="w-14 h-10 object-contain mb-3 drop-shadow-lg" />

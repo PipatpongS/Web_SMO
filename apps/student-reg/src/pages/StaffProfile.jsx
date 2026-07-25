@@ -10,6 +10,7 @@ import { isStaffEditClosed, STAFF_EDIT_DEADLINE } from '../config/timeConfig';
 import bImg from '../assets/b.png';
 import logoImg from '../assets/Logo.png';
 import sponsorLogo from '../assets/Sponser/Daimond/cropped_logo_white.png';
+import SponsorsSection from '../components/SponsorsSection';
 
 const contentLang = {
   TH: {
@@ -448,6 +449,9 @@ const StaffProfile = () => {
           })()}
         </div>
       </div>
+
+      {/* Sponsors Section */}
+      <SponsorsSection lang={lang} />
 
       {/* Role Details Modal */}
       {showRoleModal && selectedRole && createPortal(
