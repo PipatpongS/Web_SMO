@@ -22,51 +22,64 @@ initializeApp({
 });
 const db = getFirestore();
 
-const OLD_RICH_MENU_ID = "richmenu-609709c735278bd859280fa95834aaf6";
+const IMAGE_PATH = path.resolve('../apps/student-reg/api/Richmenu_3.jpg');
 
 async function updateRichMenuAndLinkUsers() {
-  console.log("1️⃣ Downloading image from old Rich Menu...");
-  const imgRes = await fetch(`https://api-data.line.me/v2/bot/richmenu/${OLD_RICH_MENU_ID}/content`, {
-    headers: {
-      "Authorization": `Bearer ${LINE_ACCESS_TOKEN}`
-    }
-  });
-
-  if (!imgRes.ok) {
-    console.error("❌ Failed to download old Rich Menu image:", await imgRes.text());
+  console.log("1️⃣ Reading local Rich Menu image from Richmenu_3.jpg...");
+  if (!fs.existsSync(IMAGE_PATH)) {
+    console.error(`❌ Image file not found at: ${IMAGE_PATH}`);
     process.exit(1);
   }
 
-  const contentType = imgRes.headers.get('content-type') || 'image/png';
-  const imgBuffer = Buffer.from(await imgRes.arrayBuffer());
-  console.log(`✅ Image downloaded successfully (${imgBuffer.length} bytes, type: ${contentType})`);
+  const imgBuffer = fs.readFileSync(IMAGE_PATH);
+  const contentType = 'image/jpeg';
+  console.log(`✅ Loaded image successfully (${imgBuffer.length} bytes, type: ${contentType})`);
 
-  console.log("2️⃣ Creating new Rich Menu object with updated URL...");
+  console.log("2️⃣ Creating new Rich Menu object with 5 areas...");
   const newMenuBody = {
     size: { width: 2500, height: 1686 },
     selected: true,
-    name: "Menu After Register (Updated Activity Details)",
+    name: "Menu After Register V3 (5 Options)",
     chatBarText: "เมนู / Menu",
     areas: [
       {
-        bounds: { x: 0, y: 0, width: 1610, height: 1686 },
+        // 1. Profile (Left area: x=0 to 863)
+        bounds: { x: 0, y: 0, width: 863, height: 1686 },
         action: {
           type: "uri",
           uri: "https://liff.line.me/2010390110-fPHy5j81/profile"
         }
       },
       {
-        bounds: { x: 1610, y: 0, width: 890, height: 843 },
+        // 2. Activity Details (Top Mid: x=863 to 1641, y=0 to 847)
+        bounds: { x: 863, y: 0, width: 778, height: 847 },
         action: {
           type: "uri",
           uri: "https://liff.line.me/2010390110-fPHy5j81/activity-details"
         }
       },
       {
-        bounds: { x: 1610, y: 843, width: 890, height: 843 },
+        // 3. Instagram (Top Right: x=1641 to 2500, y=0 to 847)
+        bounds: { x: 1641, y: 0, width: 859, height: 847 },
         action: {
           type: "uri",
           uri: "https://www.instagram.com/samovidva_bangmod?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw=="
+        }
+      },
+      {
+        // 4. Activity Feedback Form (Bottom Mid: x=863 to 1641, y=847 to 1686)
+        bounds: { x: 863, y: 847, width: 778, height: 839 },
+        action: {
+          type: "uri",
+          uri: "https://forms.gle/PFmpfJBJGdDakLZV7"
+        }
+      },
+      {
+        // 5. Expectation Survey (Bottom Right: x=1641 to 2500, y=847 to 1686)
+        bounds: { x: 1641, y: 847, width: 859, height: 839 },
+        action: {
+          type: "uri",
+          uri: "https://docs.google.com/forms/d/e/1FAIpQLSfN4UIaL_N2rtELHe4upn-Qby-PVuI8xNApYvAJ5V7Q_w6oRA/viewform?usp=sharing&ouid=105246602615321610585"
         }
       }
     ]
@@ -89,7 +102,7 @@ async function updateRichMenuAndLinkUsers() {
   const { richMenuId: newRichMenuId } = await createRes.json();
   console.log(`✅ Created new Rich Menu! ID: ${newRichMenuId}`);
 
-  console.log("3️⃣ Uploading image to new Rich Menu...");
+  console.log("3️⃣ Uploading Richmenu_3.jpg image to new Rich Menu...");
   const uploadRes = await fetch(`https://api-data.line.me/v2/bot/richmenu/${newRichMenuId}/content`, {
     method: "POST",
     headers: {
@@ -116,7 +129,7 @@ async function updateRichMenuAndLinkUsers() {
     }
   });
 
-  console.log(`Found ${userIds.length} users in Firestore.`);
+  console.log(`Found ${userIds.length} valid LINE UIDs in Firestore.`);
 
   if (userIds.length === 0) {
     console.log("No users found to link.");
