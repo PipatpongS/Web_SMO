@@ -8,6 +8,7 @@ import Dashboard from './pages/Dashboard';
 import StockSummary from './pages/StockSummary';
 import ScanInput from './pages/ScanInput';
 import StudentDetails from './pages/StudentDetails';
+import StudentLookup from './pages/StudentLookup';
 
 // Assets
 import bgImg from './assets/bg.jpg';
