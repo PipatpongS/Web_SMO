@@ -8,39 +8,26 @@ export default function Login() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { login, triggerLiffLogin, liffProfile, liffLoading, logout, lang, staff } = useData();
+  const { login, triggerLiffLogin, liffProfile, liffLoading, logout, lang, setLang, staff } = useData();
   const navigate = useNavigate();
 
   const isTH = lang === 'TH';
 
   useEffect(() => {
-    if (staff && liffProfile) {
+    if (staff) {
       navigate('/home', { replace: true });
-    } else if (staff && !liffProfile && !liffLoading) {
-      logout();
-      setError(isTH 
-        ? 'การเชื่อมต่อ LINE หลุดออกจากระบบ กรุณายืนยันตัวตนด้วย LINE ใหม่อีกครั้งเพื่อความปลอดภัย' 
-        : 'LINE Session Disconnected. Please re-authenticate with LINE for security.');
     }
-  }, [staff, liffProfile, liffLoading, navigate, logout, isTH]);
+  }, [staff, navigate]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
-
-    if (!liffProfile) {
-      setError(isTH ? 'ไม่อนุญาตให้เข้าสู่ระบบ: ต้องยืนยันตัวตนด้วย LINE ก่อนเท่านั้นเพื่อความปลอดภัย' : 'Login rejected: Must authenticate with LINE first.');
-      return;
-    }
-
     setIsSubmitting(true);
 
     try {
       const res = await login(username, password);
       if (res && res.success) {
         navigate('/home');
-      } else if (res && res.reason === 'NO_LINE_PROFILE') {
-        setError(isTH ? 'ไม่พบข้อมูลการยืนยันตัวตนด้วย LINE กรุณากดปุ่มเชื่อมต่อ LINE ด้านบนก่อน' : 'LINE profile missing. Please authenticate with LINE first.');
       } else {
         setError(isTH ? 'ไอดีหรือรหัสผ่านไม่ถูกต้อง' : 'Invalid ID or Password');
       }
@@ -53,8 +40,19 @@ export default function Login() {
 
   return (
     <div className="w-full flex flex-col items-center justify-center relative z-10 my-auto animate-fadeIn">
-      <div className="glass-panel p-6 sm:p-8 w-full max-w-sm sm:max-w-md shadow-2xl border border-white/20 rounded-3xl">
+      <div className="glass-panel p-6 sm:p-8 w-full max-w-sm sm:max-w-md shadow-2xl border border-white/20 rounded-3xl relative">
         
+        {/* Language Switcher */}
+        <div className="flex justify-end mb-2">
+          <button 
+            type="button"
+            onClick={() => setLang(lang === 'TH' ? 'EN' : 'TH')} 
+            className="bg-white/20 hover:bg-white/30 transition-all duration-200 active:scale-75 px-3 py-1 rounded-full text-xs font-bold backdrop-blur-sm flex items-center cursor-pointer text-white border border-white/20 shadow-sm"
+          >
+            <span className="mr-1">🌐</span> <span>{lang === 'TH' ? 'TH' : 'EN'}</span>
+          </button>
+        </div>
+
         <div className="text-center mb-6 space-y-1">
           <div className="inline-flex p-3 rounded-2xl bg-purple-500/20 text-purple-300 border border-purple-400/30 mb-2 shadow-inner">
             <Lock size={28} />

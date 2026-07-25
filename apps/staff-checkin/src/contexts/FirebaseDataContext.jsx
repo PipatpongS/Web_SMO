@@ -616,28 +616,35 @@ export const FirebaseDataProvider = ({ children }) => {
     const cleanUser = username.trim().toLowerCase();
     const cleanPass = password.trim();
 
-    const envAdminUser = (import.meta.env.VITE_STAFF_ADMIN_USER || 'rak_smo').trim().toLowerCase();
-    const envAdminPass = (import.meta.env.VITE_STAFF_ADMIN_PASS || 'Rak_vidva_!?').trim();
+    const cleanVal = (val, fallback = '') => {
+      const raw = val || fallback;
+      return String(raw).split('#')[0].trim();
+    };
 
-    const envShirtOperatorUser = (import.meta.env.VITE_STAFF_OPERATOR_USER || 'shirt_check').trim().toLowerCase();
-    const envShirtOperatorPass = (import.meta.env.VITE_STAFF_OPERATOR_PASS || 'HB{lVtEE9jU').trim();
+    const envAdminUser = cleanVal(import.meta.env.VITE_STAFF_ADMIN_USER, 'rak_smo').toLowerCase();
+    const envAdminPass = cleanVal(import.meta.env.VITE_STAFF_ADMIN_PASS, 'Rak_vidva_!?');
 
-    const envWalkinOperatorUser = (import.meta.env.VITE_STAFF_WALKIN_OPERATOR_USER || 'walkin_approve').trim().toLowerCase();
-    const envWalkinOperatorPass = (import.meta.env.VITE_STAFF_WALKIN_OPERATOR_PASS || 'HzA[HH1q~2').trim();
+    const envShirtOperatorUser = cleanVal(import.meta.env.VITE_STAFF_OPERATOR_USER, 'shirt_check').toLowerCase();
+    const envShirtOperatorPass = cleanVal(import.meta.env.VITE_STAFF_OPERATOR_PASS, 'HB{lVtEE9jU');
 
-    const { user: envCheckinOperatorUser, pass: envCheckinOperatorPass } = getCheckinOperatorEnv();
+    const envWalkinOperatorUser = cleanVal(import.meta.env.VITE_STAFF_WALKIN_OPERATOR_USER, 'walkin_approve').toLowerCase();
+    const envWalkinOperatorPass = cleanVal(import.meta.env.VITE_STAFF_WALKIN_OPERATOR_PASS, 'HzA[HH1q~2');
+
+    const { user: rawOperatorUser, pass: rawOperatorPass } = getCheckinOperatorEnv();
+    const envCheckinOperatorUser = cleanVal(rawOperatorUser, 'reg_checkin').toLowerCase();
+    const envCheckinOperatorPass = cleanVal(rawOperatorPass, 'Reg_vidva_2026!?');
 
     const DEPT_ACCOUNTS = [
-      { dept: 'CPE', name: 'สตาฟ CPE (คอมพิวเตอร์)', u: (import.meta.env.VITE_STAFF_CHECKIN_DAY2_CPE_USER || 'cpe_checkin').trim().toLowerCase(), p: (import.meta.env.VITE_STAFF_CHECKIN_DAY2_CPE_PASS || 'IHJvT(jot^F').trim() },
-      { dept: 'ME', name: 'สตาฟ ME (เครื่องกล)', u: (import.meta.env.VITE_STAFF_CHECKIN_DAY2_ME_USER || 'me_checkin').trim().toLowerCase(), p: (import.meta.env.VITE_STAFF_CHECKIN_DAY2_ME_PASS || 'eu]III}@5z}').trim() },
-      { dept: 'PE', name: 'สตาฟ PE (อุตสาหการ)', u: (import.meta.env.VITE_STAFF_CHECKIN_DAY2_PE_USER || 'pe_checkin').trim().toLowerCase(), p: (import.meta.env.VITE_STAFF_CHECKIN_DAY2_PE_PASS || ')crZbUg{1-E').trim() },
-      { dept: 'CE', name: 'สตาฟ CE (โยธา)', u: (import.meta.env.VITE_STAFF_CHECKIN_DAY2_CE_USER || 'ce_checkin').trim().toLowerCase(), p: (import.meta.env.VITE_STAFF_CHECKIN_DAY2_CE_PASS || ']0nai=%NOOX').trim() },
-      { dept: 'ENV', name: 'สตาฟ ENV (สิ่งแวดล้อม)', u: (import.meta.env.VITE_STAFF_CHECKIN_DAY2_ENV_USER || 'env_checkin').trim().toLowerCase(), p: (import.meta.env.VITE_STAFF_CHECKIN_DAY2_ENV_PASS || 'WITqRd%Qg~U').trim() },
-      { dept: 'CHE', name: 'สตาฟ CHE (เคมี)', u: (import.meta.env.VITE_STAFF_CHECKIN_DAY2_CHE_USER || 'che_checkin').trim().toLowerCase(), p: (import.meta.env.VITE_STAFF_CHECKIN_DAY2_CHE_PASS || ')2gaev3Csp~').trim() },
-      { dept: 'INC', name: 'สตาฟ INC (เครื่องมือวัด)', u: (import.meta.env.VITE_STAFF_CHECKIN_DAY2_INC_USER || 'inc_checkin').trim().toLowerCase(), p: (import.meta.env.VITE_STAFF_CHECKIN_DAY2_INC_PASS || 'DNf^KyhT%&q').trim() },
-      { dept: 'EE', name: 'สตาฟ EE (ไฟฟ้า)', u: (import.meta.env.VITE_STAFF_CHECKIN_DAY2_EE_USER || 'ee_checkin').trim().toLowerCase(), p: (import.meta.env.VITE_STAFF_CHECKIN_DAY2_EE_PASS || ')~P^qr([sX9').trim() },
-      { dept: 'ENE', name: 'สตาฟ ENE (พลังงาน)', u: (import.meta.env.VITE_STAFF_CHECKIN_DAY2_ENE_USER || 'ene_checkin').trim().toLowerCase(), p: (import.meta.env.VITE_STAFF_CHECKIN_DAY2_ENE_PASS || 'Qdp[{kSJ8L^').trim() },
-      { dept: 'TME', name: 'สตาฟ TME (แม่พิมพ์)', u: (import.meta.env.VITE_STAFF_CHECKIN_DAY2_TME_USER || 'tme_checkin').trim().toLowerCase(), p: (import.meta.env.VITE_STAFF_CHECKIN_DAY2_TME_PASS || 'y4^BkxhH19M').trim() },
+      { dept: 'CPE', name: 'สตาฟ CPE (คอมพิวเตอร์)', u: cleanVal(import.meta.env.VITE_STAFF_CHECKIN_DAY2_CPE_USER, 'cpe_checkin').toLowerCase(), p: cleanVal(import.meta.env.VITE_STAFF_CHECKIN_DAY2_CPE_PASS, 'IHJvT(jot^F') },
+      { dept: 'ME', name: 'สตาฟ ME (เครื่องกล)', u: cleanVal(import.meta.env.VITE_STAFF_CHECKIN_DAY2_ME_USER, 'me_checkin').toLowerCase(), p: cleanVal(import.meta.env.VITE_STAFF_CHECKIN_DAY2_ME_PASS, 'eu]III}@5z}') },
+      { dept: 'PE', name: 'สตาฟ PE (อุตสาหการ)', u: cleanVal(import.meta.env.VITE_STAFF_CHECKIN_DAY2_PE_USER, 'pe_checkin').toLowerCase(), p: cleanVal(import.meta.env.VITE_STAFF_CHECKIN_DAY2_PE_PASS, ')crZbUg{1-E') },
+      { dept: 'CE', name: 'สตาฟ CE (โยธา)', u: cleanVal(import.meta.env.VITE_STAFF_CHECKIN_DAY2_CE_USER, 'ce_checkin').toLowerCase(), p: cleanVal(import.meta.env.VITE_STAFF_CHECKIN_DAY2_CE_PASS, ']0nai=%NOOX') },
+      { dept: 'ENV', name: 'สตาฟ ENV (สิ่งแวดล้อม)', u: cleanVal(import.meta.env.VITE_STAFF_CHECKIN_DAY2_ENV_USER, 'env_checkin').toLowerCase(), p: cleanVal(import.meta.env.VITE_STAFF_CHECKIN_DAY2_ENV_PASS, 'WITqRd%Qg~U') },
+      { dept: 'CHE', name: 'สตาฟ CHE (เคมี)', u: cleanVal(import.meta.env.VITE_STAFF_CHECKIN_DAY2_CHE_USER, 'che_checkin').toLowerCase(), p: cleanVal(import.meta.env.VITE_STAFF_CHECKIN_DAY2_CHE_PASS, ')2gaev3Csp~') },
+      { dept: 'INC', name: 'สตาฟ INC (เครื่องมือวัด)', u: cleanVal(import.meta.env.VITE_STAFF_CHECKIN_DAY2_INC_USER, 'inc_checkin').toLowerCase(), p: cleanVal(import.meta.env.VITE_STAFF_CHECKIN_DAY2_INC_PASS, 'DNf^KyhT%&q') },
+      { dept: 'EE', name: 'สตาฟ EE (ไฟฟ้า)', u: cleanVal(import.meta.env.VITE_STAFF_CHECKIN_DAY2_EE_USER, 'ee_checkin').toLowerCase(), p: cleanVal(import.meta.env.VITE_STAFF_CHECKIN_DAY2_EE_PASS, ')~P^qr([sX9') },
+      { dept: 'ENE', name: 'สตาฟ ENE (พลังงาน)', u: cleanVal(import.meta.env.VITE_STAFF_CHECKIN_DAY2_ENE_USER, 'ene_checkin').toLowerCase(), p: cleanVal(import.meta.env.VITE_STAFF_CHECKIN_DAY2_ENE_PASS, 'Qdp[{kSJ8L^') },
+      { dept: 'TME', name: 'สตาฟ TME (แม่พิมพ์)', u: cleanVal(import.meta.env.VITE_STAFF_CHECKIN_DAY2_TME_USER, 'tme_checkin').toLowerCase(), p: cleanVal(import.meta.env.VITE_STAFF_CHECKIN_DAY2_TME_PASS, 'y4^BkxhH19M') },
     ];
 
     // 1. Verify against Environment Variables
