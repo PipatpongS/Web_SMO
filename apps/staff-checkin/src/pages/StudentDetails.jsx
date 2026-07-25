@@ -450,6 +450,19 @@ export default function StudentDetails() {
                 {student.department || 'วิศวกรรมคอมพิวเตอร์'}
               </span>
             </div>
+
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-slate-500 font-semibold shrink-0">กลุ่มกิจกรรม:</span>
+              <span className="text-slate-900 font-bold text-right truncate">
+                {(() => {
+                  const map = { '1': 'DREAM', '2': 'DESIGN', '3': 'BUILD', '4': 'BLOOM', '5': 'BEYOND' };
+                  const groupVal = student.group || student.assigned_group || student.assigned_group_name || '';
+                  const groupKey = String(groupVal).trim();
+                  const groupName = map[groupKey] || groupVal || (isTH ? 'ยังไม่ได้รับกลุ่ม' : 'Not Assigned');
+                  return groupName;
+                })()}
+              </span>
+            </div>
           </div>
         </div>
 

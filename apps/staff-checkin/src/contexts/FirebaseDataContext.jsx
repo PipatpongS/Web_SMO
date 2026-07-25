@@ -344,6 +344,17 @@ export const FirebaseDataProvider = ({ children }) => {
     const tempShortUpper = tempShortCode ? tempShortCode.toUpperCase() : searchUpper;
     const lineUidUpper = lineUidFromQr ? lineUidFromQr.toUpperCase() : null;
 
+    const shortCodeCandidates = new Set([searchUpper]);
+    if (/^[A-Z0-9]{4}$/.test(searchUpper)) {
+      shortCodeCandidates.add(`W-${searchUpper}`);
+    }
+    if (searchUpper.startsWith('W-') && /^[A-Z0-9]{4}$/.test(searchUpper.slice(2))) {
+      shortCodeCandidates.add(searchUpper.slice(2));
+    } else if (searchUpper.startsWith('W') && /^[A-Z0-9]{4}$/.test(searchUpper.slice(1))) {
+      shortCodeCandidates.add(`W-${searchUpper.slice(1)}`);
+      shortCodeCandidates.add(searchUpper.slice(1));
+    }
+
     // 1️⃣ Step 1: Check Local Cache FIRST (Strict LINE UID matching)
     if (lineUidFromQr) {
       const localUidMatch = students.find(s => (s.docId === lineUidFromQr || s.line_uid === lineUidFromQr || s.id === lineUidFromQr));
@@ -356,7 +367,7 @@ export const FirebaseDataProvider = ({ children }) => {
         const isPlaceholder = sStudentId === '69070500000';
 
         if (tempShortUpper && sShortCode === tempShortUpper) return true;
-        if (searchUpper && (sShortCode === searchUpper || sQrCode === searchUpper || (!isPlaceholder && sStudentId === searchUpper))) return true;
+        if (searchUpper && (shortCodeCandidates.has(sShortCode) || sQrCode === searchUpper || (!isPlaceholder && sStudentId === searchUpper))) return true;
         return false;
       });
       if (localMatch) return localMatch;
@@ -394,18 +405,20 @@ export const FirebaseDataProvider = ({ children }) => {
 
     // 4️⃣ Step 4: Lookup by used_short_codes/{shortCode} Document Key (1-2 Reads)
     try {
-      const targetShortCode = tempShortUpper || searchUpper;
-      const scRef = doc(db, 'used_short_codes', targetShortCode);
-      const scSnap = await getDoc(scRef);
-      if (scSnap.exists()) {
-        const scData = scSnap.data();
-        const studentUid = scData.uid || scData.line_uid;
-        if (studentUid) {
-          const studentDocSnap = await getDoc(doc(db, 'users', studentUid));
-          if (studentDocSnap.exists()) {
-            const found = { ...studentDocSnap.data(), docId: studentDocSnap.id, line_uid: studentDocSnap.id };
-            setStudents(prev => [...prev.filter(x => x.docId !== found.docId), found]);
-            return found; // Return immediately!
+      const targetShortCodes = Array.from(new Set([tempShortUpper, searchUpper, ...shortCodeCandidates].filter(Boolean)));
+      for (const codeStr of targetShortCodes) {
+        const scRef = doc(db, 'used_short_codes', codeStr);
+        const scSnap = await getDoc(scRef);
+        if (scSnap.exists()) {
+          const scData = scSnap.data();
+          const studentUid = scData.uid || scData.line_uid;
+          if (studentUid) {
+            const studentDocSnap = await getDoc(doc(db, 'users', studentUid));
+            if (studentDocSnap.exists()) {
+              const found = { ...studentDocSnap.data(), docId: studentDocSnap.id, line_uid: studentDocSnap.id };
+              setStudents(prev => [...prev.filter(x => x.docId !== found.docId), found]);
+              return found; // Return immediately!
+            }
           }
         }
       }
@@ -414,7 +427,7 @@ export const FirebaseDataProvider = ({ children }) => {
     }
 
     // 5️⃣ Step 5: Targeted Query by short_code / walkin_temp_short_code field with limit(1)
-    const targetCodesToQuery = Array.from(new Set([searchUpper, tempShortUpper].filter(Boolean)));
+    const targetCodesToQuery = Array.from(new Set([searchUpper, tempShortUpper, ...shortCodeCandidates].filter(Boolean)));
     for (const codeStr of targetCodesToQuery) {
       try {
         const qShort = query(collection(db, 'users'), where('short_code', '==', codeStr), limit(1));
@@ -879,13 +892,18 @@ export const FirebaseDataProvider = ({ children }) => {
             timestamp: approvedAt,
             event: 'WALKIN_APPROVED_AND_ASSIGNED_GROUP',
             student_doc_id: firestoreDocId,
+            student_line_uid: targetStudent.line_uid || targetStudent.docId || '',
             student_id: targetStudent.studentId || '',
+            student_short_code: targetStudent.short_code || targetStudent.walkin_temp_short_code || targetStudent.shortCode || '',
             student_name: `${targetStudent.firstName || ''} ${targetStudent.lastName || ''}`.trim(),
+            student_group: targetStudent.group || targetStudent.assigned_group || targetStudent.assigned_group_name || '',
             assigned_group: assignedGroup,
             assigned_group_name: assignedGroupName,
             is_foreigner: isForeigner,
             staff_line_uid: staffUid,
-            staff_name: staffName,
+            staff_username: staffUsername,
+            staff_display_name: staffName,
+            staff_role: staff?.role || '',
             user_agent: navigator.userAgent
           });
         } catch (e) {
@@ -989,18 +1007,22 @@ export const FirebaseDataProvider = ({ children }) => {
         batch.set(logRef, {
           log_id: logRef.id,
           session: 'day1_morning',
-          student_id: currentStudent.studentId || currentStudent.id || '',
+          action: 'CHECKIN_REGISTRATION',
+          timestamp,
           student_doc_id: firestoreDocId,
+          student_line_uid: currentStudent.line_uid || currentStudent.docId || '',
+          student_id: currentStudent.studentId || currentStudent.id || '',
+          student_short_code: currentStudent.short_code || currentStudent.walkin_temp_short_code || currentStudent.shortCode || '',
+          student_group: currentStudent.group || currentStudent.assigned_group || currentStudent.assigned_group_name || '',
           student_name: `${currentStudent.firstName || ''} ${currentStudent.lastName || ''}`.trim(),
           department: currentStudent.department || '',
           search_method: searchMethod,
-          action: 'CHECKIN_REGISTRATION',
-          timestamp,
           staff_line_uid: staffUid,
           staff_username: staffUsername,
-          operator_user: staffUsername || envCheckinOperatorUser,
           staff_display_name: staffName,
+          staff_role: staff?.role || '',
           staff_picture_url: staffPic,
+          operator_user: staffUsername || envCheckinOperatorUser,
           client_ip: clientIp,
           device_model: deviceInfo.device_model,
           user_agent: deviceInfo.user_agent,

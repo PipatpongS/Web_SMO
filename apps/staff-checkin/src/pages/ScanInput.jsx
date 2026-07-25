@@ -160,21 +160,26 @@ export default function ScanInput() {
       return;
     }
 
-    if (clean.startsWith('W')) {
+    if (clean.startsWith('W-')) {
+      clean = clean.slice(2);
+    } else if (clean.startsWith('W')) {
       clean = clean.slice(1);
     }
 
-    const payload = clean.slice(0, 4);
-    setCode(`W-${payload}`);
+    setCode(clean.slice(0, 4));
   };
 
   const [isSearching, setIsSearching] = useState(false);
 
   const executeSearch = async (searchCode, method = 'SHORT_CODE') => {
-    const targetCode = searchCode.replace(/\s+/g, '').trim();
+    let targetCode = searchCode.replace(/\s+/g, '').trim();
     if (!targetCode) {
-      setError(isTH ? 'กรุณากรอก Short Code (เช่น W-AB12)' : 'Please enter Short Code (e.g. W-AB12)');
+      setError(isTH ? 'กรุณากรอก Short Code (เช่น AB12)' : 'Please enter Short Code (e.g. AB12)');
       return;
+    }
+
+    if (method === 'SHORT_CODE' && /^[A-Z0-9]{4}$/.test(targetCode) && !targetCode.startsWith('W')) {
+      targetCode = `W-${targetCode}`;
     }
 
     setIsSearching(true);
@@ -302,7 +307,7 @@ export default function ScanInput() {
         <form onSubmit={handleSearchSubmit} className="w-full space-y-2 pt-2 border-t border-white/10 shrink-0">
           <div>
             <label className="block text-[11px] sm:text-xs font-medium text-white/80 mb-1 text-center">
-              {isTH ? 'หรือกรอก Short Code (เช่น W-AB12)' : 'Or enter Short Code (e.g. W-AB12)'}
+              {isTH ? 'หรือกรอก Short Code (เช่น AB12)' : 'Or enter Short Code (e.g. AB12)'}
             </label>
             <input 
               type="text" 

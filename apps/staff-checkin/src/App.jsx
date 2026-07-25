@@ -8,8 +8,6 @@ import Dashboard from './pages/Dashboard';
 import StockSummary from './pages/StockSummary';
 import ScanInput from './pages/ScanInput';
 import StudentDetails from './pages/StudentDetails';
-import StudentLookup from './pages/StudentLookup';
-import WalkinLogs from './pages/WalkinLogs';
 
 // Assets
 import bgImg from './assets/bg.jpg';
@@ -54,8 +52,8 @@ const LayoutContent = ({ children }) => {
   }, []);
 
   const path = location.pathname;
-  // StockSummary, StudentDetails, StudentLookup & WalkinLogs are scrollable!
-  const isScrollablePage = path === '/stock-summary' || path.startsWith('/student') || path === '/student-lookup' || path === '/walkin-logs';
+  // StockSummary, StudentDetails, StudentLookup are scrollable!
+  const isScrollablePage = path === '/stock-summary' || path.startsWith('/student') || path === '/student-lookup';
   const isWidePage = path === '/stock-summary';
 
   const containerWidthClass = isWidePage 
@@ -154,12 +152,6 @@ function App() {
             <Route path="/student-lookup" element={
               <ProtectedRoute>
                 <StudentLookup />
-              </ProtectedRoute>
-            } />
-
-            <Route path="/walkin-logs" element={
-              <ProtectedRoute>
-                <WalkinLogs />
               </ProtectedRoute>
             } />
             

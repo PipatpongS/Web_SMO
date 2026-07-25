@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useData, ROLES } from '../contexts/FirebaseDataContext';
-import { Shirt, BarChart2, LogOut, ShieldCheck, User, UserCheck, Search, History, ClipboardCheck } from 'lucide-react';
+import { Shirt, BarChart2, LogOut, ShieldCheck, User, UserCheck, ClipboardCheck } from 'lucide-react';
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -20,7 +20,7 @@ export default function Dashboard() {
 
   const canDoWalkin = isSupervisor || isWalkinOperator;
   const canDoShirt = isSupervisor || isShirtOperator;
-  const canDoCheckin = isSupervisor || isCheckinOperator;
+  const canDoCheckin = isSupervisor || isCheckinOperator || isWalkinOperator;
 
   const displayName = liffProfile?.displayName || staff?.displayName || staff?.name || (isSupervisor ? 'Admin Staff' : 'Staff');
   const profilePic = liffProfile?.pictureUrl || staff?.pictureUrl || null;
@@ -99,50 +99,6 @@ export default function Dashboard() {
                 {isTH 
                   ? 'สแกน QR Code หรือค้นหารายชื่อ เพื่ออนุมัติการลงทะเบียนหน้างานและสุ่มกลุ่มกิจกรรมทันที' 
                   : 'Scan QR Code or search student to approve walk-in and assign group instantly'}
-              </span>
-            </div>
-          </button>
-        )}
-
-        {/* Menu 2: Student Information Lookup */}
-        {canDoWalkin && (
-          <button 
-            onClick={() => navigate('/student-lookup')}
-            className="w-full glass-panel p-4 sm:p-5 flex items-center gap-4 hover:bg-white/15 transition-all cursor-pointer group text-left shadow-2xl border border-white/20 hover:border-blue-400/50 rounded-3xl"
-          >
-            <div className="bg-blue-500/20 p-3.5 rounded-2xl text-blue-300 group-hover:scale-110 transition-transform shrink-0 border border-blue-400/40 shadow-inner">
-              <Search size={30} />
-            </div>
-            <div className="space-y-0.5">
-              <span className="text-base sm:text-lg font-black block text-white group-hover:text-blue-200 transition-colors">
-                {isTH ? '2. ค้นหาข้อมูลส่วนตัวน้อง' : '2. Student Information Lookup'}
-              </span>
-              <span className="text-xs text-white/70 block font-medium leading-relaxed">
-                {isTH 
-                  ? 'ค้นหาชื่อ-นามสกุล, รหัสนักศึกษา, ภาควิชา, กลุ่มกิจกรรม และรอบการสมัคร' 
-                  : 'Lookup name, student ID, department, activity group, and round'}
-              </span>
-            </div>
-          </button>
-        )}
-
-        {/* Menu 3: Recent 10 Approval Logs */}
-        {canDoWalkin && (
-          <button 
-            onClick={() => navigate('/walkin-logs')}
-            className="w-full glass-panel p-4 sm:p-5 flex items-center gap-4 hover:bg-white/15 transition-all cursor-pointer group text-left shadow-2xl border border-white/20 hover:border-cyan-400/50 rounded-3xl"
-          >
-            <div className="bg-cyan-500/20 p-3.5 rounded-2xl text-cyan-300 group-hover:scale-110 transition-transform shrink-0 border border-cyan-400/40 shadow-inner">
-              <History size={30} />
-            </div>
-            <div className="space-y-0.5">
-              <span className="text-base sm:text-lg font-black block text-white group-hover:text-cyan-200 transition-colors">
-                {isTH ? '3. ประวัติการอนุมัติ 10 รายการล่าสุด' : '3. Recent 10 Approval Logs'}
-              </span>
-              <span className="text-xs text-white/70 block font-medium leading-relaxed">
-                {isTH 
-                  ? 'ดูประวัติการอนุมัติสิทธิ์ Walk-in 10 รายการล่าสุด พร้อมกลุ่มกิจกรรมและเวลา' 
-                  : 'View recent 10 Walk-in approvals with assigned groups and timestamp'}
               </span>
             </div>
           </button>
