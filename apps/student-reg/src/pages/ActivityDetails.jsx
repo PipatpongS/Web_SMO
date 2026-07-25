@@ -6,6 +6,7 @@ import LoadingScreen from '../components/LoadingScreen';
 
 import bImg from '../assets/b.png';
 import logoImg from '../assets/Logo.png';
+import sponsorLogo from '../assets/Sponser/Daimond/cropped_logo_white.png';
 
 const groupNames = {
   1: 'DREAM',
@@ -164,8 +165,9 @@ const ActivityDetails = () => {
       {/* Top Header */}
       <div className="w-full max-w-lg flex flex-col items-center">
         <div className="w-full flex justify-center lg:justify-start items-center -mt-8 -mb-5 relative z-10 min-h-[4rem] text-white">
-          <div className="flex items-center z-10">
-            <img src={logoImg} alt="KMUTT ENG Logo" className="h-24 sm:h-32 md:h-36 object-contain drop-shadow-lg" />
+          <div className="flex items-center gap-1.5 sm:gap-3 z-10 pl-12 sm:pl-0 pr-16 sm:pr-24 max-w-full">
+            <img src={logoImg} alt="KMUTT ENG Logo" className="h-16 sm:h-32 md:h-36 object-contain drop-shadow-lg shrink-0" />
+            <img src={sponsorLogo} alt="Sponsor Logo" className="h-5 sm:h-10 md:h-12 object-contain drop-shadow-lg shrink min-w-0" />
           </div>
           <div className="absolute right-0 z-20">
             <button

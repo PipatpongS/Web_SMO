@@ -198,6 +198,7 @@ const contentLang = {
 
 import { FaCheck, FaArrowLeft, FaLine, FaHeartbeat, FaRunning, FaTools, FaCamera } from 'react-icons/fa';
 import logoImg from '../assets/Logo.png';
+import sponsorLogo from '../assets/Sponser/Daimond/cropped_logo_white.png';
 import bImg from '../assets/b.png';
 import sizeChartImgThai from '../assets/Size_Chart_Thai.jpg';
 import sizeChartImgEng from '../assets/Size_Chart_Eng.jpg';
@@ -945,8 +946,9 @@ const StaffRegister = () => {
       <div className="w-full max-w-lg flex flex-col items-center">
         {/* Logos & Header Section */}
         <div className="w-full flex justify-center lg:justify-start items-center -mt-8 -mb-5 relative z-10 min-h-[4rem] text-white">
-          <div className="flex items-center z-10">
-            <img src={logoImg} alt="KMUTT ENG Logo" className="h-24 sm:h-32 md:h-36 object-contain drop-shadow-lg" />
+          <div className="flex items-center gap-1.5 sm:gap-3 z-10 pl-12 sm:pl-0 pr-16 sm:pr-24 max-w-full">
+            <img src={logoImg} alt="KMUTT ENG Logo" className="h-16 sm:h-32 md:h-36 object-contain drop-shadow-lg shrink-0" />
+            <img src={sponsorLogo} alt="Sponsor Logo" className="h-5 sm:h-10 md:h-12 object-contain drop-shadow-lg shrink min-w-0" />
           </div>
           <div className="absolute right-0 z-20">
             <button onClick={() => setLang(lang === 'TH' ? 'EN' : 'TH')} type="button" className="bg-white/20 hover:bg-white/30 transition-all duration-200 active:scale-75 px-2 py-1 rounded-full text-sm font-semibold backdrop-blur-sm flex items-center cursor-pointer">
