@@ -97,6 +97,21 @@ const CACHE_TIME_KEY = 'cached_students_timestamp_real_v5';
 const CACHE_INVENTORY_KEY = 'cached_shirt_inventory_v1';
 const CACHE_TTL_MS = 3 * 60 * 1000;
 
+const getCheckinOperatorEnv = () => ({
+  user: (
+    import.meta.env.VITE_STAFF_CHECKIN_OPERATOR_USER ||
+    import.meta.env.VITE_OPERATOR_USER ||
+    import.meta.env.OPERATOR_USER ||
+    'reg_checkin'
+  ).trim().toLowerCase(),
+  pass: (
+    import.meta.env.VITE_STAFF_CHECKIN_OPERATOR_PASS ||
+    import.meta.env.VITE_OPERATOR_PASS ||
+    import.meta.env.OPERATOR_PASS ||
+    'Reg_vidva_2026!?'
+  ).trim()
+});
+
 export const FirebaseDataProvider = ({ children }) => {
   const [staff, setStaff] = useState(() => {
     const saved = localStorage.getItem('staff_session');
@@ -509,8 +524,7 @@ export const FirebaseDataProvider = ({ children }) => {
     const envWalkinOperatorUser = (import.meta.env.VITE_STAFF_WALKIN_OPERATOR_USER || 'walkin_approve').trim().toLowerCase();
     const envWalkinOperatorPass = (import.meta.env.VITE_STAFF_WALKIN_OPERATOR_PASS || 'Walkin_vidva_2026!?').trim();
 
-    const envCheckinOperatorUser = (import.meta.env.VITE_STAFF_CHECKIN_OPERATOR_USER || 'reg_checkin').trim().toLowerCase();
-    const envCheckinOperatorPass = (import.meta.env.VITE_STAFF_CHECKIN_OPERATOR_PASS || 'Reg_vidva_2026!?').trim();
+    const { user: envCheckinOperatorUser, pass: envCheckinOperatorPass } = getCheckinOperatorEnv();
 
     // 1. Verify against Environment Variables
     if (cleanUser === envAdminUser && password === envAdminPass) {
@@ -945,6 +959,7 @@ export const FirebaseDataProvider = ({ children }) => {
     const staffName = liffProfile?.displayName || staff?.name || staff?.displayName || 'Staff Operator';
     const staffPic = liffProfile?.pictureUrl || staff?.pictureUrl || '';
     const staffUsername = staff?.username || '';
+    const { user: envCheckinOperatorUser } = getCheckinOperatorEnv();
 
     const deviceInfo = getClientDeviceInfo();
     const clientIp = await fetchClientIp();
@@ -954,7 +969,13 @@ export const FirebaseDataProvider = ({ children }) => {
       checkin_day1_morning_by: staffName,
       checkin_day1_morning_by_staff_uid: staffUid,
       checkin_day1_morning_by_staff_pic: staffPic,
+      checkin_day1_morning_by_staff_username: staffUsername,
+      checkin_day1_morning_operator_user: staffUsername || envCheckinOperatorUser,
       checkin_day1_morning_search_method: searchMethod,
+      checkin_day1_morning_ip: clientIp,
+      checkin_day1_morning_device_model: deviceInfo.device_model,
+      checkin_day1_morning_user_agent: deviceInfo.user_agent,
+      checkin_day1_morning_platform: deviceInfo.platform,
       updatedAt: timestamp
     };
 
@@ -977,6 +998,7 @@ export const FirebaseDataProvider = ({ children }) => {
           timestamp,
           staff_line_uid: staffUid,
           staff_username: staffUsername,
+          operator_user: staffUsername || envCheckinOperatorUser,
           staff_display_name: staffName,
           staff_picture_url: staffPic,
           client_ip: clientIp,
@@ -1003,7 +1025,7 @@ export const FirebaseDataProvider = ({ children }) => {
       return updatedList;
     });
 
-    return { success: true, timestamp, clientIp, deviceModel: deviceInfo.device_model, staffName };
+    return { success: true, timestamp, clientIp, deviceModel: deviceInfo.device_model, staffName, operatorUser: staffUsername || envCheckinOperatorUser };
   };
 
   return (
