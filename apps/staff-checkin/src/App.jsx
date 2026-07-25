@@ -47,6 +47,7 @@ const ProtectedRoute = ({ children, requireSupervisor = false }) => {
 const LayoutContent = ({ children }) => {
   const { lang, setLang } = useData();
   const location = useLocation();
+  const path = location.pathname;
 
   useEffect(() => {
     const img = new Image();
