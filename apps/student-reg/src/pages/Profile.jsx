@@ -25,8 +25,10 @@ const contentLang = {
     shirtStatus: 'สถานะการรับเสื้อ',
     shirtReceived: 'ได้รับแล้ว',
     shirtNotReceived: 'ยังไม่ได้รับ',
-    checkinDay1: 'สถานะเข้างาน (25 ก.ค. 2569)',
-    checkinDay2: 'สถานะเข้างาน (26 ก.ค. 2569)',
+    checkinDay1Title: 'สถานะเข้างาน',
+    checkinDay1Date: '25 ก.ค. 2569',
+    checkinDay2Title: 'สถานะเข้างาน',
+    checkinDay2Date: '26 ก.ค. 2569',
     statusRegistered: 'ลงทะเบียนแล้ว',
     statusNotRegistered: 'ยังไม่ลงทะเบียน',
     statusNote: 'หมายเหตุ: หากข้อมูลสถานะไม่ถูกต้อง โปรดติดต่อ LINE OA',
@@ -48,8 +50,10 @@ const contentLang = {
     shirtStatus: 'Shirt Received Status',
     shirtReceived: 'Received',
     shirtNotReceived: 'Not Received',
-    checkinDay1: 'Registration Status (July 25, 2026)',
-    checkinDay2: 'Registration Status (July 26, 2026)',
+    checkinDay1Title: 'Registration Status',
+    checkinDay1Date: 'July 25, 2026',
+    checkinDay2Title: 'Registration Status',
+    checkinDay2Date: 'July 26, 2026',
     statusRegistered: 'Registered',
     statusNotRegistered: 'Not Registered',
     statusNote: 'Note: If the status information is incorrect, please contact LINE OA',
@@ -362,7 +366,10 @@ const Profile = () => {
                   </span>
                 </div>
                 <div className="flex justify-between border-b border-gray-100 pb-2.5 items-center gap-2">
-                  <span className="text-xs sm:text-sm text-gray-500">{t.checkinDay1}</span>
+                  <div className="flex flex-col text-left">
+                    <span className="text-xs sm:text-sm text-gray-600 font-medium">{t.checkinDay1Title}</span>
+                    <span className="text-[11px] sm:text-xs text-slate-400 font-medium mt-0.5">{t.checkinDay1Date}</span>
+                  </div>
                   <span className={`inline-flex items-center justify-center text-center px-3 py-1 text-xs font-bold rounded-full border whitespace-nowrap ml-auto shrink-0 ${
                     displayRegData.checkin_day1_morning
                       ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
@@ -372,7 +379,10 @@ const Profile = () => {
                   </span>
                 </div>
                 <div className="flex justify-between border-b border-gray-100 pb-2.5 items-center gap-2">
-                  <span className="text-xs sm:text-sm text-gray-500">{t.checkinDay2}</span>
+                  <div className="flex flex-col text-left">
+                    <span className="text-xs sm:text-sm text-gray-600 font-medium">{t.checkinDay2Title}</span>
+                    <span className="text-[11px] sm:text-xs text-slate-400 font-medium mt-0.5">{t.checkinDay2Date}</span>
+                  </div>
                   <span className={`inline-flex items-center justify-center text-center px-3 py-1 text-xs font-bold rounded-full border whitespace-nowrap ml-auto shrink-0 ${
                     displayRegData.checkin_day2_morning
                       ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
