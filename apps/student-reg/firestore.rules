@@ -1,91 +1,39 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    function isOwner(userId) {
-      return request.auth != null && request.auth.uid == userId;
-    }
 
-    // Helper: ตรวจสอบว่าเป็นการอัปเดตเฉพาะฟิลด์เช็ครับเสื้อ, อนุมัติ Walk-in หรือฟิลด์ Short Code/QR Code ของสตาฟฟ์
-    function isStaffShirtCheckinUpdate() {
-      return request.resource.data.diff(resource.data).affectedKeys()
-        .hasOnly([
-          'shirt_received_at', 
-          'shirt_received_by_staff_uid', 
-          'shirt_received_by_staff_name', 
-          'shirt_received_by_staff_pic', 
-          'search_method', 
-          'shirt_size_received', 
-          'is_shirt_size_changed', 
-          'proxy_type', 
-          'proxy_student_id', 
-          'proxy_name', 
-          'proxy_phone',
-          'short_code',
-          'shortCode',
-          'qr_code',
-          'qrCode',
-          'walkin_status',
-          'walkin_verified',
-          'walkin_approved_at',
-          'walkin_approved_by_staff_name',
-          'walkin_approved_by_staff_uid',
-          'walkin_temp_qr',
-          'walkin_temp_short_code',
-          'checkin_day1_morning',
-          'checkin_day1_morning_by',
-          'checkin_day1_morning_by_staff_uid',
-          'checkin_day1_morning_by_staff_pic',
-          'checkin_day1_morning_by_staff_username',
-          'checkin_day1_morning_operator_user',
-          'checkin_day1_morning_search_method',
-          'checkin_day1_morning_ip',
-          'checkin_day1_morning_device_model',
-          'checkin_day1_morning_user_agent',
-          'checkin_day1_morning_platform',
-          'note',
-          'updatedAt'
-        ]);
-    }
-
+    // ✅ Collection: users (การลงทะเบียนนักศึกษา, อนุมัติ Walk-in, เช็คชื่อ, แจกเสื้อ)
     match /users/{userId} {
-      // ✅ อนุญาตอ่านและ List รายชื่อนักศึกษาสำหรับการสแกนและ Dashboard สต็อกสตาฟฟ์
-      allow get: if true;
-      allow list: if true;
-      allow update: if true;
-      
-      // ✅ การลงทะเบียนใหม่ของนักศึกษา (เปิดรับสมัครสำหรับกิจกรรมถัดไป)
-      allow create: if true;
-                    
+      allow read, write, create, update, get, list: if true;
       allow delete: if false;
     }
 
-    // ✅ กฎสำหรับคอลเลกชันสต็อกเสื้อคลังจริง (shirt_inventory)
+    // ✅ Collection: shirt_inventory (สต็อกเสื้อคลังจริง)
     match /shirt_inventory/{docId} {
-      allow read, write, create, update, list: if true;
+      allow read, write, create, update, get, list: if true;
     }
 
-    // ✅ กฎสำหรับคอลเลกชัน Log การแจกเสื้อ (shirt_checkin_logs)
+    // ✅ Collection: shirt_checkin_logs (Log การแจกเสื้อ)
     match /shirt_checkin_logs/{logId} {
-      allow read, write, create, list: if true;
+      allow read, write, create, get, list: if true;
     }
 
-    // ✅ กฎสำหรับคอลเลกชัน Log การเช็คชื่อลงทะเบียน (registration_checkin_logs)
+    // ✅ Collection: registration_checkin_logs (Log การเช็คชื่อลงทะเบียน)
     match /registration_checkin_logs/{logId} {
-      allow read, write, create, list: if true;
+      allow read, write, create, get, list: if true;
     }
 
-    // ✅ กฎสำหรับคอลเลกชัน Log การเข้าใช้งานสตาฟฟ์ (staff_access_logs)
+    // ✅ Collection: staff_access_logs (Log การเข้าใช้งานสตาฟฟ์)
     match /staff_access_logs/{logId} {
-      allow read, write, create, list: if true;
+      allow read, write, create, get, list: if true;
     }
 
-    // ✅ กฎสำหรับระบบจองรหัส Short Code ป้องกันการซ้ำ (used_short_codes)
+    // ✅ Collection: used_short_codes (ระบบจองรหัส Short Code ป้องกันการซ้ำ)
     match /used_short_codes/{code} {
       allow read, write, create, update, get, list: if true;
     }
 
-    // ✅ กฎสำหรับ Staff (Collection: staff_applicants)
+    // ✅ Collection: staff_applicants (ข้อมูลสตาฟฟ์)
     match /staff_applicants/{userId} {
       allow read, write, create, update, get, list: if true;
     }
