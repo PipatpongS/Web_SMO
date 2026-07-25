@@ -535,7 +535,7 @@ export const FirebaseDataProvider = ({ children }) => {
     const envShirtOperatorPass = (import.meta.env.VITE_STAFF_OPERATOR_PASS || 'HB{lVtEE9jU').trim();
 
     const envWalkinOperatorUser = (import.meta.env.VITE_STAFF_WALKIN_OPERATOR_USER || 'walkin_approve').trim().toLowerCase();
-    const envWalkinOperatorPass = (import.meta.env.VITE_STAFF_WALKIN_OPERATOR_PASS || 'Walkin_vidva_2026!?').trim();
+    const envWalkinOperatorPass = (import.meta.env.VITE_STAFF_WALKIN_OPERATOR_PASS || 'HzA[HH1q~2').trim();
 
     const { user: envCheckinOperatorUser, pass: envCheckinOperatorPass } = getCheckinOperatorEnv();
 

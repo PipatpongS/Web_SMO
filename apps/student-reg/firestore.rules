@@ -36,7 +36,13 @@ service cloud.firestore {
           'checkin_day1_morning_by',
           'checkin_day1_morning_by_staff_uid',
           'checkin_day1_morning_by_staff_pic',
+          'checkin_day1_morning_by_staff_username',
+          'checkin_day1_morning_operator_user',
           'checkin_day1_morning_search_method',
+          'checkin_day1_morning_ip',
+          'checkin_day1_morning_device_model',
+          'checkin_day1_morning_user_agent',
+          'checkin_day1_morning_platform',
           'note',
           'updatedAt'
         ]);
