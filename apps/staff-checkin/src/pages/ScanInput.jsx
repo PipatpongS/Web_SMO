@@ -233,7 +233,7 @@ export default function ScanInput() {
   const isCheckinMode = mode === 'checkin';
 
   return (
-    <div className="w-full flex flex-col items-center justify-start py-3 pb-24 sm:pb-28 px-3 sm:px-4 space-y-3">
+    <div className="w-full h-full flex flex-col items-center justify-between overflow-hidden py-1 px-3 sm:px-4 min-h-0">
 
       {/* Top Navigation Bar */}
       <div className="w-full flex items-center justify-between mb-1.5 shrink-0">
