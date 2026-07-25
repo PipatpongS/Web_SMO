@@ -131,17 +131,26 @@ const Home = () => {
             </button>
           ) : (
             <button
+              disabled={!isParticipantRegistered && isAfterRegistration()}
               onClick={() => {
                 if (isParticipantRegistered) {
                   navigate('/profile');
-                } else {
+                } else if (!isAfterRegistration()) {
                   navigate('/register');
                 }
               }}
-              className="w-full max-w-[250px] mx-auto text-[14px] py-2 flex justify-center items-center space-x-2 mb-12 min-h-[40px] glass-button cursor-pointer"
+              className={`w-full max-w-[250px] mx-auto text-[14px] py-2 flex justify-center items-center space-x-2 mb-12 min-h-[40px] transition-all ${
+                !isParticipantRegistered && isAfterRegistration()
+                  ? 'bg-gray-500/60 text-gray-300 border border-gray-400/40 cursor-not-allowed rounded-full opacity-80 backdrop-blur-md shadow-inner'
+                  : 'glass-button cursor-pointer'
+              }`}
             >
               <span>
-                {isParticipantRegistered ? t.profileBtn : t.registerBtn}
+                {isParticipantRegistered
+                  ? t.profileBtn
+                  : isAfterRegistration()
+                  ? (lang === 'TH' ? 'ปิดรับลงทะเบียนแล้ว' : 'Registration Closed')
+                  : t.registerBtn}
               </span>
             </button>
           )}

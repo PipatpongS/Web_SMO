@@ -314,8 +314,8 @@ const Register = () => {
   }, [formData, regData, isEditMode]);
 
   useEffect(() => {
-    // Allow Walk-in registration access
-    if (!loading && !isRegistered && isBeforeRegistration()) {
+    // Allow Walk-in registration access only when open
+    if (!loading && !isRegistered && (isBeforeRegistration() || isAfterRegistration())) {
       navigate('/', { replace: true });
     }
   }, [loading, isRegistered, navigate]);
