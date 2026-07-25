@@ -609,28 +609,12 @@ export const FirebaseDataProvider = ({ children }) => {
   const login = async (username, password) => {
     if (!username || !password) return { success: false, reason: 'MISSING_FIELDS' };
 
-    // STRICT SAFETY CHECK: Must have authenticated LINE Profile (LIFF) first
-    if (!liffProfile || !liffProfile.line_uid) {
-      if (db) {
-        try {
-          await addDoc(collection(db, 'staff_access_logs'), {
-            timestamp: getThaiISOString(),
-            event: 'LOGIN_REJECTED_NO_LINE',
-            username: username,
-            user_agent: navigator.userAgent
-          });
-        } catch (err) {
-          console.error("Failed to write staff_access_logs:", err);
-        }
-      }
-      return { success: false, reason: 'NO_LINE_PROFILE' };
-    }
-
     let role = null;
     let name = '';
     let department = null;
 
     const cleanUser = username.trim().toLowerCase();
+    const cleanPass = password.trim();
 
     const envAdminUser = (import.meta.env.VITE_STAFF_ADMIN_USER || 'rak_smo').trim().toLowerCase();
     const envAdminPass = (import.meta.env.VITE_STAFF_ADMIN_PASS || 'Rak_vidva_!?').trim();
@@ -657,20 +641,20 @@ export const FirebaseDataProvider = ({ children }) => {
     ];
 
     // 1. Verify against Environment Variables
-    if (cleanUser === envAdminUser && password === envAdminPass) {
+    if (cleanUser === envAdminUser && (cleanPass === envAdminPass || password === envAdminPass)) {
       role = ROLES.SUPERVISOR;
       name = 'Admin Staff (SMO)';
-    } else if (cleanUser === envShirtOperatorUser && password === envShirtOperatorPass) {
+    } else if (cleanUser === envShirtOperatorUser && (cleanPass === envShirtOperatorPass || password === envShirtOperatorPass)) {
       role = ROLES.SHIRT_OPERATOR;
       name = 'Shirt Check Operator';
-    } else if (cleanUser === envWalkinOperatorUser && password === envWalkinOperatorPass) {
+    } else if (cleanUser === envWalkinOperatorUser && (cleanPass === envWalkinOperatorPass || password === envWalkinOperatorPass)) {
       role = ROLES.WALKIN_OPERATOR;
       name = 'Walk-in Approval Operator';
-    } else if (cleanUser === envCheckinOperatorUser && password === envCheckinOperatorPass) {
+    } else if (cleanUser === envCheckinOperatorUser && (cleanPass === envCheckinOperatorPass || password === envCheckinOperatorPass)) {
       role = ROLES.CHECKIN_OPERATOR;
       name = 'Registration Check-in Operator';
     } else {
-      const matchDept = DEPT_ACCOUNTS.find(acc => acc.u === cleanUser && acc.p === password);
+      const matchDept = DEPT_ACCOUNTS.find(acc => acc.u === cleanUser && (acc.p === cleanPass || acc.p === password));
       if (matchDept) {
         role = ROLES.CHECKIN_OPERATOR;
         name = matchDept.name;
@@ -679,14 +663,14 @@ export const FirebaseDataProvider = ({ children }) => {
     }
     
     // 2. Verify against Firestore 'staff' collection if configured
-    if (!role && db && cleanUser.length > 0 && password.length > 0) {
+    if (!role && db && cleanUser.length > 0 && cleanPass.length > 0) {
       try {
         const staffRef = collection(db, 'staff');
         const qStaff = query(staffRef, where('username', '==', cleanUser), limit(1));
         const snapStaff = await getDocs(qStaff);
         if (!snapStaff.empty) {
           const sDoc = snapStaff.docs[0].data();
-          if (sDoc.password === password) {
+          if (sDoc.password === cleanPass || sDoc.password === password) {
             role = sDoc.role === 'SUPERVISOR' || sDoc.role === 'ADMIN' ? ROLES.SUPERVISOR : (sDoc.role || ROLES.OPERATOR);
             name = sDoc.name || sDoc.username;
             department = sDoc.department || null;
@@ -698,14 +682,24 @@ export const FirebaseDataProvider = ({ children }) => {
     }
 
     const isSuccess = !!role;
+    const effectiveLiffProfile = liffProfile || {
+      line_uid: `WEB_${cleanUser}`,
+      displayName: name || cleanUser,
+      pictureUrl: ''
+    };
+
+    if (isSuccess && !liffProfile) {
+      saveLiffProfile(effectiveLiffProfile);
+    }
+
     const sessionData = isSuccess ? {
       username,
       name: name || username,
       role,
       department: department || null,
-      line_uid: liffProfile.line_uid,
-      displayName: liffProfile.displayName || name,
-      pictureUrl: liffProfile.pictureUrl || '',
+      line_uid: effectiveLiffProfile.line_uid,
+      displayName: effectiveLiffProfile.displayName || name,
+      pictureUrl: effectiveLiffProfile.pictureUrl || '',
       loginAt: getThaiISOString()
     } : null;
 

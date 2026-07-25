@@ -118,7 +118,6 @@ export default function Login() {
               onFocus={(e) => setTimeout(() => e.target.scrollIntoView({ behavior: 'smooth', block: 'center' }), 300)}
               className="w-full px-4 py-2.5 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-purple-400 text-sm font-semibold transition-all disabled:opacity-50"
               placeholder={isTH ? 'กรอกไอดี' : 'Enter Username'}
-              disabled={!liffProfile}
               required
             />
           </div>
@@ -134,7 +133,6 @@ export default function Login() {
               onFocus={(e) => setTimeout(() => e.target.scrollIntoView({ behavior: 'smooth', block: 'center' }), 300)}
               className="w-full px-4 py-2.5 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-purple-400 text-sm font-semibold transition-all disabled:opacity-50"
               placeholder={isTH ? 'กรอกรหัสผ่าน' : 'Enter Password'}
-              disabled={!liffProfile}
               required
             />
           </div>
@@ -147,18 +145,12 @@ export default function Login() {
           
           <button 
             type="submit" 
-            disabled={isSubmitting || !liffProfile}
-            className={`w-full glass-button mt-4 py-3 text-sm font-extrabold cursor-pointer hover:scale-[1.02] active:scale-95 transition-all shadow-lg border rounded-xl ${
-              !liffProfile 
-                ? 'bg-gray-600/30 text-white/50 border-gray-500/30 cursor-not-allowed hover:scale-100 active:scale-100'
-                : 'bg-purple-600/50 hover:bg-purple-600/70 text-white border-purple-400/40'
-            }`}
+            disabled={isSubmitting}
+            className="w-full glass-button mt-4 py-3 text-sm font-extrabold cursor-pointer hover:scale-[1.02] active:scale-95 transition-all shadow-lg border rounded-xl bg-purple-600/50 hover:bg-purple-600/70 text-white border-purple-400/40"
           >
-            {!liffProfile 
-              ? (isTH ? 'ต้องเข้าผ่านแอป LINE เท่านั้น' : 'Must open via LINE App') 
-              : isSubmitting 
-                ? (isTH ? 'กำลังเข้าสู่ระบบ...' : 'Logging in...') 
-                : (isTH ? 'เข้าสู่ระบบ' : 'Login')}
+            {isSubmitting 
+              ? (isTH ? 'กำลังเข้าสู่ระบบ...' : 'Logging in...') 
+              : (isTH ? 'เข้าสู่ระบบ' : 'Login')}
           </button>
         </form>
       </div>
