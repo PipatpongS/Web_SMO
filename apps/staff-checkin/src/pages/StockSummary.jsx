@@ -216,7 +216,7 @@ export default function StockSummary() {
   };
 
   return (
-    <div className="w-full flex flex-col items-center py-2 space-y-4">
+    <div className="w-full flex flex-col items-center py-4 pb-24 sm:pb-28 space-y-4">
       
       {/* Top Back Navigation Bar */}
       <div className="w-full flex items-center justify-between">

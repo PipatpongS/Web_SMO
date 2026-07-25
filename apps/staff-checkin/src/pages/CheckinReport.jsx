@@ -101,7 +101,7 @@ export default function CheckinReport() {
   };
 
   return (
-    <div className="w-full flex flex-col items-center justify-start py-2 px-3 sm:px-4 my-auto space-y-4 animate-fadeIn">
+    <div className="w-full flex flex-col items-center justify-start py-4 pb-24 sm:pb-28 px-3 sm:px-4 space-y-4 animate-fadeIn">
 
       {/* Top Bar with Back Button & Refresh */}
       <div className="w-full flex items-center justify-between shrink-0">

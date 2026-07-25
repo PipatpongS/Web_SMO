@@ -11,7 +11,6 @@ export default function StudentDetails() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const method = searchParams.get('method') || 'DIRECT';
-  // Walkin mode check
 
   const { students, findStudentByCodeDirect, confirmShirtPickup, revokeShirtPickup, approveWalkinRegistration, confirmRegistrationCheckin, lang, staff, matchDepartment: matchDeptContext, formatDepartment: formatDeptContext } = useData();
   const matchDepartment = matchDeptContext || matchDeptHelper;
@@ -386,7 +385,7 @@ export default function StudentDetails() {
   const isSizeChanged = selectedSize !== registeredSize;
 
   return (
-    <div className="w-full max-w-2xl mx-auto flex flex-col items-center justify-start overflow-y-auto py-2 px-3 sm:px-4 min-h-0">
+    <div className="w-full max-w-2xl mx-auto flex flex-col items-center justify-start py-4 pb-24 sm:pb-28 px-3 sm:px-4">
 
       {/* Top Navigation */}
       <div className="w-full flex items-center justify-between mb-3.5 shrink-0">
@@ -511,9 +510,9 @@ export default function StudentDetails() {
           </div>
         )}
 
-        {/* Walk-in Approval Banner Section */}
-        {isWalkinPending && (
-          <div className="p-4 bg-amber-50 border-2 border-amber-300 rounded-2xl space-y-3">
+        {/* Walk-in Approval Banner Section (ONLY available in Menu 3: Walk-in Approval Mode) */}
+        {isWalkinPending && isWalkinMode && (
+          <div className="p-4 bg-amber-50 border-2 border-amber-300 rounded-2xl space-y-3 shadow-sm">
             <div className="flex items-center gap-2 text-amber-900 font-extrabold text-sm sm:text-base">
               <AlertTriangle className="text-amber-600 shrink-0" size={20} />
               <span>{isTH ? 'รอยืนยันอนุมัติการลงทะเบียนรอบหน้างาน (Walk-in)' : 'Pending Walk-in Registration Approval'}</span>
@@ -523,15 +522,51 @@ export default function StudentDetails() {
                 ? 'นักศึกษายังอยู่ในสถานะรออนุมัติการลงทะเบียนหน้างาน โปรดตรวจบัตรประชาชน/บัตรรอบตรงหน้า แล้วกดปุ่มอนุมัติเพื่อเปิดสิทธิ์ลงทะเบียนฉบับจริง'
                 : 'Student is pending on-site registration approval. Please verify ID card and click approve button below.'}
             </p>
-            <button
-              type="button"
-              onClick={handleApproveWalkin}
-              disabled={isSubmitting}
-              className="w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-xs sm:text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95 disabled:opacity-50"
-            >
-              <CheckCircle2 size={18} />
-              <span>{isSubmitting ? (isTH ? 'กำลังอนุมัติ...' : 'Approving...') : (isTH ? 'อนุมัติการลงทะเบียน Walk-in (ตรวจบัตรแล้ว)' : 'Approve Walk-in Registration')}</span>
-            </button>
+
+            {(() => {
+              const isSupervisor = staff?.role === 'STAFF_SUPERVISOR';
+              const isWalkinOperator = staff?.role === 'STAFF_WALKIN_OPERATOR';
+              const canApproveAnyDept = isSupervisor || isWalkinOperator;
+              const isWalkinDeptMismatch = !canApproveAnyDept && staff?.department && !matchDepartment(student?.department, staff.department);
+
+              if (isWalkinDeptMismatch) {
+                return (
+                  <div className="p-3 bg-rose-50 border border-rose-300 rounded-xl space-y-1.5 text-xs text-rose-900 font-bold">
+                    <p className="flex items-center gap-1.5 text-rose-700 font-extrabold">
+                      <XCircle size={16} className="shrink-0" />
+                      <span>{isTH ? 'นักศึกษาไม่ได้อยู่ในภาควิชาของคุณ' : 'Student is not in your department'}</span>
+                    </p>
+                    <p className="text-[11px] text-rose-800 font-normal leading-relaxed">
+                      {isTH
+                        ? `นักศึกษารายนี้สังกัดภาควิชา ${formatDepartment(student?.department, true)} ไม่ตรงกับภาควิชาที่คุณมีสิทธิ์อนุมัติ (${formatDepartment(staff?.department, true)}) คุณสามารถอนุมัติได้เฉพาะนักศึกษาในภาควิชาของคุณเท่านั้น (บัญชี Walk-in Approval Operator สามารถอนุมัติได้ทุกภาควิชา)`
+                        : `This student belongs to ${formatDepartment(student?.department, false)}, which does not match your department (${formatDepartment(staff?.department, false)}). Walk-in approval is limited to your department.`}
+                    </p>
+                  </div>
+                );
+              }
+
+              return (
+                <button
+                  type="button"
+                  onClick={handleApproveWalkin}
+                  disabled={isSubmitting}
+                  className="w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-extrabold text-xs sm:text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95 disabled:opacity-50"
+                >
+                  <CheckCircle2 size={18} />
+                  <span>{isSubmitting ? (isTH ? 'กำลังอนุมัติ...' : 'Approving...') : (isTH ? 'อนุมัติการลงทะเบียน Walk-in (ตรวจบัตรแล้ว)' : 'Approve Walk-in Registration')}</span>
+                </button>
+              );
+            })()}
+          </div>
+        )}
+
+        {/* Notice for Menu 1 (Check-in Mode) when student is pending Walk-in approval */}
+        {isWalkinPending && !isWalkinMode && (
+          <div className="p-3.5 bg-amber-50 border border-amber-300 rounded-2xl flex items-center justify-between gap-3 text-xs text-amber-900 font-bold shadow-xs">
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="text-amber-600 shrink-0" size={18} />
+              <span>{isTH ? 'นักศึกษารอยืนยันอนุมัติการลงทะเบียนหน้างาน (อนุมัติได้ที่เมนู 3 อนุมัติ Walk-in เท่านั้น)' : 'Pending Walk-in Approval (Can only be approved in Menu 3 Walk-in Approval)'}</span>
+            </div>
           </div>
         )}
 

@@ -53,26 +53,17 @@ const LayoutContent = ({ children }) => {
     img.src = bgImg;
   }, []);
 
-  const path = location.pathname;
-  // StockSummary, StudentDetails, StudentLookup, CheckinReport are scrollable!
-  const isScrollablePage = path === '/stock-summary' || path.startsWith('/student') || path === '/student-lookup' || path === '/checkin-report';
   const isWidePage = path === '/stock-summary';
 
   const containerWidthClass = isWidePage 
     ? 'max-w-md sm:max-w-2xl md:max-w-4xl lg:max-w-5xl xl:max-w-6xl' 
     : 'max-w-md sm:max-w-lg';
 
-  const outerWrapperClass = isScrollablePage
-    ? 'min-h-screen w-screen font-sans text-white bg-black/40 backdrop-blur-[2px] overflow-y-auto'
-    : 'h-[100dvh] w-screen font-sans text-white bg-black/40 backdrop-blur-[2px] overflow-hidden';
+  const outerWrapperClass = 'min-h-[100dvh] w-screen font-sans text-white bg-black/40 backdrop-blur-[2px] overflow-y-auto overflow-x-hidden';
 
-  const innerFlexClass = isScrollablePage
-    ? 'flex flex-col items-center min-h-screen px-3 sm:px-6 pb-8 relative'
-    : 'flex flex-col items-center h-full px-3 sm:px-6 pb-2 relative';
+  const innerFlexClass = 'flex flex-col items-center min-h-[100dvh] px-3 sm:px-6 pb-28 sm:pb-32 relative';
 
-  const contentAreaClass = isScrollablePage
-    ? 'w-full flex-1 flex flex-col'
-    : 'w-full flex-1 flex flex-col justify-center items-center py-2 overflow-hidden';
+  const contentAreaClass = 'w-full flex-1 flex flex-col items-center justify-start py-2';
 
   return (
     <div className={outerWrapperClass}>
@@ -84,7 +75,7 @@ const LayoutContent = ({ children }) => {
           className="fixed top-0 left-0 m-0 p-0 w-20 md:w-28 z-50 pointer-events-none" 
         />
 
-        <div className={`w-full ${containerWidthClass} flex flex-col items-center ${isScrollablePage ? 'min-h-screen' : 'h-full'} transition-all duration-300`}>
+        <div className={`w-full ${containerWidthClass} flex flex-col items-center min-h-full transition-all duration-300`}>
           {/* Top Header Section */}
           <div className="w-full flex justify-center lg:justify-start items-center -mt-6 sm:-mt-8 -mb-3 sm:-mb-5 relative z-10 shrink-0 min-h-[4rem] text-white">
             <div className="flex items-center z-10">

@@ -941,6 +941,21 @@ export const FirebaseDataProvider = ({ children }) => {
 
     if (!targetStudent) return { success: false, error: 'Student record not found' };
 
+    // Department Restriction Check for Walk-in Approval:
+    // Supervisor (rak_smo) and Walk-in Operator (walkin_approve) can approve EVERYONE regardless of department!
+    // Department Staff (cpe_checkin, me_checkin, etc.) can ONLY approve students in their own department!
+    const isSupervisor = staff?.role === ROLES.SUPERVISOR;
+    const isWalkinOperator = staff?.role === ROLES.WALKIN_OPERATOR;
+    if (!isSupervisor && !isWalkinOperator && staff?.department) {
+      const studentDept = targetStudent.department || '';
+      if (!matchDepartment(studentDept, staff.department)) {
+        return {
+          success: false,
+          error: `คุณมีสิทธิ์อนุมัติเฉพาะนักศึกษาภาควิชาของคุณ (${formatDepartment(staff.department, true)}) นักศึกษารายนี้สังกัดภาควิชา ${formatDepartment(studentDept, true)} (Walk-in approval is limited to your department)`
+        };
+      }
+    }
+
     // Real Firestore Document Key: prefer line_uid field (stored in Firestore doc) > docId > id
     const firestoreDocId = targetStudent.line_uid || targetStudent.docId || studentOrDocId;
     console.log('✅ approveWalkinRegistration → firestoreDocId:', firestoreDocId, '| targetStudent.line_uid:', targetStudent.line_uid, '| targetStudent.docId:', targetStudent.docId);

@@ -39,7 +39,7 @@ export default function Login() {
   };
 
   return (
-    <div className="w-full flex flex-col items-center justify-center relative z-10 my-auto animate-fadeIn">
+    <div className="w-full flex flex-col items-center justify-start relative z-10 py-4 pb-24 sm:pb-28 animate-fadeIn">
       <div className="glass-panel p-6 sm:p-8 w-full max-w-sm sm:max-w-md shadow-2xl border border-white/20 rounded-3xl relative">
         
         {/* Language Switcher */}

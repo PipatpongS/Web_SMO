@@ -38,7 +38,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="w-full max-w-md sm:max-w-lg flex flex-col items-center justify-center relative z-10 py-2 px-3 sm:px-4 animate-fadeIn transition-all duration-300 ease-in-out my-auto space-y-6 sm:space-y-8">
+    <div className="w-full max-w-md sm:max-w-lg flex flex-col items-center justify-start relative z-10 py-4 pb-24 sm:pb-28 px-3 sm:px-4 animate-fadeIn transition-all duration-300 ease-in-out space-y-6 sm:space-y-8">
 
       {/* Staff Status Bar */}
       <div className="w-full bg-black/30 px-3 py-3 sm:px-4 sm:py-3.5 rounded-3xl backdrop-blur-md border border-white/15 shadow-xl mb-4 sm:mb-6">

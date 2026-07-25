@@ -101,7 +101,7 @@ export default function WalkinLogs() {
   };
 
   return (
-    <div className="w-full max-w-md sm:max-w-xl py-2 px-3 sm:px-4 flex flex-col my-auto space-y-4 animate-fadeIn">
+    <div className="w-full max-w-md sm:max-w-xl py-4 pb-24 sm:pb-28 px-3 sm:px-4 flex flex-col space-y-4 animate-fadeIn">
       
       {/* Top Action Bar */}
       <div className="flex items-center justify-between shrink-0">
