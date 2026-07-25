@@ -35,16 +35,34 @@ export default function StudentDetails() {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showProxyScanModal, setShowProxyScanModal] = useState(false);
 
-  // Lock body scrolling whenever any popup/modal is open
+  // Lock body scrolling whenever any popup/modal is open (iOS & Android robust scroll lock)
   useEffect(() => {
     const isAnyModalOpen = !!(alertNoticeModal || showConfirmModal || showSuccessModal || showProxyScanModal);
     if (isAnyModalOpen) {
+      const scrollY = window.scrollY;
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = '100%';
       document.body.style.overflow = 'hidden';
     } else {
+      const scrollY = document.body.style.top;
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
       document.body.style.overflow = '';
+      if (scrollY) {
+        window.scrollTo(0, parseInt(scrollY || '0', 10) * -1);
+      }
     }
     return () => {
+      const scrollY = document.body.style.top;
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
       document.body.style.overflow = '';
+      if (scrollY) {
+        window.scrollTo(0, parseInt(scrollY || '0', 10) * -1);
+      }
     };
   }, [alertNoticeModal, showConfirmModal, showSuccessModal, showProxyScanModal]);
 
@@ -939,6 +957,7 @@ export default function StudentDetails() {
       {alertNoticeModal && (
         <div
           className="fixed inset-0 z-50 overflow-hidden p-4 flex items-center justify-center bg-slate-950/70 backdrop-blur-xs transition-opacity cursor-pointer select-none touch-none overscroll-none"
+          onTouchMove={(e) => { if (e.target === e.currentTarget) e.preventDefault(); }}
           onClick={(e) => {
             if (e.target === e.currentTarget) {
               setAlertNoticeModal(null);
@@ -1001,6 +1020,7 @@ export default function StudentDetails() {
       {showConfirmModal && (
         <div
           className="fixed inset-0 z-50 overflow-hidden flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm cursor-pointer select-none touch-none overscroll-none"
+          onTouchMove={(e) => { if (e.target === e.currentTarget) e.preventDefault(); }}
           onClick={(e) => {
             if (e.target === e.currentTarget) {
               setShowConfirmModal(false);
@@ -1120,6 +1140,7 @@ export default function StudentDetails() {
       {showSuccessModal && (
         <div
           className="fixed inset-0 z-50 overflow-hidden flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm cursor-pointer select-none touch-none overscroll-none"
+          onTouchMove={(e) => { if (e.target === e.currentTarget) e.preventDefault(); }}
           onClick={(e) => {
             if (e.target === e.currentTarget) {
               setShowSuccessModal(false);
@@ -1157,6 +1178,7 @@ export default function StudentDetails() {
       {showProxyScanModal && (
         <div
           className="fixed inset-0 z-50 overflow-hidden flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm cursor-pointer select-none touch-none overscroll-none"
+          onTouchMove={(e) => { if (e.target === e.currentTarget) e.preventDefault(); }}
           onClick={(e) => {
             if (e.target === e.currentTarget) {
               setShowProxyScanModal(false);
