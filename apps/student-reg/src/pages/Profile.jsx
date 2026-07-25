@@ -351,9 +351,9 @@ const Profile = () => {
                     <span className="font-semibold text-[#1e3a5f] text-right ml-4">{displayRegData.shirtSize}</span>
                   </div>
                 </div>
-                <div className="flex justify-between border-b border-gray-100 pb-2.5 items-center">
-                  <span className="text-gray-500 whitespace-nowrap">{t.shirtStatus}</span>
-                  <span className={`inline-flex items-center justify-center text-center px-3 py-1 text-xs font-bold rounded-full border whitespace-nowrap ${
+                <div className="flex justify-between border-b border-gray-100 pb-2.5 items-center gap-2">
+                  <span className="text-xs sm:text-sm text-gray-500">{t.shirtStatus}</span>
+                  <span className={`inline-flex items-center justify-center text-center px-3 py-1 text-xs font-bold rounded-full border whitespace-nowrap ml-auto shrink-0 ${
                     displayRegData.shirt_received_at
                       ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                       : 'bg-amber-50 text-amber-700 border-amber-200'
@@ -361,9 +361,9 @@ const Profile = () => {
                     {displayRegData.shirt_received_at ? t.shirtReceived : t.shirtNotReceived}
                   </span>
                 </div>
-                <div className="flex justify-between border-b border-gray-100 pb-2.5 items-center">
-                  <span className="text-gray-500 whitespace-nowrap">{t.checkinDay1}</span>
-                  <span className={`inline-flex items-center justify-center text-center px-3 py-1 text-xs font-bold rounded-full border whitespace-nowrap ${
+                <div className="flex justify-between border-b border-gray-100 pb-2.5 items-center gap-2">
+                  <span className="text-xs sm:text-sm text-gray-500">{t.checkinDay1}</span>
+                  <span className={`inline-flex items-center justify-center text-center px-3 py-1 text-xs font-bold rounded-full border whitespace-nowrap ml-auto shrink-0 ${
                     displayRegData.checkin_day1_morning
                       ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                       : 'bg-rose-50 text-rose-700 border-rose-200'
@@ -371,9 +371,9 @@ const Profile = () => {
                     {displayRegData.checkin_day1_morning ? t.statusRegistered : t.statusNotRegistered}
                   </span>
                 </div>
-                <div className="flex justify-between border-b border-gray-100 pb-2.5 items-center">
-                  <span className="text-gray-500 whitespace-nowrap">{t.checkinDay2}</span>
-                  <span className={`inline-flex items-center justify-center text-center px-3 py-1 text-xs font-bold rounded-full border whitespace-nowrap ${
+                <div className="flex justify-between border-b border-gray-100 pb-2.5 items-center gap-2">
+                  <span className="text-xs sm:text-sm text-gray-500">{t.checkinDay2}</span>
+                  <span className={`inline-flex items-center justify-center text-center px-3 py-1 text-xs font-bold rounded-full border whitespace-nowrap ml-auto shrink-0 ${
                     displayRegData.checkin_day2_morning
                       ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                       : 'bg-rose-50 text-rose-700 border-rose-200'
