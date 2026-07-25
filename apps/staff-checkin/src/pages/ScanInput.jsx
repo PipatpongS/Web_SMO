@@ -154,19 +154,8 @@ export default function ScanInput() {
       return;
     }
 
-    let clean = inputVal.replace(/[^A-Z0-9]/g, '');
-    if (!clean) {
-      setCode('');
-      return;
-    }
-
-    if (clean.startsWith('W-')) {
-      clean = clean.slice(2);
-    } else if (clean.startsWith('W')) {
-      clean = clean.slice(1);
-    }
-
-    setCode(clean.slice(0, 4));
+    let clean = inputVal.replace(/[^A-Z0-9-]/g, '');
+    setCode(clean.slice(0, 8));
   };
 
   const [isSearching, setIsSearching] = useState(false);
@@ -176,10 +165,6 @@ export default function ScanInput() {
     if (!targetCode) {
       setError(isTH ? 'กรุณากรอก Short Code (เช่น AB12)' : 'Please enter Short Code (e.g. AB12)');
       return;
-    }
-
-    if (method === 'SHORT_CODE' && /^[A-Z0-9]{4}$/.test(targetCode) && !targetCode.startsWith('W')) {
-      targetCode = `W-${targetCode}`;
     }
 
     setIsSearching(true);
@@ -315,7 +300,7 @@ export default function ScanInput() {
               maxLength={6}
               onChange={handleCodeChange}
               className="w-full px-3.5 py-2 text-center text-lg sm:text-xl font-bold tracking-[0.2em] rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-amber-400 uppercase font-mono"
-              placeholder="W-AB12"
+              placeholder="AB12"
             />
           </div>
 
