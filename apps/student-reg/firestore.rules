@@ -54,8 +54,8 @@ service cloud.firestore {
       allow list: if true;
       allow update: if true;
       
-      // ✅ การลงทะเบียนใหม่ของนักศึกษา (ปิดรับสมัครอัตโนมัติหลังเวลา 09:30 น. วันที่ 25 ก.ค. 2026)
-      allow create: if request.time <= timestamp.value(1784946600000);
+      // ✅ การลงทะเบียนใหม่ของนักศึกษา (เปิดรับสมัครสำหรับกิจกรรมถัดไป)
+      allow create: if true;
                     
       allow delete: if false;
     }
