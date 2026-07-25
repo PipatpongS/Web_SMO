@@ -5,7 +5,7 @@ import { ArrowLeft, Search, User, Hash, BookOpen, Users, Tag, CheckCircle2, Cloc
 
 export default function StudentLookup() {
   const navigate = useNavigate();
-  const { students, findStudentByCodeDirect, lang, approveWalkinRegistration } = useData();
+  const { students, findStudentByCodeDirect, lang, approveWalkinRegistration, formatDepartment } = useData();
   const isTH = lang === 'TH';
 
   const [searchInput, setSearchInput] = useState('');
@@ -68,10 +68,10 @@ export default function StudentLookup() {
           ...studentResult,
           walkin_status: 'APPROVED',
           walkin_verified: true,
-          group: res.assignedGroup || studentResult.group
+          group: groupName || studentResult.group
         };
         setStudentResult(updated);
-        setApproveMsg(isTH ? `✅ อนุมัติสำเร็จ! สุ่มได้กลุ่ม ${groupName}` : `✅ Approved! Assigned Group ${groupName}`);
+        setApproveMsg(isTH ? 'อนุมัติการลงทะเบียนเรียบร้อยแล้ว' : 'Registration successfully approved.');
       } else {
         setApproveMsg(isTH ? `เกิดข้อผิดพลาด: ${res.error}` : `Error: ${res.error}`);
       }
@@ -197,7 +197,7 @@ export default function StudentLookup() {
                   </div>
                   <div className="min-w-0">
                     <p className="text-[10px] text-slate-400 font-semibold uppercase">{isTH ? 'ภาควิชา' : 'Department'}</p>
-                    <p className="text-sm font-bold text-slate-800 truncate">{studentResult.department || 'คณะวิศวกรรมศาสตร์'}</p>
+                    <p className="text-sm font-bold text-slate-800 truncate">{formatDepartment ? formatDepartment(studentResult.department, isTH) : (studentResult.department || 'คณะวิศวกรรมศาสตร์')}</p>
                   </div>
                 </div>
 
@@ -241,9 +241,9 @@ export default function StudentLookup() {
                     className="w-full py-3 bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs sm:text-sm rounded-2xl shadow-md transition-all cursor-pointer flex items-center justify-center gap-2"
                   >
                     {isSubmitting ? (
-                      <><Loader2 size={16} className="animate-spin" /><span>กำลังอนุมัติ...</span></>
+                      <><Loader2 size={16} className="animate-spin" /><span>{isTH ? 'กำลังอนุมัติ...' : 'Approving...'}</span></>
                     ) : (
-                      <><CheckCircle2 size={18} /><span>กดอนุมัติการลงทะเบียน (สุ่มกลุ่มกิจกรรมทันที)</span></>
+                      <><CheckCircle2 size={18} /><span>{isTH ? 'กดอนุมัติการลงทะเบียน' : 'Approve Registration'}</span></>
                     )}
                   </button>
                 </div>

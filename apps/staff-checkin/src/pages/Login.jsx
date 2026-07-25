@@ -19,8 +19,8 @@ export default function Login() {
     } else if (staff && !liffProfile && !liffLoading) {
       logout();
       setError(isTH 
-        ? '⚠️ การเชื่อมต่อ LINE หลุดออกจากระบบ กรุณายืนยันตัวตนด้วย LINE ใหม่อีกครั้งเพื่อความปลอดภัย' 
-        : '⚠️ LINE Session Disconnected. Please re-authenticate with LINE for security.');
+        ? 'การเชื่อมต่อ LINE หลุดออกจากระบบ กรุณายืนยันตัวตนด้วย LINE ใหม่อีกครั้งเพื่อความปลอดภัย' 
+        : 'LINE Session Disconnected. Please re-authenticate with LINE for security.');
     }
   }, [staff, liffProfile, liffLoading, navigate, logout, isTH]);
 

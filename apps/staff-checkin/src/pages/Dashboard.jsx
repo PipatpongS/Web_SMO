@@ -5,7 +5,7 @@ import { Shirt, BarChart2, LogOut, ShieldCheck, User, UserCheck, ClipboardCheck 
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const { staff, liffProfile, logout, lang } = useData();
+  const { staff, liffProfile, logout, lang, formatDepartment } = useData();
 
   const handleLogout = () => {
     logout();
@@ -18,7 +18,7 @@ export default function Dashboard() {
   const isShirtOperator = staff?.role === ROLES.SHIRT_OPERATOR;
   const isCheckinOperator = staff?.role === ROLES.CHECKIN_OPERATOR;
 
-  const canDoWalkin = isSupervisor || isWalkinOperator;
+  const canDoWalkin = isSupervisor || isWalkinOperator || isCheckinOperator;
   const canDoShirt = isSupervisor || isShirtOperator;
   const canDoCheckin = isSupervisor || isCheckinOperator || isWalkinOperator;
 
@@ -27,6 +27,10 @@ export default function Dashboard() {
 
   const getRoleLabel = () => {
     if (isSupervisor) return isTH ? 'ผู้ดูแลระบบ (Admin)' : 'Admin';
+    if (staff?.department) {
+      const deptName = formatDepartment ? formatDepartment(staff.department, isTH) : staff.department;
+      return isTH ? `สตาฟภาควิชา ${deptName}` : `Department Staff (${deptName})`;
+    }
     if (isWalkinOperator) return isTH ? 'สตาฟอนุมัติ Walk-in' : 'Walk-in Operator';
     if (isShirtOperator) return isTH ? 'สตาฟตรวจแจกเสื้อ' : 'Shirt Operator';
     if (isCheckinOperator) return isTH ? 'สตาฟเช็คชื่อลงทะเบียน' : 'Registration Check-in Operator';
@@ -35,7 +39,7 @@ export default function Dashboard() {
 
   return (
     <div className="w-full max-w-md sm:max-w-lg flex flex-col items-center justify-center relative z-10 py-2 px-3 sm:px-4 animate-fadeIn transition-all duration-300 ease-in-out my-auto space-y-6 sm:space-y-8">
-      
+
       {/* Staff Status Bar */}
       <div className="w-full bg-black/30 px-3 py-3 sm:px-4 sm:py-3.5 rounded-3xl backdrop-blur-md border border-white/15 shadow-xl mb-4 sm:mb-6">
         <div className="flex items-center justify-between gap-2">
@@ -50,23 +54,26 @@ export default function Dashboard() {
             </div>
             <div className="min-w-0">
               <p className="text-white text-sm font-extrabold truncate leading-tight">{displayName}</p>
-              <span className={`text-[10px] px-2 py-0.5 rounded-md font-extrabold border inline-block mt-0.5 ${
-                isSupervisor 
-                  ? 'bg-purple-500/30 text-purple-200 border-purple-400/40' 
-                  : isWalkinOperator
-                  ? 'bg-amber-500/30 text-amber-200 border-amber-400/40'
-                  : isCheckinOperator
-                  ? 'bg-teal-500/30 text-teal-200 border-teal-400/40'
-                  : 'bg-blue-500/30 text-blue-200 border-blue-400/40'
-              }`}>
-                {getRoleLabel()}
-              </span>
+              <div className="flex items-center gap-1 mt-0.5">
+                <span className={`text-[10px] px-2.5 py-0.5 rounded-md font-extrabold border inline-block ${isSupervisor
+                  ? 'bg-purple-500/30 text-purple-200 border-purple-400/40'
+                  : staff?.department
+                    ? 'bg-amber-400/25 text-amber-200 border-amber-400/50'
+                    : isWalkinOperator
+                      ? 'bg-amber-500/30 text-amber-200 border-amber-400/40'
+                      : isCheckinOperator
+                        ? 'bg-teal-500/30 text-teal-200 border-teal-400/40'
+                        : 'bg-blue-500/30 text-blue-200 border-blue-400/40'
+                  }`}>
+                  {getRoleLabel()}
+                </span>
+              </div>
             </div>
           </div>
 
           {/* Right: logout button — icon only on mobile, icon+text on sm+ */}
-          <button 
-            onClick={handleLogout} 
+          <button
+            onClick={handleLogout}
             className="flex items-center gap-1 text-red-300 hover:text-red-100 font-bold px-2.5 py-2 sm:px-3 rounded-xl bg-red-500/20 hover:bg-red-500/30 border border-red-400/30 transition-all cursor-pointer shadow-sm shrink-0"
             title={isTH ? "ออกจากระบบ" : "Log out"}
           >
@@ -81,32 +88,10 @@ export default function Dashboard() {
         <h2 className="text-base sm:text-lg font-black text-center text-white text-glow mb-2 uppercase tracking-wide">
           {isTH ? 'เลือกรายการเมนูสตาฟ' : 'Staff Action Menu'}
         </h2>
-        
-        {/* Menu 1: Walk-in Approval & Instant Group Assignment */}
-        {canDoWalkin && (
-          <button 
-            onClick={() => navigate('/scan?mode=walkin')}
-            className="w-full glass-panel p-4 sm:p-5 flex items-center gap-4 hover:bg-white/15 transition-all cursor-pointer group text-left shadow-2xl border border-white/20 hover:border-amber-400/50 rounded-3xl"
-          >
-            <div className="bg-amber-400/20 p-3.5 rounded-2xl text-amber-300 group-hover:scale-110 transition-transform shrink-0 border border-amber-400/40 shadow-inner">
-              <UserCheck size={30} />
-            </div>
-            <div className="space-y-0.5">
-              <span className="text-base sm:text-lg font-black block text-white group-hover:text-amber-200 transition-colors">
-                {isTH ? '1. อนุมัติการลงทะเบียน (สุ่มกลุ่มกิจกรรม)' : '1. Walk-in Approval & Grouping'}
-              </span>
-              <span className="text-xs text-white/70 block font-medium leading-relaxed">
-                {isTH 
-                  ? 'สแกน QR Code หรือค้นหารายชื่อ เพื่ออนุมัติการลงทะเบียนหน้างานและสุ่มกลุ่มกิจกรรมทันที' 
-                  : 'Scan QR Code or search student to approve walk-in and assign group instantly'}
-              </span>
-            </div>
-          </button>
-        )}
 
-        {/* Registration Check-in Menu (Day 1 Morning) */}
+        {/* Menu 1: Registration Check-in (เช็คชื่อลงทะเบียน) */}
         {canDoCheckin && (
-          <button 
+          <button
             onClick={() => navigate('/scan?mode=checkin')}
             className="w-full glass-panel p-4 sm:p-5 flex items-center gap-4 hover:bg-white/15 transition-all cursor-pointer group text-left shadow-2xl border border-white/20 hover:border-teal-400/50 rounded-3xl"
           >
@@ -115,12 +100,54 @@ export default function Dashboard() {
             </div>
             <div className="space-y-0.5">
               <span className="text-base sm:text-lg font-black block text-white group-hover:text-teal-200 transition-colors">
-                {isTH ? 'เช็คชื่อลงทะเบียน (วันที่ 1 เช้า)' : 'Registration Check-in (Day 1 AM)'}
+                {isTH ? '1. เช็คชื่อลงทะเบียน' : '1. Registration Check-in'}
               </span>
               <span className="text-xs text-white/70 block font-medium leading-relaxed">
-                {isTH 
-                  ? 'สแกน QR Code, Short Code หรือรหัสนักศึกษา เพื่อบันทึกการเข้าร่วมและเช็คชื่อ' 
-                  : 'Scan QR Code, Short Code or Student ID to record attendance'}
+                {isTH
+                  ? 'สแกน QR Code, Short Code หรือรหัสนักศึกษา เพื่อเช็คชื่อเข้าร่วม'
+                  : 'Scan QR Code, Short Code, or Student ID to record attendance'}
+              </span>
+            </div>
+          </button>
+        )}
+
+        {/* Menu 2: Registration Statistics & Directory (ดูสถิติการลงทะเบียน) */}
+        <button
+          onClick={() => navigate('/checkin-report')}
+          className="w-full glass-panel p-4 sm:p-5 flex items-center gap-4 hover:bg-white/15 transition-all cursor-pointer group text-left shadow-2xl border border-white/20 hover:border-blue-400/50 rounded-3xl"
+        >
+          <div className="bg-blue-500/20 p-3.5 rounded-2xl text-blue-300 group-hover:scale-110 transition-transform shrink-0 border border-blue-400/40 shadow-inner">
+            <BarChart2 size={30} />
+          </div>
+          <div className="space-y-0.5">
+            <span className="text-base sm:text-lg font-black block text-white group-hover:text-blue-200 transition-colors">
+              {isTH ? '2. ดูสถิติและรายชื่อการลงทะเบียน' : '2. Registration Statistics & Directory'}
+            </span>
+            <span className="text-xs text-white/70 block font-medium leading-relaxed">
+              {isTH
+                ? 'ดูยอดรวมและค้นหารายชื่อเฉพาะภาควิชา'
+                : 'View stats and search directory for your department'}
+            </span>
+          </div>
+        </button>
+
+        {/* Menu 3: Walk-in Registration Approval (อนุมัติการลงทะเบียนสำหรับ Walk-in) */}
+        {canDoWalkin && (
+          <button
+            onClick={() => navigate('/scan?mode=walkin')}
+            className="w-full glass-panel p-4 sm:p-5 flex items-center gap-4 hover:bg-white/15 transition-all cursor-pointer group text-left shadow-2xl border border-white/20 hover:border-amber-400/50 rounded-3xl"
+          >
+            <div className="bg-amber-400/20 p-3.5 rounded-2xl text-amber-300 group-hover:scale-110 transition-transform shrink-0 border border-amber-400/40 shadow-inner">
+              <UserCheck size={30} />
+            </div>
+            <div className="space-y-0.5">
+              <span className="text-base sm:text-lg font-black block text-white group-hover:text-amber-200 transition-colors">
+                {isTH ? '3. อนุมัติการลงทะเบียน (สำหรับ Walk-in)' : '3. Walk-in Registration Approval'}
+              </span>
+              <span className="text-xs text-white/70 block font-medium leading-relaxed">
+                {isTH
+                  ? 'สแกน QR Code หรือค้นหารายชื่อ เพื่ออนุมัติการลงทะเบียนหน้างาน'
+                  : 'Scan QR Code or search student to approve walk-in registration'}
               </span>
             </div>
           </button>
@@ -128,7 +155,7 @@ export default function Dashboard() {
 
         {/* Shirt Check-in Menu */}
         {canDoShirt && (
-          <button 
+          <button
             onClick={() => navigate('/scan?mode=shirt')}
             className="w-full glass-panel p-4 sm:p-5 flex items-center gap-4 hover:bg-white/15 transition-all cursor-pointer group text-left shadow-2xl border border-white/20 hover:border-purple-400/50 rounded-3xl"
           >
@@ -145,10 +172,9 @@ export default function Dashboard() {
             </div>
           </button>
         )}
-
         {/* Stock & Summary Dashboard (Available for Admin/Supervisor) */}
         {isSupervisor && (
-          <button 
+          <button
             onClick={() => navigate('/stock-summary')}
             className="w-full glass-panel p-4 sm:p-5 flex items-center gap-4 hover:bg-white/15 transition-all cursor-pointer group text-left shadow-2xl border border-white/20 hover:border-emerald-400/50 rounded-3xl"
           >

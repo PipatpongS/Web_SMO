@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
-import { useData } from '../contexts/FirebaseDataContext';
+import { useData, matchDepartment as matchDeptHelper, formatDepartment as formatDeptHelper } from '../contexts/FirebaseDataContext';
 import { ArrowLeft, CheckCircle2, ShieldCheck, AlertTriangle, XCircle, Shirt, Phone, Loader2, QrCode, User, Hash, Users, ClipboardCheck, Clock } from 'lucide-react';
 import jsQR from 'jsqr';
 
@@ -13,7 +13,9 @@ export default function StudentDetails() {
   const method = searchParams.get('method') || 'DIRECT';
   // Walkin mode check
 
-  const { students, findStudentByCodeDirect, confirmShirtPickup, revokeShirtPickup, approveWalkinRegistration, confirmRegistrationCheckin, lang } = useData();
+  const { students, findStudentByCodeDirect, confirmShirtPickup, revokeShirtPickup, approveWalkinRegistration, confirmRegistrationCheckin, lang, staff, matchDepartment: matchDeptContext, formatDepartment: formatDeptContext } = useData();
+  const matchDepartment = matchDeptContext || matchDeptHelper;
+  const formatDepartment = formatDeptContext || formatDeptHelper;
   const isTH = lang === 'TH';
 
   const [student, setStudent] = useState(null);
@@ -62,9 +64,8 @@ export default function StudentDetails() {
         }));
         setAlertNoticeModal({
           type: 'success',
-          title: isTH ? 'อนุมัติการลงทะเบียนสำเร็จ!' : 'Registration Approved!',
-          message: isTH ? `ได้รับกลุ่ม ${groupName}` : `Assigned Group ${groupName}`,
-          groupName
+          title: isTH ? 'อนุมัติการลงทะเบียนเรียบร้อยแล้ว' : 'Registration successfully approved.',
+          message: isTH ? 'อนุมัติการลงทะเบียนเรียบร้อยแล้ว' : 'Registration successfully approved.'
         });
       } else {
         setAlertNoticeModal({
@@ -94,9 +95,12 @@ export default function StudentDetails() {
   const proxyStreamRef = useRef(null);
   const [cameraActive, setCameraActive] = useState(false);
 
+  const [isNotFound, setIsNotFound] = useState(false);
+
   useEffect(() => {
     if (!id) return;
     let isMounted = true;
+    setIsNotFound(false);
 
     // 1. Search in local state (0 Reads)
     const found = students.find(s => s.docId === id || s.id === id || s.studentId === id || (s.short_code && s.short_code.toUpperCase() === id.toUpperCase()));
@@ -112,7 +116,8 @@ export default function StudentDetails() {
     } else {
       // 2. Single-Doc Targeted Fetch from Firestore (1 Read)
       findStudentByCodeDirect(id).then(directMatch => {
-        if (directMatch && isMounted) {
+        if (!isMounted) return;
+        if (directMatch) {
           setStudent(directMatch);
           const regSize = directMatch.shirtSize || 'M';
           setSelectedSize(directMatch.shirt_size_received || regSize);
@@ -121,14 +126,18 @@ export default function StudentDetails() {
           setProxyStudentId(directMatch.proxy_student_id || '');
           setProxyName(directMatch.proxy_name || '');
           setProxyPhone(directMatch.proxy_phone || '');
+        } else {
+          setIsNotFound(true);
         }
+      }).catch(err => {
+        if (isMounted) setIsNotFound(true);
       });
     }
 
     return () => {
       isMounted = false;
     };
-  }, [id]);
+  }, [id, students]);
 
   // Camera handling for scanning Proxy QR
   const startProxyCamera = async () => {
@@ -300,8 +309,8 @@ export default function StudentDetails() {
       if (res?.success) {
         setStudent(prev => ({
           ...prev,
-          checkin_day1_morning: res.timestamp,
-          checkin_day1_morning_by: res.staffName || prev?.checkin_day1_morning_by
+          checkin_day2_morning: res.timestamp,
+          checkin_day2_morning_by: res.staffName || prev?.checkin_day2_morning_by
         }));
         setShowConfirmModal(false);
         setShowSuccessModal(true);
@@ -333,8 +342,30 @@ export default function StudentDetails() {
   };
 
   if (!student) {
+    if (isNotFound) {
+      return (
+        <div className="flex flex-col items-center justify-center my-auto p-6 text-center max-w-sm mx-auto glass-panel border border-white/20 rounded-3xl space-y-4 shadow-2xl animate-fadeIn">
+          <div className="w-16 h-16 rounded-full bg-rose-500/20 text-rose-300 border border-rose-400/30 flex items-center justify-center">
+            <XCircle size={36} />
+          </div>
+          <div className="space-y-1">
+            <h3 className="text-lg font-black text-white">{isTH ? 'ไม่พบข้อมูลนักศึกษาในระบบ' : 'Student Record Not Found'}</h3>
+            <p className="text-xs text-white/70 font-medium">
+              {isTH ? 'ไม่พบข้อมูลตรงตามรหัสที่ระบุ กรุณาตรวจสอบรหัสนักศึกษา หรือ Short Code อีกครั้ง' : 'No matching record found. Please verify the Student ID or Short Code.'}
+            </p>
+          </div>
+          <button
+            onClick={() => navigate(`/scan?mode=${mode}`)}
+            className="w-full py-3 rounded-2xl bg-white/20 hover:bg-white/30 text-white font-bold text-xs border border-white/30 cursor-pointer transition-all flex items-center justify-center gap-2"
+          >
+            <ArrowLeft size={16} /> {isTH ? 'กลับไปหน้าสแกน/ค้นหา' : 'Back to Search/Scan'}
+          </button>
+        </div>
+      );
+    }
+
     return (
-      <div className="flex flex-col items-center justify-center h-full min-h-[300px] text-white">
+      <div className="flex flex-col items-center justify-center my-auto min-h-[300px] text-white">
         <Loader2 className="w-10 h-10 animate-spin text-amber-300 mb-3" />
         <p className="text-white/80 font-medium">{isTH ? 'กำลังโหลดข้อมูลนักศึกษา...' : 'Loading student details...'}</p>
       </div>
@@ -349,38 +380,37 @@ export default function StudentDetails() {
   };
 
   const isReceived = !!student.shirt_received_at;
-  const isCheckedIn = !!student.checkin_day1_morning;
+  const isCheckedIn = !!student.checkin_day2_morning;
   const registeredSize = student.shirtSize || 'M';
   const isSizeChanged = selectedSize !== registeredSize;
 
   return (
     <div className="w-full max-w-2xl mx-auto flex flex-col items-center justify-start overflow-y-auto py-2 px-3 sm:px-4 min-h-0">
-      
+
       {/* Top Navigation */}
       <div className="w-full flex items-center justify-between mb-3.5 shrink-0">
-        <button 
-          onClick={() => navigate(`/scan?mode=${mode}`)} 
+        <button
+          onClick={() => navigate(`/scan?mode=${mode}`)}
           className="text-white hover:bg-white/20 flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-md transition-all border border-white/20 shadow-xs cursor-pointer active:scale-95"
         >
           <ArrowLeft size={14} /> {isTH ? 'กลับไปหน้าสแกน' : 'Back to Scan'}
         </button>
 
-        <div className={`text-xs px-3 py-1.5 rounded-full font-bold border flex items-center gap-1.5 shadow-xs ${
-          isWalkinMode 
-            ? 'bg-amber-400/20 text-amber-200 border-amber-400/40' 
-            : isCheckinMode
+        <div className={`text-xs px-3 py-1.5 rounded-full font-bold border flex items-center gap-1.5 shadow-xs ${isWalkinMode
+          ? 'bg-amber-400/20 text-amber-200 border-amber-400/40'
+          : isCheckinMode
             ? 'bg-teal-500/20 text-teal-200 border-teal-400/40'
             : 'bg-purple-500/20 text-purple-200 border-purple-400/40'
-        }`}>
+          }`}>
           {isWalkinMode ? (
             <>
               <ShieldCheck size={14} className="text-amber-400 shrink-0" />
-              <span>{isTH ? 'โหมดอนุมัติ Walk-in (สุ่มกลุ่ม)' : 'Walk-in Approval Mode'}</span>
+              <span>{isTH ? 'โหมดอนุมัติ Walk-in' : 'Walk-in Approval Mode'}</span>
             </>
           ) : isCheckinMode ? (
             <>
               <ClipboardCheck size={14} className="text-teal-400 shrink-0" />
-              <span>{isTH ? 'โหมดเช็คชื่อลงทะเบียน (วันที่ 1 เช้า)' : 'Registration Check-in Mode'}</span>
+              <span>{isTH ? 'โหมดเช็คชื่อลงทะเบียน' : 'Registration Check-in Mode'}</span>
             </>
           ) : (
             <>
@@ -393,7 +423,7 @@ export default function StudentDetails() {
 
       {/* Main Solid White Content Card */}
       <div className="bg-white rounded-3xl p-5 sm:p-7 md:p-8 w-full shadow-2xl border border-slate-200/80 text-slate-800 space-y-5 my-auto">
-        
+
         {/* Student Profile Overview Header */}
         <div className="border-b border-slate-100 pb-4 space-y-3">
           {/* Top Row: Name on Left, Badges on Right */}
@@ -407,22 +437,22 @@ export default function StudentDetails() {
               {isCheckinMode && (
                 isCheckedIn ? (
                   <span className="px-3 py-1 rounded-full bg-teal-100 text-teal-800 border border-teal-300 font-extrabold text-xs flex items-center gap-1.5 shadow-xs">
-                    <CheckCircle2 size={13} className="text-teal-600" /> เช็คชื่อแล้ว
+                    <CheckCircle2 size={13} className="text-teal-600" /> {isTH ? 'เช็คชื่อแล้ว' : 'Checked In'}
                   </span>
                 ) : (
                   <span className="px-3 py-1 rounded-full bg-slate-100 text-slate-700 border border-slate-300 font-extrabold text-xs flex items-center gap-1.5 shadow-xs">
-                    ยังไม่ได้เช็คชื่อ
+                    {isTH ? 'ยังไม่ได้เช็คชื่อ' : 'Pending'}
                   </span>
                 )
               )}
               {!isWalkinMode && !isCheckinMode && (
                 isReceived ? (
                   <span className="px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 font-extrabold text-xs flex items-center gap-1.5 shadow-xs">
-                    <CheckCircle2 size={13} className="text-emerald-600" /> รับแล้ว
+                    <CheckCircle2 size={13} className="text-emerald-600" /> {isTH ? 'รับแล้ว' : 'Received'}
                   </span>
                 ) : (
                   <span className="px-3 py-1 rounded-full bg-amber-100 text-amber-900 border border-amber-300 font-extrabold text-xs flex items-center gap-1.5 shadow-xs">
-                    ยังไม่ได้รับเสื้อ
+                    {isTH ? 'ยังไม่ได้รับเสื้อ' : 'Not Received'}
                   </span>
                 )
               )}
@@ -438,29 +468,16 @@ export default function StudentDetails() {
           {/* Details Section: Spans Full Width of Container */}
           <div className="w-full bg-slate-50/80 rounded-2xl p-3 sm:p-4 border border-slate-200/80 space-y-2.5 text-xs sm:text-sm">
             <div className="flex items-center justify-between gap-2 border-b border-slate-200/60 pb-2">
-              <span className="text-slate-500 font-semibold shrink-0">รหัสนักศึกษา:</span>
+              <span className="text-slate-500 font-semibold shrink-0">{isTH ? 'รหัสนักศึกษา:' : 'Student ID:'}</span>
               <span className={`text-slate-900 font-bold text-right truncate ${(student.studentId === '69070500000' || String(student.studentId).includes('ยังไม่ได้รับ')) ? '' : 'font-mono'}`}>
                 {formatStudentId(student.studentId || student.id)}
               </span>
             </div>
 
             <div className="flex items-center justify-between gap-2">
-              <span className="text-slate-500 font-semibold shrink-0">ภาควิชา:</span>
+              <span className="text-slate-500 font-semibold shrink-0">{isTH ? 'ภาควิชา:' : 'Department:'}</span>
               <span className="text-slate-900 font-bold text-right truncate">
-                {student.department || 'วิศวกรรมคอมพิวเตอร์'}
-              </span>
-            </div>
-
-            <div className="flex items-center justify-between gap-2">
-              <span className="text-slate-500 font-semibold shrink-0">กลุ่มกิจกรรม:</span>
-              <span className="text-slate-900 font-bold text-right truncate">
-                {(() => {
-                  const map = { '1': 'DREAM', '2': 'DESIGN', '3': 'BUILD', '4': 'BLOOM', '5': 'BEYOND' };
-                  const groupVal = student.group || student.assigned_group || student.assigned_group_name || '';
-                  const groupKey = String(groupVal).trim();
-                  const groupName = map[groupKey] || groupVal || (isTH ? 'ยังไม่ได้รับกลุ่ม' : 'Not Assigned');
-                  return groupName;
-                })()}
+                {formatDepartment(student.department, isTH)}
               </span>
             </div>
           </div>
@@ -528,21 +545,6 @@ export default function StudentDetails() {
                 <span className="text-[11px] text-emerald-700 font-medium shrink-0">โดย {student.walkin_approved_by_staff_name}</span>
               )}
             </div>
-
-            {student.group && (() => {
-              const str = String(student.group).trim();
-              const map = { '1': 'DREAM', '2': 'DESIGN', '3': 'BUILD', '4': 'BLOOM', '5': 'BEYOND' };
-              const groupName = map[str] || str;
-              const displayGroup = groupName.startsWith('กลุ่ม') ? groupName : `กลุ่ม ${groupName}`;
-              return (
-                <div className="mt-2 p-3 bg-white rounded-xl border border-emerald-200 text-center">
-                  <p className="text-[11px] text-slate-500 font-bold uppercase tracking-wider mb-1">กลุ่มกิจกรรมที่ได้รับ</p>
-                  <p className="text-xl sm:text-2xl font-black text-amber-600">
-                    {displayGroup}
-                  </p>
-                </div>
-              );
-            })()}
           </div>
         )}
 
@@ -572,289 +574,312 @@ export default function StudentDetails() {
                 )}
               </div>
             </div>
-          ) : (
-            <div className="space-y-4">
-              <div className="p-4 bg-teal-50 border-2 border-teal-200 rounded-2xl text-xs text-teal-900 font-medium leading-relaxed">
-                กดปุ่มด้านล่างเพื่อบันทึกการเช็คชื่อลงทะเบียน (วันที่ 1 รอบเช้า) ลง Firebase พร้อมบันทึก log ผู้เช็ค, IP และรุ่นมือถือ
+          ) : (() => {
+            const isSupervisor = staff?.role === 'STAFF_SUPERVISOR';
+            const isDeptMismatch = !isSupervisor && staff?.department && !matchDepartment(student?.department, staff.department);
+
+            if (isDeptMismatch) {
+              return (
+                <div className="space-y-4">
+                  <div className="p-4 bg-rose-50 border-2 border-rose-300 rounded-2xl text-xs text-rose-900 font-bold leading-relaxed space-y-1.5 shadow-sm">
+                    <div className="flex items-center gap-2 text-rose-700 text-sm font-extrabold">
+                      <AlertTriangle size={20} className="text-rose-600 shrink-0" />
+                      <span>{isTH ? 'นักศึกษาไม่ได้อยู่ในภาควิชาของคุณ' : 'Student is not in your department'}</span>
+                    </div>
+                    <p className="text-xs text-rose-800 font-medium">
+                      {isTH
+                        ? `นักศึกษารายนี้สังกัดภาควิชา ${formatDepartment(student?.department, true)} ไม่ตรงกับภาควิชาที่คุณมีสิทธิ์เช็คชื่อ (${formatDepartment(staff?.department, true)})`
+                        : `This student belongs to ${formatDepartment(student?.department, false)}, which does not match your department (${formatDepartment(staff?.department, false)}).`}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    disabled={true}
+                    className="w-full py-3.5 sm:py-4 rounded-2xl bg-gray-200 text-gray-500 font-bold text-sm sm:text-base flex items-center justify-center gap-2 cursor-not-allowed border border-gray-300 opacity-80"
+                  >
+                    <XCircle size={18} /> {isTH ? 'นักศึกษาไม่ได้อยู่ในภาควิชาของคุณ' : 'Student is not in your department'}
+                  </button>
+                </div>
+              );
+            }
+
+            return (
+              <div className="space-y-4">
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmModal(true)}
+                  disabled={isSubmitting}
+                  className="w-full py-3.5 sm:py-4 rounded-2xl bg-teal-600 hover:bg-teal-700 text-white font-extrabold text-sm sm:text-base flex items-center justify-center gap-2.5 cursor-pointer shadow-xl transition-all active:scale-[0.99] disabled:opacity-50"
+                >
+                  <ClipboardCheck size={18} /> {isTH ? 'ยืนยันเช็คชื่อลงทะเบียน' : 'Confirm Registration Check-in'}
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={() => setShowConfirmModal(true)}
-                disabled={isSubmitting}
-                className="w-full py-3.5 sm:py-4 rounded-2xl bg-teal-600 hover:bg-teal-700 text-white font-extrabold text-sm sm:text-base flex items-center justify-center gap-2.5 cursor-pointer shadow-xl transition-all active:scale-[0.99] disabled:opacity-50"
-              >
-                <ClipboardCheck size={18} /> ยืนยันเช็คชื่อลงทะเบียน
-              </button>
-            </div>
-          )
+            );
+          })()
         )}
 
         {/* SHIRT PICKUP SECTION (Only visible in Shirt Pickup Mode, hidden in Walk-in Approval Mode) */}
         {!isWalkinMode && !isCheckinMode && (
           isReceived ? (
-          <div className="space-y-3 bg-emerald-50/80 p-4 sm:p-5 rounded-2xl border border-emerald-200">
-            {/* Header */}
-            <div className="flex items-center gap-2.5 border-b border-emerald-200 pb-3 mb-1">
-              <div className="w-9 h-9 rounded-xl bg-emerald-600 flex items-center justify-center shrink-0 shadow-sm">
-                <ShieldCheck className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <h3 className="font-extrabold text-emerald-800 text-sm sm:text-base leading-tight">ประวัติการรับเสื้อเรียบร้อย</h3>
-                <p className="text-[10px] text-emerald-600 font-medium">บันทึกข้อมูลในระบบแล้ว</p>
-              </div>
-            </div>
-
-            <div className="space-y-2.5">
-              {/* Date & Time */}
-              {student.shirt_received_at && (() => {
-                const dtStr = student.shirt_received_at;
-                const dt = new Date(dtStr);
-                const isValid = !isNaN(dt.getTime());
-                const dateStr = isValid
-                  ? dt.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' })
-                  : dtStr.split('T')[0] || dtStr;
-                const timeStr = isValid
-                  ? dt.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
-                  : (dtStr.split('T')[1] || '').replace(/\.\d+\+.*$/, '').replace(/\+.*$/, '');
-                return (
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="bg-white rounded-xl px-3 py-2.5 border border-emerald-100 shadow-sm">
-                      <p className="text-[9px] text-slate-400 font-semibold uppercase tracking-wide mb-0.5">วันที่รับ</p>
-                      <p className="text-xs font-bold text-slate-800 leading-tight">{dateStr}</p>
-                    </div>
-                    <div className="bg-white rounded-xl px-3 py-2.5 border border-emerald-100 shadow-sm">
-                      <p className="text-[9px] text-slate-400 font-semibold uppercase tracking-wide mb-0.5">เวลาที่รับ</p>
-                      <p className="text-sm font-black text-emerald-700 font-mono">{timeStr}</p>
-                    </div>
-                  </div>
-                );
-              })()}
-
-              {/* Shirt Size Received vs Reserved */}
-              <div className="bg-white rounded-xl px-3 py-2.5 border border-amber-200 shadow-sm">
-                <p className="text-[9px] text-slate-400 font-semibold uppercase tracking-wide mb-1.5">ไซซ์เสื้อที่ได้รับ</p>
-                <div className="flex items-center gap-2.5">
-                  <span className="text-2xl font-black text-amber-700">{student.shirt_size_received || student.shirtSize}</span>
-                  {student.is_shirt_size_changed && student.shirtSize && (
-                    <div className="flex items-center gap-1 text-[10px] text-slate-500 font-medium bg-amber-50 px-2 py-1 rounded-lg border border-amber-200">
-                      <Shirt size={11} className="text-amber-500" />
-                      <span>จองไว้: <b className="text-amber-700">{student.shirtSize}</b></span>
-                    </div>
-                  )}
-                  {!student.is_shirt_size_changed && student.shirtSize && (
-                    <div className="flex items-center gap-1 text-[10px] text-emerald-600 font-medium bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-200">
-                      <Shirt size={11} className="text-emerald-500" />
-                      <span>ตรงกับที่จอง</span>
-                    </div>
-                  )}
+            <div className="space-y-3 bg-emerald-50/80 p-4 sm:p-5 rounded-2xl border border-emerald-200">
+              {/* Header */}
+              <div className="flex items-center gap-2.5 border-b border-emerald-200 pb-3 mb-1">
+                <div className="w-9 h-9 rounded-xl bg-emerald-600 flex items-center justify-center shrink-0 shadow-sm">
+                  <ShieldCheck className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-emerald-800 text-sm sm:text-base leading-tight">ประวัติการรับเสื้อเรียบร้อย</h3>
+                  <p className="text-[10px] text-emerald-600 font-medium">บันทึกข้อมูลในระบบแล้ว</p>
                 </div>
               </div>
 
-              {/* Staff who distributed */}
-              <div className="bg-white rounded-xl px-3 py-2.5 border border-emerald-100 shadow-sm">
-                <p className="text-[9px] text-slate-400 font-semibold uppercase tracking-wide mb-1.5">สตาฟฟ์ผู้แจก</p>
-                <div className="flex items-center gap-2.5">
-                  {student.shirt_received_by_staff_pic ? (
-                    <img
-                      src={student.shirt_received_by_staff_pic}
-                      alt="Staff"
-                      className="w-8 h-8 rounded-full object-cover border-2 border-emerald-300 shadow-sm shrink-0"
-                    />
-                  ) : (
-                    <div className="w-8 h-8 rounded-full bg-purple-100 border-2 border-purple-200 flex items-center justify-center shrink-0">
-                      <User size={16} className="text-purple-500" />
-                    </div>
-                  )}
-                  <p className="text-sm font-bold text-slate-800">{student.shirt_received_by_staff_name || 'Staff'}</p>
-                </div>
-              </div>
-
-              {/* Proxy info */}
-              {student.proxy_name && (
-                <div className="bg-blue-50 rounded-xl px-3 py-2.5 border border-blue-200 shadow-sm space-y-1">
-                  <p className="text-[9px] text-blue-400 font-semibold uppercase tracking-wide">รายละเอียดผู้รับแทน</p>
-                  <p className="text-xs font-bold text-blue-800">{student.proxy_name}</p>
-                  {student.proxy_student_id && <p className="text-[11px] text-slate-600">รหัส: {student.proxy_student_id}</p>}
-                  {student.proxy_phone && <p className="text-[11px] text-slate-600">โทร: {student.proxy_phone}</p>}
-                </div>
-              )}
-            </div>
-
-            <button 
-              onClick={handleRevoke}
-              disabled={isSubmitting}
-              className="w-full mt-2 py-2.5 rounded-xl bg-red-100 hover:bg-red-200 border border-red-300 text-red-700 font-bold text-xs sm:text-sm transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm disabled:opacity-50"
-            >
-              <XCircle size={16} /> {isTH ? 'ยกเลิกรายการนี้' : 'Revoke Item'}
-            </button>
-          </div>
-        ) : (
-          /* FORM TO CONFIRM SHIRT PICKUP */
-          <div className="space-y-5">
-            
-            {/* 1. Shirt Size Selection */}
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <label className="text-xs sm:text-sm font-black text-slate-900 flex items-center gap-1.5">
-                  <Shirt size={16} className="text-indigo-600" /> ไซซ์เสื้อที่แจกจริง:
-                </label>
-                <span className="text-xs text-slate-500 font-medium">
-                  ไซซ์ที่ลงทะเบียนไว้: <b className="text-amber-800 text-xs sm:text-sm font-black font-mono">{registeredSize}</b>
-                </span>
-              </div>
-
-              {/* Size Buttons Selector */}
-              <div className="grid grid-cols-5 gap-2">
-                {SHIRT_SIZES.map((size) => {
-                  const isSelected = selectedSize === size;
-                  const isOriginal = registeredSize === size;
+              <div className="space-y-2.5">
+                {/* Date & Time */}
+                {student.shirt_received_at && (() => {
+                  const dtStr = student.shirt_received_at;
+                  const dt = new Date(dtStr);
+                  const isValid = !isNaN(dt.getTime());
+                  const dateStr = isValid
+                    ? dt.toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' })
+                    : dtStr.split('T')[0] || dtStr;
+                  const timeStr = isValid
+                    ? dt.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+                    : (dtStr.split('T')[1] || '').replace(/\.\d+\+.*$/, '').replace(/\+.*$/, '');
                   return (
-                    <button
-                      key={size}
-                      type="button"
-                      onClick={() => setSelectedSize(size)}
-                      className={`py-2.5 sm:py-3 rounded-xl font-black text-xs sm:text-sm transition-all border cursor-pointer ${
-                        isSelected 
-                          ? 'bg-amber-400 text-slate-950 border-2 border-amber-500 shadow-md scale-105 font-black' 
-                          : isOriginal 
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="bg-white rounded-xl px-3 py-2.5 border border-emerald-100 shadow-sm">
+                        <p className="text-[9px] text-slate-400 font-semibold uppercase tracking-wide mb-0.5">วันที่รับ</p>
+                        <p className="text-xs font-bold text-slate-800 leading-tight">{dateStr}</p>
+                      </div>
+                      <div className="bg-white rounded-xl px-3 py-2.5 border border-emerald-100 shadow-sm">
+                        <p className="text-[9px] text-slate-400 font-semibold uppercase tracking-wide mb-0.5">เวลาที่รับ</p>
+                        <p className="text-sm font-black text-emerald-700 font-mono">{timeStr}</p>
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {/* Shirt Size Received vs Reserved */}
+                <div className="bg-white rounded-xl px-3 py-2.5 border border-amber-200 shadow-sm">
+                  <p className="text-[9px] text-slate-400 font-semibold uppercase tracking-wide mb-1.5">ไซซ์เสื้อที่ได้รับ</p>
+                  <div className="flex items-center gap-2.5">
+                    <span className="text-2xl font-black text-amber-700">{student.shirt_size_received || student.shirtSize}</span>
+                    {student.is_shirt_size_changed && student.shirtSize && (
+                      <div className="flex items-center gap-1 text-[10px] text-slate-500 font-medium bg-amber-50 px-2 py-1 rounded-lg border border-amber-200">
+                        <Shirt size={11} className="text-amber-500" />
+                        <span>จองไว้: <b className="text-amber-700">{student.shirtSize}</b></span>
+                      </div>
+                    )}
+                    {!student.is_shirt_size_changed && student.shirtSize && (
+                      <div className="flex items-center gap-1 text-[10px] text-emerald-600 font-medium bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-200">
+                        <Shirt size={11} className="text-emerald-500" />
+                        <span>ตรงกับที่จอง</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Staff who distributed */}
+                <div className="bg-white rounded-xl px-3 py-2.5 border border-emerald-100 shadow-sm">
+                  <p className="text-[9px] text-slate-400 font-semibold uppercase tracking-wide mb-1.5">สตาฟฟ์ผู้แจก</p>
+                  <div className="flex items-center gap-2.5">
+                    {student.shirt_received_by_staff_pic ? (
+                      <img
+                        src={student.shirt_received_by_staff_pic}
+                        alt="Staff"
+                        className="w-8 h-8 rounded-full object-cover border-2 border-emerald-300 shadow-sm shrink-0"
+                      />
+                    ) : (
+                      <div className="w-8 h-8 rounded-full bg-purple-100 border-2 border-purple-200 flex items-center justify-center shrink-0">
+                        <User size={16} className="text-purple-500" />
+                      </div>
+                    )}
+                    <p className="text-sm font-bold text-slate-800">{student.shirt_received_by_staff_name || 'Staff'}</p>
+                  </div>
+                </div>
+
+                {/* Proxy info */}
+                {student.proxy_name && (
+                  <div className="bg-blue-50 rounded-xl px-3 py-2.5 border border-blue-200 shadow-sm space-y-1">
+                    <p className="text-[9px] text-blue-400 font-semibold uppercase tracking-wide">รายละเอียดผู้รับแทน</p>
+                    <p className="text-xs font-bold text-blue-800">{student.proxy_name}</p>
+                    {student.proxy_student_id && <p className="text-[11px] text-slate-600">รหัส: {student.proxy_student_id}</p>}
+                    {student.proxy_phone && <p className="text-[11px] text-slate-600">โทร: {student.proxy_phone}</p>}
+                  </div>
+                )}
+              </div>
+
+              <button
+                onClick={handleRevoke}
+                disabled={isSubmitting}
+                className="w-full mt-2 py-2.5 rounded-xl bg-red-100 hover:bg-red-200 border border-red-300 text-red-700 font-bold text-xs sm:text-sm transition-all flex items-center justify-center gap-2 cursor-pointer shadow-sm disabled:opacity-50"
+              >
+                <XCircle size={16} /> {isTH ? 'ยกเลิกรายการนี้' : 'Revoke Item'}
+              </button>
+            </div>
+          ) : (
+            /* FORM TO CONFIRM SHIRT PICKUP */
+            <div className="space-y-5">
+
+              {/* 1. Shirt Size Selection */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-xs sm:text-sm font-black text-slate-900 flex items-center gap-1.5">
+                    <Shirt size={16} className="text-indigo-600" /> ไซซ์เสื้อที่แจกจริง:
+                  </label>
+                  <span className="text-xs text-slate-500 font-medium">
+                    ไซซ์ที่ลงทะเบียนไว้: <b className="text-amber-800 text-xs sm:text-sm font-black font-mono">{registeredSize}</b>
+                  </span>
+                </div>
+
+                {/* Size Buttons Selector */}
+                <div className="grid grid-cols-5 gap-2">
+                  {SHIRT_SIZES.map((size) => {
+                    const isSelected = selectedSize === size;
+                    const isOriginal = registeredSize === size;
+                    return (
+                      <button
+                        key={size}
+                        type="button"
+                        onClick={() => setSelectedSize(size)}
+                        className={`py-2.5 sm:py-3 rounded-xl font-black text-xs sm:text-sm transition-all border cursor-pointer ${isSelected
+                          ? 'bg-amber-400 text-slate-950 border-2 border-amber-500 shadow-md scale-105 font-black'
+                          : isOriginal
                             ? 'bg-amber-50 text-amber-900 border-2 border-amber-300 hover:bg-amber-100 font-bold'
                             : 'bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-200 font-semibold'
-                      }`}
-                    >
-                      {size}
-                      {isOriginal && <span className="block text-[9px] font-normal leading-none opacity-80">(จอง)</span>}
-                    </button>
-                  );
-                })}
+                          }`}
+                      >
+                        {size}
+                        {isOriginal && <span className="block text-[9px] font-normal leading-none opacity-80">(จอง)</span>}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Warning if size changed */}
+                {isSizeChanged && (
+                  <div className="mt-2.5 p-3 rounded-2xl bg-amber-50 border border-amber-300 text-amber-900 text-xs font-semibold flex items-center gap-2">
+                    <AlertTriangle size={16} className="text-amber-600 shrink-0" />
+                    <span>{isTH ? `แจ้งเตือน: กำลังมอบเสื้อไซซ์ ${selectedSize} (ต่างจากไซซ์ที่จองไว้เดิม ${registeredSize})` : `Notice: Assigning size ${selectedSize} (Original size: ${registeredSize})`}</span>
+                  </div>
+                )}
               </div>
 
-              {/* Warning if size changed */}
-              {isSizeChanged && (
-                <div className="mt-2.5 p-3 rounded-2xl bg-amber-50 border border-amber-300 text-amber-900 text-xs font-semibold flex items-center gap-2">
-                  <AlertTriangle size={16} className="text-amber-600 shrink-0" />
-                  <span>{isTH ? `แจ้งเตือน: กำลังมอบเสื้อไซซ์ ${selectedSize} (ต่างจากไซซ์ที่จองไว้เดิม ${registeredSize})` : `Notice: Assigning size ${selectedSize} (Original size: ${registeredSize})`}</span>
-                </div>
-              )}
-            </div>
-
-            {/* 2. Proxy Pickup Toggle */}
-            <div className="pt-3 border-t border-slate-100">
-              <div className="flex items-center justify-between">
-                <label className="text-xs sm:text-sm font-black text-slate-900 flex items-center gap-1.5">
-                  <User size={16} className="text-indigo-600" />
-                  <span>ผู้รับมอบเสื้อ:</span>
-                </label>
-                <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200">
-                  <button
-                    type="button"
-                    onClick={() => { setIsProxy(false); setProxyName(''); setProxyStudentId(''); setProxyPhone(''); }}
-                    className={`px-3 py-1.5 text-xs rounded-lg font-bold transition-all cursor-pointer ${
-                      !isProxy ? 'bg-amber-400 text-slate-950 shadow-sm' : 'text-slate-600 hover:text-slate-900 font-semibold'
-                    }`}
-                  >
-                    {isTH ? 'รับด้วยตนเอง' : 'Self Pickup'}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setIsProxy(true)}
-                    className={`px-3 py-1.5 text-xs rounded-lg font-bold transition-all cursor-pointer ${
-                      isProxy ? 'bg-amber-400 text-slate-950 shadow-sm' : 'text-slate-600 hover:text-slate-900 font-semibold'
-                    }`}
-                  >
-                    {isTH ? 'มีผู้รับแทน' : 'Proxy Pickup'}
-                  </button>
-                </div>
-              </div>
-
-              {/* Proxy Pickup Details Box */}
-              {isProxy && (
-                <div className="mt-3 p-4 rounded-2xl bg-amber-50/80 border border-amber-200 space-y-3 shadow-sm">
-                  <span className="text-xs font-extrabold text-amber-900 block">👥 ระบุข้อมูลผู้รับแทน:</span>
-
-                  {/* Mode Buttons */}
-                  <div className="flex gap-2">
+              {/* 2. Proxy Pickup Toggle */}
+              <div className="pt-3 border-t border-slate-100">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs sm:text-sm font-black text-slate-900 flex items-center gap-1.5">
+                    <User size={16} className="text-indigo-600" />
+                    <span>ผู้รับมอบเสื้อ:</span>
+                  </label>
+                  <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200">
                     <button
                       type="button"
-                      onClick={() => setShowProxyScanModal(true)}
-                      className="flex-1 py-2.5 px-3 rounded-xl bg-amber-200/70 hover:bg-amber-200 border border-amber-300 text-amber-950 text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer shadow-sm"
+                      onClick={() => { setIsProxy(false); setProxyName(''); setProxyStudentId(''); setProxyPhone(''); }}
+                      className={`px-3 py-1.5 text-xs rounded-lg font-bold transition-all cursor-pointer ${!isProxy ? 'bg-amber-400 text-slate-950 shadow-sm' : 'text-slate-600 hover:text-slate-900 font-semibold'
+                        }`}
                     >
-                      <QrCode size={15} /> สแกน QR / Short Code
+                      {isTH ? 'รับด้วยตนเอง' : 'Self Pickup'}
                     </button>
                     <button
                       type="button"
-                      onClick={() => { setProxyType('MANUAL_INPUT'); }}
-                      className={`px-3 py-2.5 rounded-xl text-xs font-bold border cursor-pointer ${
-                        proxyType === 'MANUAL_INPUT' ? 'bg-amber-400 text-slate-950 border-amber-500 shadow-sm' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
-                      }`}
+                      onClick={() => setIsProxy(true)}
+                      className={`px-3 py-1.5 text-xs rounded-lg font-bold transition-all cursor-pointer ${isProxy ? 'bg-amber-400 text-slate-950 shadow-sm' : 'text-slate-600 hover:text-slate-900 font-semibold'
+                        }`}
                     >
-                      กรอกรหัสมือ
+                      {isTH ? 'มีผู้รับแทน' : 'Proxy Pickup'}
                     </button>
                   </div>
+                </div>
 
-                  {/* Proxy Info Display / Manual Inputs */}
-                  {proxyType === 'MANUAL_INPUT' ? (
-                    <div className="space-y-2 pt-1">
-                      <div>
-                        <label className="block text-[11px] font-bold text-slate-700 mb-1">รหัสนักศึกษาผู้รับแทน 11 หลัก *</label>
-                        <input
-                          type="text"
-                          maxLength={11}
-                          value={proxyStudentId}
-                          onChange={(e) => handleManualProxyChange(e.target.value, proxyPhone)}
-                          placeholder="69070500002"
-                          className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 text-xs font-mono font-bold focus:outline-none focus:ring-2 focus:ring-amber-500"
-                          required
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[11px] font-bold text-slate-700 mb-1">เบอร์โทรศัพท์ผู้รับแทน *</label>
-                        <input
-                          type="tel"
-                          value={proxyPhone}
-                          onChange={(e) => handleManualProxyChange(proxyStudentId, e.target.value)}
-                          placeholder="0898765432"
-                          className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 text-xs font-mono font-bold focus:outline-none focus:ring-2 focus:ring-amber-500"
-                          required
-                        />
-                      </div>
+                {/* Proxy Pickup Details Box */}
+                {isProxy && (
+                  <div className="mt-3 p-4 rounded-2xl bg-amber-50/80 border border-amber-200 space-y-3 shadow-sm">
+                    <span className="text-xs font-extrabold text-amber-900 block">👥 ระบุข้อมูลผู้รับแทน:</span>
+
+                    {/* Mode Buttons */}
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setShowProxyScanModal(true)}
+                        className="flex-1 py-2.5 px-3 rounded-xl bg-amber-200/70 hover:bg-amber-200 border border-amber-300 text-amber-950 text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer shadow-sm"
+                      >
+                        <QrCode size={15} /> สแกน QR / Short Code
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setProxyType('MANUAL_INPUT'); }}
+                        className={`px-3 py-2.5 rounded-xl text-xs font-bold border cursor-pointer ${proxyType === 'MANUAL_INPUT' ? 'bg-amber-400 text-slate-950 border-amber-500 shadow-sm' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
+                          }`}
+                      >
+                        กรอกรหัสมือ
+                      </button>
                     </div>
-                  ) : (
-                    proxyName ? (
-                      <div className="p-3 rounded-xl bg-white border border-emerald-300 text-xs space-y-1 shadow-sm">
-                        <p className="font-black text-emerald-700 flex items-center gap-1">
-                          <CheckCircle2 size={14} /> ข้อมูลผู้รับแทนจากระบบ:
-                        </p>
-                        <p className="text-slate-800 font-bold">• ชื่อ-นามสกุล: {proxyName}</p>
-                        <p className="text-slate-600 font-mono">• รหัสนักศึกษา: {proxyStudentId}</p>
-                        {proxyPhone && <p className="text-slate-600 font-mono">• เบอร์โทร: {proxyPhone}</p>}
+
+                    {/* Proxy Info Display / Manual Inputs */}
+                    {proxyType === 'MANUAL_INPUT' ? (
+                      <div className="space-y-2 pt-1">
+                        <div>
+                          <label className="block text-[11px] font-bold text-slate-700 mb-1">รหัสนักศึกษาผู้รับแทน 11 หลัก *</label>
+                          <input
+                            type="text"
+                            maxLength={11}
+                            value={proxyStudentId}
+                            onChange={(e) => handleManualProxyChange(e.target.value, proxyPhone)}
+                            placeholder="69070500002"
+                            className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 text-xs font-mono font-bold focus:outline-none focus:ring-2 focus:ring-amber-500"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[11px] font-bold text-slate-700 mb-1">เบอร์โทรศัพท์ผู้รับแทน *</label>
+                          <input
+                            type="tel"
+                            value={proxyPhone}
+                            onChange={(e) => handleManualProxyChange(proxyStudentId, e.target.value)}
+                            placeholder="0898765432"
+                            className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 text-xs font-mono font-bold focus:outline-none focus:ring-2 focus:ring-amber-500"
+                            required
+                          />
+                        </div>
                       </div>
                     ) : (
-                      <p className="text-xs text-amber-900 font-medium italic text-center py-1">
-                        * กดปุ่ม "สแกน QR / Short Code" เพื่อเลือกผู้รับแทนจากระบบ
-                      </p>
-                    )
-                  )}
-                </div>
-              )}
+                      proxyName ? (
+                        <div className="p-3 rounded-xl bg-white border border-emerald-300 text-xs space-y-1 shadow-sm">
+                          <p className="font-black text-emerald-700 flex items-center gap-1">
+                            <CheckCircle2 size={14} /> ข้อมูลผู้รับแทนจากระบบ:
+                          </p>
+                          <p className="text-slate-800 font-bold">• ชื่อ-นามสกุล: {proxyName}</p>
+                          <p className="text-slate-600 font-mono">• รหัสนักศึกษา: {proxyStudentId}</p>
+                          {proxyPhone && <p className="text-slate-600 font-mono">• เบอร์โทร: {proxyPhone}</p>}
+                        </div>
+                      ) : (
+                        <p className="text-xs text-amber-900 font-medium italic text-center py-1">
+                          * กดปุ่ม "สแกน QR / Short Code" เพื่อเลือกผู้รับแทนจากระบบ
+                        </p>
+                      )
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Confirm Submit Button */}
+              <button
+                type="button"
+                onClick={() => setShowConfirmModal(true)}
+                className="w-full py-3.5 sm:py-4 rounded-2xl bg-purple-700 hover:bg-purple-800 text-white font-extrabold text-sm sm:text-base flex items-center justify-center gap-2.5 cursor-pointer mt-3 shadow-xl hover:shadow-2xl transition-all active:scale-[0.99]"
+              >
+                <CheckCircle2 size={18} /> ยืนยันการรับมอบเสื้อ
+              </button>
+
             </div>
-
-            {/* Confirm Submit Button */}
-            <button
-              type="button"
-              onClick={() => setShowConfirmModal(true)}
-              className="w-full py-3.5 sm:py-4 rounded-2xl bg-purple-700 hover:bg-purple-800 text-white font-extrabold text-sm sm:text-base flex items-center justify-center gap-2.5 cursor-pointer mt-3 shadow-xl hover:shadow-2xl transition-all active:scale-[0.99]"
-            >
-              <CheckCircle2 size={18} /> ยืนยันการรับมอบเสื้อ
-            </button>
-
-          </div>
-        )
-      )}
+          )
+        )}
       </div>
 
       {/* CUSTOM CENTER-SCREEN ALERT/NOTICE MODAL */}
       {alertNoticeModal && (
-        <div 
+        <div
           className="fixed inset-0 z-50 overflow-y-auto p-4 flex items-center justify-center bg-slate-950/70 backdrop-blur-xs transition-opacity cursor-pointer"
           onClick={(e) => {
             if (e.target === e.currentTarget) {
@@ -862,16 +887,15 @@ export default function StudentDetails() {
             }
           }}
         >
-          <div 
+          <div
             className="bg-white rounded-3xl p-6 w-full max-w-sm border border-slate-200 text-center space-y-4 shadow-2xl text-slate-800 relative cursor-default transform transition-all animate-in fade-in zoom-in-95 duration-200"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Icon Header */}
-            <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto shadow-md border-2 ${
-              alertNoticeModal.type === 'success' 
-                ? 'bg-emerald-100 text-emerald-600 border-emerald-300' 
-                : 'bg-rose-100 text-rose-600 border-rose-300'
-            }`}>
+            <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto shadow-md border-2 ${alertNoticeModal.type === 'success'
+              ? 'bg-emerald-100 text-emerald-600 border-emerald-300'
+              : 'bg-rose-100 text-rose-600 border-rose-300'
+              }`}>
               {alertNoticeModal.type === 'success' ? (
                 <CheckCircle2 size={36} strokeWidth={2.5} />
               ) : (
@@ -901,14 +925,13 @@ export default function StudentDetails() {
                     navigate(`/scan?mode=${mode}`);
                   }
                 }}
-                className={`w-full py-3 rounded-2xl font-extrabold text-sm shadow-md cursor-pointer transition-colors ${
-                  alertNoticeModal.type === 'success'
-                    ? 'bg-amber-500 hover:bg-amber-600 text-slate-950'
-                    : 'bg-slate-800 hover:bg-slate-900 text-white'
-                }`}
+                className={`w-full py-3 rounded-2xl font-extrabold text-sm shadow-md cursor-pointer transition-colors ${alertNoticeModal.type === 'success'
+                  ? 'bg-amber-500 hover:bg-amber-600 text-slate-950'
+                  : 'bg-slate-800 hover:bg-slate-900 text-white'
+                  }`}
               >
-                {alertNoticeModal.type === 'success' 
-                  ? (isTH ? '📷 สแกนอนุมัติคนถัดไป' : 'Scan Next Student') 
+                {alertNoticeModal.type === 'success'
+                  ? (isTH ? '📷 สแกนอนุมัติคนถัดไป' : 'Scan Next Student')
                   : (isTH ? 'ตกลง / ปิดหน้าต่าง' : 'OK / Close')}
               </button>
             </div>
@@ -918,7 +941,7 @@ export default function StudentDetails() {
 
       {/* CONFIRMATION MODAL */}
       {showConfirmModal && (
-        <div 
+        <div
           className="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm cursor-pointer"
           onClick={(e) => {
             if (e.target === e.currentTarget) {
@@ -926,7 +949,7 @@ export default function StudentDetails() {
             }
           }}
         >
-          <div 
+          <div
             className="bg-white rounded-3xl p-6 w-full max-w-sm border border-slate-200 shadow-2xl text-slate-800 space-y-5 cursor-default"
             onClick={(e) => e.stopPropagation()}
           >
@@ -970,17 +993,17 @@ export default function StudentDetails() {
                   <Clock size={15} className="text-teal-500 shrink-0" />
                   <div className="text-left">
                     <p className="text-[10px] text-teal-500 font-semibold uppercase tracking-wide">รอบเช็คชื่อ</p>
-                    <p className="text-sm font-black text-teal-700">วันที่ 1 — รอบเช้า (เวลาไทย +07:00)</p>
+                    <p className="text-sm font-black text-teal-700">วันที่ 2 — รอบเช้า (เวลาไทย +07:00)</p>
                   </div>
                 </div>
               ) : (
-              <div className="flex items-center gap-3 bg-amber-50 px-4 py-2.5 rounded-xl border border-amber-200">
-                <Shirt size={15} className="text-amber-500 shrink-0" />
-                <div className="text-left">
-                  <p className="text-[10px] text-amber-500 font-semibold uppercase tracking-wide">ไซซ์เสื้อที่จะมอบ</p>
-                  <p className="text-lg font-black text-amber-700">{selectedSize}</p>
+                <div className="flex items-center gap-3 bg-amber-50 px-4 py-2.5 rounded-xl border border-amber-200">
+                  <Shirt size={15} className="text-amber-500 shrink-0" />
+                  <div className="text-left">
+                    <p className="text-[10px] text-amber-500 font-semibold uppercase tracking-wide">ไซซ์เสื้อที่จะมอบ</p>
+                    <p className="text-lg font-black text-amber-700">{selectedSize}</p>
+                  </div>
                 </div>
-              </div>
               )}
               {isProxy && (
                 <div className="flex items-center gap-3 bg-blue-50 px-4 py-2.5 rounded-xl border border-blue-200">
@@ -1007,9 +1030,8 @@ export default function StudentDetails() {
                 type="button"
                 onClick={isCheckinMode ? handleConfirmCheckin : handleConfirmSubmit}
                 disabled={isSubmitting}
-                className={`flex-1 py-3 rounded-2xl text-white font-black text-sm flex items-center justify-center gap-2 shadow-lg cursor-pointer transition-colors disabled:opacity-70 ${
-                  isCheckinMode ? 'bg-teal-600 hover:bg-teal-700' : 'bg-purple-700 hover:bg-purple-800'
-                }`}
+                className={`flex-1 py-3 rounded-2xl text-white font-black text-sm flex items-center justify-center gap-2 shadow-lg cursor-pointer transition-colors disabled:opacity-70 ${isCheckinMode ? 'bg-teal-600 hover:bg-teal-700' : 'bg-purple-700 hover:bg-purple-800'
+                  }`}
               >
                 {isSubmitting ? (
                   <><Loader2 size={16} className="animate-spin" /><span>กำลังบันทึก...</span></>
@@ -1024,7 +1046,7 @@ export default function StudentDetails() {
 
       {/* SUCCESS MODAL */}
       {showSuccessModal && (
-        <div 
+        <div
           className="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm cursor-pointer"
           onClick={(e) => {
             if (e.target === e.currentTarget) {
@@ -1033,7 +1055,7 @@ export default function StudentDetails() {
             }
           }}
         >
-          <div 
+          <div
             className="bg-white rounded-3xl p-7 w-full max-w-sm border border-slate-200 text-center space-y-4 shadow-2xl text-slate-800 cursor-default"
             onClick={(e) => e.stopPropagation()}
           >
@@ -1059,7 +1081,7 @@ export default function StudentDetails() {
 
       {/* PROXY SCANNER MODAL */}
       {showProxyScanModal && (
-        <div 
+        <div
           className="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm cursor-pointer"
           onClick={(e) => {
             if (e.target === e.currentTarget) {
@@ -1067,7 +1089,7 @@ export default function StudentDetails() {
             }
           }}
         >
-          <div 
+          <div
             className="bg-white rounded-3xl p-5 sm:p-6 w-full max-w-md border border-slate-200 space-y-4 shadow-2xl text-slate-800 cursor-default"
             onClick={(e) => e.stopPropagation()}
           >

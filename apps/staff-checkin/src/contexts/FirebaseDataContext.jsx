@@ -33,12 +33,102 @@ export const getThaiISOString = () => {
   return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}.${millis}+07:00`;
 };
 
-// Formatted time display (e.g. "10:30:15 น.")
+// Formatted date & time display (e.g. "26 ก.ค. เวลา 10:30:15 น.")
 export const formatThaiTime = (dateObj = new Date()) => {
-  const hours = String(dateObj.getHours()).padStart(2, '0');
-  const minutes = String(dateObj.getMinutes()).padStart(2, '0');
-  const seconds = String(dateObj.getSeconds()).padStart(2, '0');
-  return `${hours}:${minutes}:${seconds} น.`;
+  if (!dateObj || isNaN(new Date(dateObj).getTime())) return 'ยังไม่ได้โหลดข้อมูล';
+  const d = new Date(dateObj);
+  const day = d.getDate();
+  const monthsTH = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+  const month = monthsTH[d.getMonth()];
+  const hours = String(d.getHours()).padStart(2, '0');
+  const minutes = String(d.getMinutes()).padStart(2, '0');
+  const seconds = String(d.getSeconds()).padStart(2, '0');
+  return `${day} ${month} เวลา ${hours}:${minutes}:${seconds} น.`;
+};
+
+// Department Aliases Map to match raw Firestore string variations
+export const DEPT_ALIASES = {
+  'CPE': ['CPE', 'คอมพิวเตอร์', 'COMPUTER', 'วิศวกรรมคอมพิวเตอร์'],
+  'ME': ['ME', 'เครื่องกล', 'MECHANICAL', 'วิศวกรรมเครื่องกล'],
+  'PE': ['PE', 'อุตสาหการ', 'การผลิต', 'INDUSTRIAL', 'วิศวกรรมอุตสาหการ'],
+  'CE': ['CE', 'โยธา', 'CIVIL', 'วิศวกรรมโยธา'],
+  'ENV': ['ENV', 'สิ่งแวดล้อม', 'ENVIRONMENTAL', 'วิศวกรรมสิ่งแวดล้อม'],
+  'CHE': ['CHE', 'เคมี', 'CHEMICAL', 'วิศวกรรมเคมี'],
+  'INC': ['INC', 'วัด', 'เครื่องมือวัด', 'INSTRUMENTATION', 'CONTROL', 'วิศวกรรมระบบควบคุมและเครื่องมือวัด'],
+  'EE': ['EE', 'ไฟฟ้า', 'ELECTRICAL', 'วิศวกรรมไฟฟ้า'],
+  'ENE': ['ENE', 'พลังงาน', 'ENERGY', 'MATERIALS', 'อิเล็กทรอนิกส์', 'โทรคมนาคม', 'วิศวกรรมอิเล็กทรอนิกส์และโทรคมนาคม'],
+  'TME': ['TME', 'แม่พิมพ์', 'TOOL', 'วิศวกรรมเครื่องมือและวัสดุ']
+};
+
+export const DEPT_TRANSLATIONS_TH = {
+  "CPE": "วิศวกรรมคอมพิวเตอร์",
+  "CE": "วิศวกรรมโยธา",
+  "CHE": "วิศวกรรมเคมี",
+  "EE": "วิศวกรรมไฟฟ้า",
+  "ENE": "วิศวกรรมอิเล็กทรอนิกส์และโทรคมนาคม",
+  "ENV": "วิศวกรรมสิ่งแวดล้อม",
+  "INC": "วิศวกรรมระบบควบคุมและเครื่องมือวัด",
+  "ME": "วิศวกรรมเครื่องกล",
+  "PE": "วิศวกรรมอุตสาหการ",
+  "TME": "วิศวกรรมเครื่องมือและวัสดุ",
+
+  "วิศวกรรมคอมพิวเตอร์": "วิศวกรรมคอมพิวเตอร์",
+  "วิศวกรรมโยธา": "วิศวกรรมโยธา",
+  "วิศวกรรมเคมี": "วิศวกรรมเคมี",
+  "วิศวกรรมไฟฟ้า": "วิศวกรรมไฟฟ้า",
+  "วิศวกรรมอิเล็กทรอนิกส์และโทรคมนาคม": "วิศวกรรมอิเล็กทรอนิกส์และโทรคมนาคม",
+  "วิศวกรรมสิ่งแวดล้อม": "วิศวกรรมสิ่งแวดล้อม",
+  "วิศวกรรมระบบควบคุมและเครื่องมือวัด": "วิศวกรรมระบบควบคุมและเครื่องมือวัด",
+  "วิศวกรรมเครื่องกล": "วิศวกรรมเครื่องกล",
+  "วิศวกรรมอุตสาหการ": "วิศวกรรมอุตสาหการ",
+  "วิศวกรรมเครื่องมือและวัสดุ": "วิศวกรรมเครื่องมือและวัสดุ"
+};
+
+export const DEPT_TRANSLATIONS_EN = {
+  "CPE": "Computer Engineering",
+  "CE": "Civil Engineering",
+  "CHE": "Chemical Engineering",
+  "EE": "Electrical Engineering",
+  "ENE": "Electronics and Telecommunication Engineering",
+  "ENV": "Environmental Engineering",
+  "INC": "Control Systems and Instrumentation Engineering",
+  "ME": "Mechanical Engineering",
+  "PE": "Production Engineering",
+  "TME": "Tool and Materials Engineering",
+
+  "วิศวกรรมคอมพิวเตอร์": "Computer Engineering",
+  "วิศวกรรมโยธา": "Civil Engineering",
+  "วิศวกรรมเคมี": "Chemical Engineering",
+  "วิศวกรรมไฟฟ้า": "Electrical Engineering",
+  "วิศวกรรมอิเล็กทรอนิกส์และโทรคมนาคม": "Electronics and Telecommunication Engineering",
+  "วิศวกรรมสิ่งแวดล้อม": "Environmental Engineering",
+  "วิศวกรรมระบบควบคุมและเครื่องมือวัด": "Control Systems and Instrumentation Engineering",
+  "วิศวกรรมเครื่องกล": "Mechanical Engineering",
+  "วิศวกรรมอุตสาหการ": "Production Engineering",
+  "วิศวกรรมเครื่องมือและวัสดุ": "Tool and Materials Engineering"
+};
+
+export const formatDepartment = (deptRaw, isTH = true) => {
+  if (!deptRaw) return isTH ? 'วิศวกรรมคอมพิวเตอร์' : 'Computer Engineering';
+  const deptStr = String(deptRaw).trim();
+  if (isTH) {
+    return DEPT_TRANSLATIONS_TH[deptStr] || deptStr;
+  } else {
+    return DEPT_TRANSLATIONS_EN[deptStr] || deptStr;
+  }
+};
+
+export const matchDepartment = (studentDeptRaw, deptCode) => {
+  if (!deptCode || deptCode === 'ALL') return true;
+  if (!studentDeptRaw) return false;
+  const raw = String(studentDeptRaw).trim().toUpperCase();
+  const target = String(deptCode).trim().toUpperCase();
+  if (raw === target) return true;
+  const aliases = DEPT_ALIASES[target];
+  if (aliases) {
+    return aliases.some(alias => raw.includes(alias.toUpperCase()));
+  }
+  return raw.includes(target);
 };
 
 // Staff Roles
@@ -277,9 +367,10 @@ export const FirebaseDataProvider = ({ children }) => {
           proxy_name: data.proxy_name || null,
           proxy_phone: data.proxy_phone || null,
           search_method: data.search_method || null,
-          checkin_day1_morning: data.checkin_day1_morning || null,
-          checkin_day1_morning_by: data.checkin_day1_morning_by || data.checkin_day1_morning_by_staff_name || '',
-          checkin_day1_morning_by_staff_uid: data.checkin_day1_morning_by_staff_uid || '',
+          checkin_day2_morning: data.checkin_day2_morning || null,
+          checkin_day2_morning_by: data.checkin_day2_morning_by || data.checkin_day2_morning_by_staff_name || '',
+          checkin_day2_morning_by_staff_uid: data.checkin_day2_morning_by_staff_uid || '',
+          checkin_day2_morning_by_staff_pic: data.checkin_day2_morning_by_staff_pic || ''
         });
       });
 
@@ -355,15 +446,21 @@ export const FirebaseDataProvider = ({ children }) => {
       shortCodeCandidates.add(searchUpper.slice(1));
     }
 
-    // 1️⃣ Step 1: Check Local Cache FIRST (Strict LINE UID matching)
+    // 1️⃣ Step 1: Check Local Cache FIRST (Case-insensitive LINE UID matching)
     if (lineUidFromQr) {
-      const localUidMatch = students.find(s => (s.docId === lineUidFromQr || s.line_uid === lineUidFromQr || s.id === lineUidFromQr));
+      const targetUidLower = lineUidFromQr.toLowerCase();
+      const localUidMatch = students.find(s => {
+        const sDocIdLower = (s.docId || '').toLowerCase();
+        const sLineUidLower = (s.line_uid || '').toLowerCase();
+        const sIdLower = (s.id || '').toLowerCase();
+        return sDocIdLower === targetUidLower || sLineUidLower === targetUidLower || sIdLower === targetUidLower;
+      });
       if (localUidMatch) return localUidMatch;
     } else {
       const localMatch = students.find(s => {
         const sShortCode = (s.shortCode || s.short_code || s.walkin_temp_short_code || '').toUpperCase();
         const sQrCode = (s.qrCode || s.qr_code || '').toUpperCase();
-        const sStudentId = (s.studentId || '').toUpperCase();
+        const sStudentId = String(s.studentId || s.id || s.student_id || '').trim().toUpperCase();
         const isPlaceholder = sStudentId === '69070500000';
 
         if (tempShortUpper && sShortCode === tempShortUpper) return true;
@@ -375,29 +472,35 @@ export const FirebaseDataProvider = ({ children }) => {
 
     if (!db) return null;
 
-    // 2️⃣ Step 2: Direct Document Key Lookup by EXACT LINE UID (Preserve Case!)
+    // 2️⃣ Step 2: Direct Document Key Lookup by LINE UID (Tries original case & lowercase)
     if (lineUidFromQr) {
       try {
-        const docRef = doc(db, 'users', lineUidFromQr);
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-          const found = { ...docSnap.data(), docId: docSnap.id, line_uid: docSnap.id };
-          setStudents(prev => [...prev.filter(x => x.docId !== found.docId), found]);
-          return found; // Return exact user doc immediately!
+        const uidsToTry = Array.from(new Set([lineUidFromQr, lineUidFromQr.toLowerCase()].filter(Boolean)));
+        for (const uid of uidsToTry) {
+          const docRef = doc(db, 'users', uid);
+          const docSnap = await getDoc(docRef);
+          if (docSnap.exists()) {
+            const found = { ...docSnap.data(), docId: docSnap.id, line_uid: docSnap.id };
+            setStudents(prev => [...prev.filter(x => x.docId !== found.docId), found]);
+            return found; // Return exact user doc immediately!
+          }
         }
       } catch (err) {
         console.warn("Direct QR LINE UID doc get note:", err);
       }
     }
 
-    // 3️⃣ Step 3: Direct Get by Document Key matching searchUpper (1 Read!)
+    // 3️⃣ Step 3: Direct Get by Document Key matching cleanCode (Tries original case, lowercase, and upper)
     try {
-      const docRef = doc(db, 'users', searchUpper);
-      const docSnap = await getDoc(docRef);
-      if (docSnap.exists()) {
-        const found = { ...docSnap.data(), docId: docSnap.id, line_uid: docSnap.id };
-        setStudents(prev => [...prev.filter(x => x.docId !== found.docId), found]);
-        return found; // Return immediately — 1 Read consumed total!
+      const keysToTry = Array.from(new Set([cleanCode, cleanCode.toLowerCase(), searchUpper].filter(Boolean)));
+      for (const k of keysToTry) {
+        const docRef = doc(db, 'users', k);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          const found = { ...docSnap.data(), docId: docSnap.id, line_uid: docSnap.id };
+          setStudents(prev => [...prev.filter(x => x.docId !== found.docId), found]);
+          return found; // Return immediately — 1 Read consumed total!
+        }
       }
     } catch (err) {
       console.warn("Direct doc get note:", err);
@@ -525,6 +628,7 @@ export const FirebaseDataProvider = ({ children }) => {
 
     let role = null;
     let name = '';
+    let department = null;
 
     const cleanUser = username.trim().toLowerCase();
 
@@ -539,6 +643,19 @@ export const FirebaseDataProvider = ({ children }) => {
 
     const { user: envCheckinOperatorUser, pass: envCheckinOperatorPass } = getCheckinOperatorEnv();
 
+    const DEPT_ACCOUNTS = [
+      { dept: 'CPE', name: 'สตาฟ CPE (คอมพิวเตอร์)', u: (import.meta.env.VITE_STAFF_CHECKIN_DAY2_CPE_USER || 'cpe_checkin').trim().toLowerCase(), p: (import.meta.env.VITE_STAFF_CHECKIN_DAY2_CPE_PASS || 'IHJvT(jot^F').trim() },
+      { dept: 'ME', name: 'สตาฟ ME (เครื่องกล)', u: (import.meta.env.VITE_STAFF_CHECKIN_DAY2_ME_USER || 'me_checkin').trim().toLowerCase(), p: (import.meta.env.VITE_STAFF_CHECKIN_DAY2_ME_PASS || 'eu]III}@5z}').trim() },
+      { dept: 'PE', name: 'สตาฟ PE (อุตสาหการ)', u: (import.meta.env.VITE_STAFF_CHECKIN_DAY2_PE_USER || 'pe_checkin').trim().toLowerCase(), p: (import.meta.env.VITE_STAFF_CHECKIN_DAY2_PE_PASS || ')crZbUg{1-E').trim() },
+      { dept: 'CE', name: 'สตาฟ CE (โยธา)', u: (import.meta.env.VITE_STAFF_CHECKIN_DAY2_CE_USER || 'ce_checkin').trim().toLowerCase(), p: (import.meta.env.VITE_STAFF_CHECKIN_DAY2_CE_PASS || ']0nai=%NOOX').trim() },
+      { dept: 'ENV', name: 'สตาฟ ENV (สิ่งแวดล้อม)', u: (import.meta.env.VITE_STAFF_CHECKIN_DAY2_ENV_USER || 'env_checkin').trim().toLowerCase(), p: (import.meta.env.VITE_STAFF_CHECKIN_DAY2_ENV_PASS || 'WITqRd%Qg~U').trim() },
+      { dept: 'CHE', name: 'สตาฟ CHE (เคมี)', u: (import.meta.env.VITE_STAFF_CHECKIN_DAY2_CHE_USER || 'che_checkin').trim().toLowerCase(), p: (import.meta.env.VITE_STAFF_CHECKIN_DAY2_CHE_PASS || ')2gaev3Csp~').trim() },
+      { dept: 'INC', name: 'สตาฟ INC (เครื่องมือวัด)', u: (import.meta.env.VITE_STAFF_CHECKIN_DAY2_INC_USER || 'inc_checkin').trim().toLowerCase(), p: (import.meta.env.VITE_STAFF_CHECKIN_DAY2_INC_PASS || 'DNf^KyhT%&q').trim() },
+      { dept: 'EE', name: 'สตาฟ EE (ไฟฟ้า)', u: (import.meta.env.VITE_STAFF_CHECKIN_DAY2_EE_USER || 'ee_checkin').trim().toLowerCase(), p: (import.meta.env.VITE_STAFF_CHECKIN_DAY2_EE_PASS || ')~P^qr([sX9').trim() },
+      { dept: 'ENE', name: 'สตาฟ ENE (พลังงาน)', u: (import.meta.env.VITE_STAFF_CHECKIN_DAY2_ENE_USER || 'ene_checkin').trim().toLowerCase(), p: (import.meta.env.VITE_STAFF_CHECKIN_DAY2_ENE_PASS || 'Qdp[{kSJ8L^').trim() },
+      { dept: 'TME', name: 'สตาฟ TME (แม่พิมพ์)', u: (import.meta.env.VITE_STAFF_CHECKIN_DAY2_TME_USER || 'tme_checkin').trim().toLowerCase(), p: (import.meta.env.VITE_STAFF_CHECKIN_DAY2_TME_PASS || 'y4^BkxhH19M').trim() },
+    ];
+
     // 1. Verify against Environment Variables
     if (cleanUser === envAdminUser && password === envAdminPass) {
       role = ROLES.SUPERVISOR;
@@ -552,7 +669,14 @@ export const FirebaseDataProvider = ({ children }) => {
     } else if (cleanUser === envCheckinOperatorUser && password === envCheckinOperatorPass) {
       role = ROLES.CHECKIN_OPERATOR;
       name = 'Registration Check-in Operator';
-    } 
+    } else {
+      const matchDept = DEPT_ACCOUNTS.find(acc => acc.u === cleanUser && acc.p === password);
+      if (matchDept) {
+        role = ROLES.CHECKIN_OPERATOR;
+        name = matchDept.name;
+        department = matchDept.dept;
+      }
+    }
     
     // 2. Verify against Firestore 'staff' collection if configured
     if (!role && db && cleanUser.length > 0 && password.length > 0) {
@@ -565,6 +689,7 @@ export const FirebaseDataProvider = ({ children }) => {
           if (sDoc.password === password) {
             role = sDoc.role === 'SUPERVISOR' || sDoc.role === 'ADMIN' ? ROLES.SUPERVISOR : (sDoc.role || ROLES.OPERATOR);
             name = sDoc.name || sDoc.username;
+            department = sDoc.department || null;
           }
         }
       } catch (err) {
@@ -577,6 +702,7 @@ export const FirebaseDataProvider = ({ children }) => {
       username,
       name: name || username,
       role,
+      department: department || null,
       line_uid: liffProfile.line_uid,
       displayName: liffProfile.displayName || name,
       pictureUrl: liffProfile.pictureUrl || '',
@@ -596,6 +722,7 @@ export const FirebaseDataProvider = ({ children }) => {
           event: isSuccess ? 'LOGIN_SUCCESS' : 'LOGIN_FAILED',
           username: username,
           role_granted: role || 'NONE',
+          department: department || 'NONE',
           staff_line_uid: liffProfile.line_uid,
           staff_display_name: liffProfile.displayName || name,
           staff_picture_url: liffProfile.pictureUrl || '',
@@ -941,7 +1068,7 @@ export const FirebaseDataProvider = ({ children }) => {
     }
   };
 
-  // Confirm Registration Check-in (Day 1 Morning) & Write Audit Logs
+  // Confirm Registration Check-in (Day 2 Morning for 10 Dept Accounts) & Write Audit Logs
   const confirmRegistrationCheckin = async (docIdOrOptions, options = {}) => {
     let studentDocId, studentData, searchMethod;
 
@@ -963,12 +1090,24 @@ export const FirebaseDataProvider = ({ children }) => {
       return { success: false, error: 'ไม่พบข้อมูลนักศึกษาในระบบ' };
     }
 
-    if (currentStudent.checkin_day1_morning) {
-      const byText = currentStudent.checkin_day1_morning_by ? ` โดย ${currentStudent.checkin_day1_morning_by}` : '';
+    // Department Restriction: Check if student belongs to logged-in staff's department
+    const isSupervisor = staff?.role === ROLES.SUPERVISOR;
+    if (!isSupervisor && staff?.department) {
+      const studentDept = currentStudent.department || '';
+      if (!matchDepartment(studentDept, staff.department)) {
+        return {
+          success: false,
+          error: `นักศึกษาไม่ได้อยู่ในภาควิชาของคุณ (${studentDept || 'ไม่ระบุ'} / สตาฟ: ${staff.department}) (Student is not in your department)`
+        };
+      }
+    }
+
+    if (currentStudent.checkin_day2_morning) {
+      const byText = currentStudent.checkin_day2_morning_by ? ` โดย ${currentStudent.checkin_day2_morning_by}` : '';
       return {
         success: false,
         alreadyCheckedIn: true,
-        error: `เช็คชื่อแล้วเมื่อ ${currentStudent.checkin_day1_morning}${byText}`
+        error: `เช็คชื่อ Day 2 แล้วเมื่อ ${currentStudent.checkin_day2_morning}${byText}`
       };
     }
 
@@ -983,17 +1122,17 @@ export const FirebaseDataProvider = ({ children }) => {
     const clientIp = await fetchClientIp();
 
     const updatePayload = {
-      checkin_day1_morning: timestamp,
-      checkin_day1_morning_by: staffName,
-      checkin_day1_morning_by_staff_uid: staffUid,
-      checkin_day1_morning_by_staff_pic: staffPic,
-      checkin_day1_morning_by_staff_username: staffUsername,
-      checkin_day1_morning_operator_user: staffUsername || envCheckinOperatorUser,
-      checkin_day1_morning_search_method: searchMethod,
-      checkin_day1_morning_ip: clientIp,
-      checkin_day1_morning_device_model: deviceInfo.device_model,
-      checkin_day1_morning_user_agent: deviceInfo.user_agent,
-      checkin_day1_morning_platform: deviceInfo.platform,
+      checkin_day2_morning: timestamp,
+      checkin_day2_morning_by: staffName,
+      checkin_day2_morning_by_staff_uid: staffUid,
+      checkin_day2_morning_by_staff_pic: staffPic,
+      checkin_day2_morning_by_staff_username: staffUsername,
+      checkin_day2_morning_operator_user: staffUsername || envCheckinOperatorUser,
+      checkin_day2_morning_search_method: searchMethod,
+      checkin_day2_morning_ip: clientIp,
+      checkin_day2_morning_device_model: deviceInfo.device_model,
+      checkin_day2_morning_user_agent: deviceInfo.user_agent,
+      checkin_day2_morning_platform: deviceInfo.platform,
       updatedAt: timestamp
     };
 
@@ -1006,8 +1145,8 @@ export const FirebaseDataProvider = ({ children }) => {
         const logRef = doc(collection(db, 'registration_checkin_logs'));
         batch.set(logRef, {
           log_id: logRef.id,
-          session: 'day1_morning',
-          action: 'CHECKIN_REGISTRATION',
+          session: 'day2_morning',
+          action: 'CHECKIN_REGISTRATION_DAY2',
           timestamp,
           student_doc_id: firestoreDocId,
           student_line_uid: currentStudent.line_uid || currentStudent.docId || '',
@@ -1072,7 +1211,11 @@ export const FirebaseDataProvider = ({ children }) => {
       approveWalkinRegistration,
       confirmRegistrationCheckin,
       fetchStudentsFromFirestore,
-      updatePhysicalInventory
+      updatePhysicalInventory,
+      matchDepartment,
+      formatDepartment,
+      DEPT_ALIASES,
+      DEPT_TRANSLATIONS_EN
     }}>
       {children}
     </FirebaseDataContext.Provider>

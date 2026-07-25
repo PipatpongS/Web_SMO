@@ -191,9 +191,10 @@ export default function WalkinLogs() {
 
                 {/* Staff Name Footer */}
                 <div className="flex items-center justify-between text-[11px] text-slate-500 pt-1 border-t border-slate-100/70">
-                  <span>ผู้ดำเนินการอนุมัติ:</span>
-                  <span className="font-bold text-purple-700 bg-purple-50 px-2 py-0.5 rounded border border-purple-200">
-                    👤 {log.staff_name || log.staff_display_name || 'Staff'}
+                  <span>{isTH ? 'ผู้ดำเนินการอนุมัติ:' : 'Approved by:'}</span>
+                  <span className="font-bold text-purple-700 bg-purple-50 px-2 py-0.5 rounded border border-purple-200 inline-flex items-center gap-1">
+                    <UserCheck size={12} className="text-purple-600" />
+                    <span>{log.staff_name || log.staff_display_name || 'Staff'}</span>
                   </span>
                 </div>
 
