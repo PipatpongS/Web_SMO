@@ -6,6 +6,7 @@ import jsQR from 'jsqr';
 
 export default function ScanInput() {
   const [code, setCode] = useState('');
+  const [studentIdInput, setStudentIdInput] = useState('');
   const [error, setError] = useState('');
   const [cameraActive, setCameraActive] = useState(false);
   
@@ -203,9 +204,20 @@ export default function ScanInput() {
     executeSearch(code, 'SHORT_CODE');
   };
 
+  const handleStudentIdSubmit = (e) => {
+    e.preventDefault();
+    const cleanId = studentIdInput.replace(/\D/g, '').trim();
+    if (cleanId.length !== 11) {
+      setError(isTH ? 'กรุณากรอกรหัสนักศึกษา 11 หลัก' : 'Please enter an 11-digit Student ID');
+      return;
+    }
+    executeSearch(cleanId, 'STUDENT_ID');
+  };
+
   const searchParams = new URLSearchParams(window.location.search);
   const mode = searchParams.get('mode') || 'shirt';
   const isWalkinMode = mode === 'walkin';
+  const isCheckinMode = mode === 'checkin';
 
   return (
     <div className="w-full h-full flex flex-col items-center justify-between overflow-hidden py-1 px-3 sm:px-4 min-h-0">
@@ -228,15 +240,21 @@ export default function ScanInput() {
           <span className={`text-[10px] sm:text-xs px-2.5 py-0.5 rounded-full font-black border uppercase tracking-wider ${
             isWalkinMode 
               ? 'bg-amber-400/30 text-amber-200 border-amber-400/50' 
+              : isCheckinMode
+              ? 'bg-teal-500/30 text-teal-200 border-teal-400/50'
               : 'bg-purple-500/30 text-purple-200 border-purple-400/50'
           }`}>
             {isWalkinMode 
               ? (isTH ? '📋 โหมดอนุมัติ Walk-in สุ่มกลุ่ม' : '📋 Walk-in Approval Mode')
+              : isCheckinMode
+              ? (isTH ? '✅ โหมดเช็คชื่อลงทะเบียน' : '✅ Registration Check-in Mode')
               : (isTH ? '👕 โหมดเช็ครับเสื้อ' : '👕 Shirt Pickup Mode')}
           </span>
           <h2 className="text-sm sm:text-base md:text-lg font-bold text-center text-white text-glow">
             {isWalkinMode 
               ? (isTH ? 'สแกน QR Code เพื่ออนุมัติการลงทะเบียนและสุ่มกลุ่ม' : 'Scan QR Code for Walk-in Approval & Grouping')
+              : isCheckinMode
+              ? (isTH ? 'สแกน QR / Short Code / รหัสนักศึกษา เพื่อเช็คชื่อ' : 'Scan QR / Short Code / Student ID for Check-in')
               : (isTH ? 'สแกน QR Code เพื่อเช็ครับเสื้อ' : 'Scan QR Code for Shirt Pickup')}
           </h2>
         </div>
@@ -316,6 +334,42 @@ export default function ScanInput() {
             )}
           </button>
         </form>
+
+        {isCheckinMode && (
+          <form onSubmit={handleStudentIdSubmit} className="w-full space-y-2 pt-2 border-t border-white/10 shrink-0">
+            <div>
+              <label className="block text-[11px] sm:text-xs font-medium text-white/80 mb-1 text-center">
+                {isTH ? 'หรือกรอกรหัสนักศึกษา 11 หลัก' : 'Or enter 11-digit Student ID'}
+              </label>
+              <input 
+                type="text" 
+                inputMode="numeric"
+                value={studentIdInput}
+                maxLength={11}
+                onChange={(e) => setStudentIdInput(e.target.value.replace(/\D/g, '').slice(0, 11))}
+                className="w-full px-3.5 py-2 text-center text-lg sm:text-xl font-bold tracking-[0.15em] rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-teal-400 font-mono"
+                placeholder="69070500001"
+              />
+            </div>
+            <button 
+              type="submit" 
+              disabled={isSearching}
+              className="w-full glass-button py-2.5 sm:py-3 flex justify-center items-center gap-2 text-xs sm:text-sm font-bold cursor-pointer disabled:opacity-50 bg-teal-600/40 hover:bg-teal-600/60 border-teal-400/40"
+            >
+              {isSearching ? (
+                <>
+                  <Loader2 size={18} className="animate-spin text-teal-300" />
+                  <span>{isTH ? 'กำลังค้นหา...' : 'Searching...'}</span>
+                </>
+              ) : (
+                <>
+                  <Search size={18} />
+                  <span>{isTH ? 'ค้นหาด้วยรหัสนักศึกษา' : 'Search by Student ID'}</span>
+                </>
+              )}
+            </button>
+          </form>
+        )}
 
       </div>
     </div>

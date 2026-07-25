@@ -32,6 +32,11 @@ service cloud.firestore {
           'walkin_approved_by_staff_uid',
           'walkin_temp_qr',
           'walkin_temp_short_code',
+          'checkin_day1_morning',
+          'checkin_day1_morning_by',
+          'checkin_day1_morning_by_staff_uid',
+          'checkin_day1_morning_by_staff_pic',
+          'checkin_day1_morning_search_method',
           'note',
           'updatedAt'
         ]);
@@ -56,6 +61,11 @@ service cloud.firestore {
 
     // ✅ กฎสำหรับคอลเลกชัน Log การแจกเสื้อ (shirt_checkin_logs)
     match /shirt_checkin_logs/{logId} {
+      allow read, write, create, list: if true;
+    }
+
+    // ✅ กฎสำหรับคอลเลกชัน Log การเช็คชื่อลงทะเบียน (registration_checkin_logs)
+    match /registration_checkin_logs/{logId} {
       allow read, write, create, list: if true;
     }
 

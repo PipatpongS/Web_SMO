@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useData, ROLES } from '../contexts/FirebaseDataContext';
-import { Shirt, BarChart2, LogOut, ShieldCheck, User, UserCheck, Search, History } from 'lucide-react';
+import { Shirt, BarChart2, LogOut, ShieldCheck, User, UserCheck, Search, History, ClipboardCheck } from 'lucide-react';
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -16,9 +16,11 @@ export default function Dashboard() {
   const isSupervisor = staff?.role === ROLES.SUPERVISOR;
   const isWalkinOperator = staff?.role === ROLES.WALKIN_OPERATOR;
   const isShirtOperator = staff?.role === ROLES.SHIRT_OPERATOR;
+  const isCheckinOperator = staff?.role === ROLES.CHECKIN_OPERATOR;
 
   const canDoWalkin = isSupervisor || isWalkinOperator;
   const canDoShirt = isSupervisor || isShirtOperator;
+  const canDoCheckin = isSupervisor || isCheckinOperator;
 
   const displayName = liffProfile?.displayName || staff?.displayName || staff?.name || (isSupervisor ? 'Admin Staff' : 'Staff');
   const profilePic = liffProfile?.pictureUrl || staff?.pictureUrl || null;
@@ -27,6 +29,7 @@ export default function Dashboard() {
     if (isSupervisor) return isTH ? 'ผู้ดูแลระบบ (Admin)' : 'Admin';
     if (isWalkinOperator) return isTH ? 'สตาฟอนุมัติ Walk-in' : 'Walk-in Operator';
     if (isShirtOperator) return isTH ? 'สตาฟตรวจแจกเสื้อ' : 'Shirt Operator';
+    if (isCheckinOperator) return isTH ? 'สตาฟเช็คชื่อลงทะเบียน' : 'Registration Check-in Operator';
     return isTH ? 'สตาฟ' : 'Staff';
   };
 
@@ -52,6 +55,8 @@ export default function Dashboard() {
                   ? 'bg-purple-500/30 text-purple-200 border-purple-400/40' 
                   : isWalkinOperator
                   ? 'bg-amber-500/30 text-amber-200 border-amber-400/40'
+                  : isCheckinOperator
+                  ? 'bg-teal-500/30 text-teal-200 border-teal-400/40'
                   : 'bg-blue-500/30 text-blue-200 border-blue-400/40'
               }`}>
                 {getRoleLabel()}
@@ -138,6 +143,28 @@ export default function Dashboard() {
                 {isTH 
                   ? 'ดูประวัติการอนุมัติสิทธิ์ Walk-in 10 รายการล่าสุด พร้อมกลุ่มกิจกรรมและเวลา' 
                   : 'View recent 10 Walk-in approvals with assigned groups and timestamp'}
+              </span>
+            </div>
+          </button>
+        )}
+
+        {/* Registration Check-in Menu (Day 1 Morning) */}
+        {canDoCheckin && (
+          <button 
+            onClick={() => navigate('/scan?mode=checkin')}
+            className="w-full glass-panel p-4 sm:p-5 flex items-center gap-4 hover:bg-white/15 transition-all cursor-pointer group text-left shadow-2xl border border-white/20 hover:border-teal-400/50 rounded-3xl"
+          >
+            <div className="bg-teal-500/20 p-3.5 rounded-2xl text-teal-300 group-hover:scale-110 transition-transform shrink-0 border border-teal-400/40 shadow-inner">
+              <ClipboardCheck size={30} />
+            </div>
+            <div className="space-y-0.5">
+              <span className="text-base sm:text-lg font-black block text-white group-hover:text-teal-200 transition-colors">
+                {isTH ? 'เช็คชื่อลงทะเบียน (วันที่ 1 เช้า)' : 'Registration Check-in (Day 1 AM)'}
+              </span>
+              <span className="text-xs text-white/70 block font-medium leading-relaxed">
+                {isTH 
+                  ? 'สแกน QR Code, Short Code หรือรหัสนักศึกษา เพื่อบันทึกการเข้าร่วมและเช็คชื่อ' 
+                  : 'Scan QR Code, Short Code or Student ID to record attendance'}
               </span>
             </div>
           </button>

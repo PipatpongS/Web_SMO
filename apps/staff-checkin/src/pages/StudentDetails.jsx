@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useData } from '../contexts/FirebaseDataContext';
-import { ArrowLeft, CheckCircle2, ShieldCheck, AlertTriangle, XCircle, Shirt, Phone, Loader2, QrCode, User, Hash, Users } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, ShieldCheck, AlertTriangle, XCircle, Shirt, Phone, Loader2, QrCode, User, Hash, Users, ClipboardCheck, Clock } from 'lucide-react';
 import jsQR from 'jsqr';
 
 const SHIRT_SIZES = ['SS', 'S', 'M', 'L', 'XL', '2XL', '3XL', '4XL', '5XL', '6XL', '7XL'];
@@ -13,7 +13,7 @@ export default function StudentDetails() {
   const method = searchParams.get('method') || 'DIRECT';
   // Walkin mode check
 
-  const { students, findStudentByCodeDirect, confirmShirtPickup, revokeShirtPickup, approveWalkinRegistration, lang } = useData();
+  const { students, findStudentByCodeDirect, confirmShirtPickup, revokeShirtPickup, approveWalkinRegistration, confirmRegistrationCheckin, lang } = useData();
   const isTH = lang === 'TH';
 
   const [student, setStudent] = useState(null);
@@ -282,6 +282,38 @@ export default function StudentDetails() {
   const modeParam = searchParams.get('mode');
   const mode = modeParam || (isWalkinPending ? 'walkin' : 'shirt');
   const isWalkinMode = mode === 'walkin';
+  const isCheckinMode = mode === 'checkin';
+  const searchMethod = searchParams.get('method') || 'DIRECT';
+
+  const handleConfirmCheckin = async () => {
+    if (!student) return;
+    setIsSubmitting(true);
+    setFirebaseErrorMsg(null);
+
+    try {
+      const res = await confirmRegistrationCheckin({
+        studentDocId: student.docId || student.id,
+        studentData: student,
+        searchMethod
+      });
+
+      if (res?.success) {
+        setStudent(prev => ({
+          ...prev,
+          checkin_day1_morning: res.timestamp,
+          checkin_day1_morning_by: res.staffName || prev?.checkin_day1_morning_by
+        }));
+        setShowConfirmModal(false);
+        setShowSuccessModal(true);
+      } else {
+        setFirebaseErrorMsg(res?.error || 'ไม่สามารถบันทึกการเช็คชื่อลง Firebase ได้');
+      }
+    } catch (err) {
+      setFirebaseErrorMsg(err?.message || String(err));
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   // Revoke Handler
   const handleRevoke = async () => {
@@ -317,6 +349,7 @@ export default function StudentDetails() {
   };
 
   const isReceived = !!student.shirt_received_at;
+  const isCheckedIn = !!student.checkin_day1_morning;
   const registeredSize = student.shirtSize || 'M';
   const isSizeChanged = selectedSize !== registeredSize;
 
@@ -335,12 +368,19 @@ export default function StudentDetails() {
         <div className={`text-xs px-3 py-1.5 rounded-full font-bold border flex items-center gap-1.5 shadow-xs ${
           isWalkinMode 
             ? 'bg-amber-400/20 text-amber-200 border-amber-400/40' 
+            : isCheckinMode
+            ? 'bg-teal-500/20 text-teal-200 border-teal-400/40'
             : 'bg-purple-500/20 text-purple-200 border-purple-400/40'
         }`}>
           {isWalkinMode ? (
             <>
               <ShieldCheck size={14} className="text-amber-400 shrink-0" />
               <span>{isTH ? 'โหมดอนุมัติ Walk-in (สุ่มกลุ่ม)' : 'Walk-in Approval Mode'}</span>
+            </>
+          ) : isCheckinMode ? (
+            <>
+              <ClipboardCheck size={14} className="text-teal-400 shrink-0" />
+              <span>{isTH ? 'โหมดเช็คชื่อลงทะเบียน (วันที่ 1 เช้า)' : 'Registration Check-in Mode'}</span>
             </>
           ) : (
             <>
@@ -364,7 +404,18 @@ export default function StudentDetails() {
 
             {/* Status & Note Badges */}
             <div className="flex flex-col items-end gap-1.5 shrink-0">
-              {!isWalkinMode && (
+              {isCheckinMode && (
+                isCheckedIn ? (
+                  <span className="px-3 py-1 rounded-full bg-teal-100 text-teal-800 border border-teal-300 font-extrabold text-xs flex items-center gap-1.5 shadow-xs">
+                    <CheckCircle2 size={13} className="text-teal-600" /> เช็คชื่อแล้ว
+                  </span>
+                ) : (
+                  <span className="px-3 py-1 rounded-full bg-slate-100 text-slate-700 border border-slate-300 font-extrabold text-xs flex items-center gap-1.5 shadow-xs">
+                    ยังไม่ได้เช็คชื่อ
+                  </span>
+                )
+              )}
+              {!isWalkinMode && !isCheckinMode && (
                 isReceived ? (
                   <span className="px-3 py-1 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 font-extrabold text-xs flex items-center gap-1.5 shadow-xs">
                     <CheckCircle2 size={13} className="text-emerald-600" /> รับแล้ว
@@ -482,8 +533,51 @@ export default function StudentDetails() {
           </div>
         )}
 
+        {/* REGISTRATION CHECK-IN SECTION */}
+        {isCheckinMode && (
+          isCheckedIn ? (
+            <div className="space-y-3 bg-teal-50/80 p-4 sm:p-5 rounded-2xl border border-teal-200">
+              <div className="flex items-center gap-2.5 border-b border-teal-200 pb-3 mb-1">
+                <div className="w-9 h-9 rounded-xl bg-teal-600 flex items-center justify-center shrink-0 shadow-sm">
+                  <ClipboardCheck className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-teal-800 text-sm sm:text-base leading-tight">เช็คชื่อลงทะเบียนแล้ว</h3>
+                  <p className="text-[10px] text-teal-600 font-medium">บันทึกใน Firebase แล้ว</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 gap-2">
+                <div className="bg-white rounded-xl px-3 py-2.5 border border-teal-100 shadow-sm">
+                  <p className="text-[9px] text-slate-400 font-semibold uppercase tracking-wide mb-0.5">เวลาเช็คชื่อ (ไทย +07:00)</p>
+                  <p className="text-sm font-black text-teal-700 font-mono">{student.checkin_day1_morning}</p>
+                </div>
+                {student.checkin_day1_morning_by && (
+                  <div className="bg-white rounded-xl px-3 py-2.5 border border-teal-100 shadow-sm">
+                    <p className="text-[9px] text-slate-400 font-semibold uppercase tracking-wide mb-0.5">สตาฟผู้เช็ค</p>
+                    <p className="text-sm font-bold text-slate-800">{student.checkin_day1_morning_by}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="p-4 bg-teal-50 border-2 border-teal-200 rounded-2xl text-xs text-teal-900 font-medium leading-relaxed">
+                กดปุ่มด้านล่างเพื่อบันทึกการเช็คชื่อลงทะเบียน (วันที่ 1 รอบเช้า) ลง Firebase พร้อมบันทึก log ผู้เช็ค, IP และรุ่นมือถือ
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowConfirmModal(true)}
+                disabled={isSubmitting}
+                className="w-full py-3.5 sm:py-4 rounded-2xl bg-teal-600 hover:bg-teal-700 text-white font-extrabold text-sm sm:text-base flex items-center justify-center gap-2.5 cursor-pointer shadow-xl transition-all active:scale-[0.99] disabled:opacity-50"
+              >
+                <ClipboardCheck size={18} /> ยืนยันเช็คชื่อลงทะเบียน
+              </button>
+            </div>
+          )
+        )}
+
         {/* SHIRT PICKUP SECTION (Only visible in Shirt Pickup Mode, hidden in Walk-in Approval Mode) */}
-        {!isWalkinMode && (
+        {!isWalkinMode && !isCheckinMode && (
           isReceived ? (
           <div className="space-y-3 bg-emerald-50/80 p-4 sm:p-5 rounded-2xl border border-emerald-200">
             {/* Header */}
@@ -825,11 +919,17 @@ export default function StudentDetails() {
           >
             {/* Header */}
             <div className="flex items-center gap-3 pb-1 border-b border-slate-100">
-              <div className="w-10 h-10 rounded-2xl bg-purple-100 flex items-center justify-center shrink-0">
-                <CheckCircle2 size={22} className="text-purple-700" />
+              <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 ${isCheckinMode ? 'bg-teal-100' : 'bg-purple-100'}`}>
+                {isCheckinMode ? (
+                  <ClipboardCheck size={22} className="text-teal-700" />
+                ) : (
+                  <CheckCircle2 size={22} className="text-purple-700" />
+                )}
               </div>
               <div className="text-left">
-                <h3 className="text-base font-black text-slate-900 leading-tight">ยืนยันการรับเสื้อ</h3>
+                <h3 className="text-base font-black text-slate-900 leading-tight">
+                  {isCheckinMode ? 'ยืนยันเช็คชื่อลงทะเบียน' : 'ยืนยันการรับเสื้อ'}
+                </h3>
                 <p className="text-[11px] text-slate-500 font-medium">กรุณาตรวจสอบข้อมูลให้ถูกต้องก่อนยืนยัน</p>
               </div>
             </div>
@@ -839,7 +939,9 @@ export default function StudentDetails() {
               <div className="flex items-center gap-3 bg-slate-50 px-4 py-2.5 rounded-xl border border-slate-100">
                 <User size={15} className="text-slate-400 shrink-0" />
                 <div className="text-left min-w-0">
-                  <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wide">ผู้รับเสื้อ</p>
+                  <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wide">
+                    {isCheckinMode ? 'ผู้เข้าร่วม' : 'ผู้รับเสื้อ'}
+                  </p>
                   <p className="text-sm font-bold text-slate-800 truncate">{student.firstName} {student.lastName}</p>
                 </div>
               </div>
@@ -850,6 +952,15 @@ export default function StudentDetails() {
                   <p className="text-sm font-bold text-slate-800">{formatStudentId(student.studentId || student.id)}</p>
                 </div>
               </div>
+              {isCheckinMode ? (
+                <div className="flex items-center gap-3 bg-teal-50 px-4 py-2.5 rounded-xl border border-teal-200">
+                  <Clock size={15} className="text-teal-500 shrink-0" />
+                  <div className="text-left">
+                    <p className="text-[10px] text-teal-500 font-semibold uppercase tracking-wide">รอบเช็คชื่อ</p>
+                    <p className="text-sm font-black text-teal-700">วันที่ 1 — รอบเช้า (เวลาไทย +07:00)</p>
+                  </div>
+                </div>
+              ) : (
               <div className="flex items-center gap-3 bg-amber-50 px-4 py-2.5 rounded-xl border border-amber-200">
                 <Shirt size={15} className="text-amber-500 shrink-0" />
                 <div className="text-left">
@@ -857,6 +968,7 @@ export default function StudentDetails() {
                   <p className="text-lg font-black text-amber-700">{selectedSize}</p>
                 </div>
               </div>
+              )}
               {isProxy && (
                 <div className="flex items-center gap-3 bg-blue-50 px-4 py-2.5 rounded-xl border border-blue-200">
                   <Users size={15} className="text-blue-500 shrink-0" />
@@ -880,9 +992,11 @@ export default function StudentDetails() {
               </button>
               <button
                 type="button"
-                onClick={handleConfirmSubmit}
+                onClick={isCheckinMode ? handleConfirmCheckin : handleConfirmSubmit}
                 disabled={isSubmitting}
-                className="flex-1 py-3 rounded-2xl bg-purple-700 hover:bg-purple-800 text-white font-black text-sm flex items-center justify-center gap-2 shadow-lg cursor-pointer transition-colors disabled:opacity-70"
+                className={`flex-1 py-3 rounded-2xl text-white font-black text-sm flex items-center justify-center gap-2 shadow-lg cursor-pointer transition-colors disabled:opacity-70 ${
+                  isCheckinMode ? 'bg-teal-600 hover:bg-teal-700' : 'bg-purple-700 hover:bg-purple-800'
+                }`}
               >
                 {isSubmitting ? (
                   <><Loader2 size={16} className="animate-spin" /><span>กำลังบันทึก...</span></>
@@ -915,7 +1029,9 @@ export default function StudentDetails() {
             </div>
             <div>
               <h3 className="text-xl font-black text-slate-900">บันทึกสำเร็จ</h3>
-              <p className="text-xs text-slate-500 font-medium mt-1">จ่ายเสื้อและบันทึกข้อมูลเรียบร้อยแล้ว</p>
+              <p className="text-xs text-slate-500 font-medium mt-1">
+                {isCheckinMode ? 'เช็คชื่อลงทะเบียนและบันทึก log เรียบร้อยแล้ว' : 'จ่ายเสื้อและบันทึกข้อมูลเรียบร้อยแล้ว'}
+              </p>
             </div>
             <button
               type="button"

@@ -46,7 +46,50 @@ export const ROLES = {
   SUPERVISOR: 'STAFF_SUPERVISOR',       // High Admin - Full Access
   SHIRT_OPERATOR: 'STAFF_SHIRT_OPERATOR', // Shirt Check-in Operator
   WALKIN_OPERATOR: 'STAFF_WALKIN_OPERATOR', // Walk-in Approval & Group Assignment Operator
+  CHECKIN_OPERATOR: 'STAFF_CHECKIN_OPERATOR', // Registration Attendance Check-in Operator
   OPERATOR: 'STAFF_OPERATOR'            // Legacy fallback
+};
+
+// Parse mobile device model from User-Agent (best-effort on LINE in-app browser)
+export const getClientDeviceInfo = () => {
+  const ua = navigator.userAgent || '';
+  let deviceModel = 'Unknown Device';
+
+  if (/iPhone/.test(ua)) {
+    const match = ua.match(/iPhone\s*OS\s[\d_]+;\s*([^)]+)\)/i);
+    deviceModel = match ? `iPhone (${match[1].trim()})` : 'iPhone';
+  } else if (/iPad/.test(ua)) {
+    deviceModel = 'iPad';
+  } else if (/Android/.test(ua)) {
+    const match = ua.match(/;\s*([^;]+)\s+Build\//i);
+    deviceModel = match ? match[1].trim() : 'Android Device';
+  } else if (/Macintosh|Mac OS X/.test(ua)) {
+    deviceModel = 'Mac';
+  } else if (/Windows/.test(ua)) {
+    deviceModel = 'Windows PC';
+  }
+
+  return {
+    user_agent: ua,
+    device_model: deviceModel,
+    platform: navigator.platform || '',
+    language: navigator.language || ''
+  };
+};
+
+// Fetch public IP for audit logs (fallback to 'unknown' if blocked/offline)
+export const fetchClientIp = async () => {
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 4000);
+    const res = await fetch('https://api.ipify.org?format=json', { signal: controller.signal });
+    clearTimeout(timeoutId);
+    if (!res.ok) return 'unknown';
+    const data = await res.json();
+    return data?.ip || 'unknown';
+  } catch {
+    return 'unknown';
+  }
 };
 
 const CACHE_KEY = 'cached_students_db_real_v5';
@@ -219,6 +262,9 @@ export const FirebaseDataProvider = ({ children }) => {
           proxy_name: data.proxy_name || null,
           proxy_phone: data.proxy_phone || null,
           search_method: data.search_method || null,
+          checkin_day1_morning: data.checkin_day1_morning || null,
+          checkin_day1_morning_by: data.checkin_day1_morning_by || data.checkin_day1_morning_by_staff_name || '',
+          checkin_day1_morning_by_staff_uid: data.checkin_day1_morning_by_staff_uid || '',
         });
       });
 
@@ -463,6 +509,9 @@ export const FirebaseDataProvider = ({ children }) => {
     const envWalkinOperatorUser = (import.meta.env.VITE_STAFF_WALKIN_OPERATOR_USER || 'walkin_approve').trim().toLowerCase();
     const envWalkinOperatorPass = (import.meta.env.VITE_STAFF_WALKIN_OPERATOR_PASS || 'Walkin_vidva_2026!?').trim();
 
+    const envCheckinOperatorUser = (import.meta.env.VITE_STAFF_CHECKIN_OPERATOR_USER || 'reg_checkin').trim().toLowerCase();
+    const envCheckinOperatorPass = (import.meta.env.VITE_STAFF_CHECKIN_OPERATOR_PASS || 'Reg_vidva_2026!?').trim();
+
     // 1. Verify against Environment Variables
     if (cleanUser === envAdminUser && password === envAdminPass) {
       role = ROLES.SUPERVISOR;
@@ -473,6 +522,9 @@ export const FirebaseDataProvider = ({ children }) => {
     } else if (cleanUser === envWalkinOperatorUser && password === envWalkinOperatorPass) {
       role = ROLES.WALKIN_OPERATOR;
       name = 'Walk-in Approval Operator';
+    } else if (cleanUser === envCheckinOperatorUser && password === envCheckinOperatorPass) {
+      role = ROLES.CHECKIN_OPERATOR;
+      name = 'Registration Check-in Operator';
     } 
     
     // 2. Verify against Firestore 'staff' collection if configured
@@ -857,6 +909,103 @@ export const FirebaseDataProvider = ({ children }) => {
     }
   };
 
+  // Confirm Registration Check-in (Day 1 Morning) & Write Audit Logs
+  const confirmRegistrationCheckin = async (docIdOrOptions, options = {}) => {
+    let studentDocId, studentData, searchMethod;
+
+    if (typeof docIdOrOptions === 'object' && docIdOrOptions !== null) {
+      studentDocId = docIdOrOptions.studentDocId || docIdOrOptions.id;
+      studentData = docIdOrOptions.studentData || null;
+      searchMethod = docIdOrOptions.searchMethod || 'QR_CODE';
+    } else {
+      studentDocId = docIdOrOptions;
+      studentData = options.studentData || null;
+      searchMethod = options.searchMethod || 'QR_CODE';
+    }
+
+    const timestamp = getThaiISOString();
+    const currentStudent = studentData
+      || students.find(s => s.docId === studentDocId || s.id === studentDocId || s.studentId === studentDocId);
+
+    if (!currentStudent) {
+      return { success: false, error: 'ไม่พบข้อมูลนักศึกษาในระบบ' };
+    }
+
+    if (currentStudent.checkin_day1_morning) {
+      const byText = currentStudent.checkin_day1_morning_by ? ` โดย ${currentStudent.checkin_day1_morning_by}` : '';
+      return {
+        success: false,
+        alreadyCheckedIn: true,
+        error: `เช็คชื่อแล้วเมื่อ ${currentStudent.checkin_day1_morning}${byText}`
+      };
+    }
+
+    const firestoreDocId = currentStudent.docId || studentDocId;
+    const staffUid = liffProfile?.line_uid || staff?.line_uid || 'LINE_ANONYMOUS';
+    const staffName = liffProfile?.displayName || staff?.name || staff?.displayName || 'Staff Operator';
+    const staffPic = liffProfile?.pictureUrl || staff?.pictureUrl || '';
+    const staffUsername = staff?.username || '';
+
+    const deviceInfo = getClientDeviceInfo();
+    const clientIp = await fetchClientIp();
+
+    const updatePayload = {
+      checkin_day1_morning: timestamp,
+      checkin_day1_morning_by: staffName,
+      checkin_day1_morning_by_staff_uid: staffUid,
+      checkin_day1_morning_by_staff_pic: staffPic,
+      checkin_day1_morning_search_method: searchMethod,
+      updatedAt: timestamp
+    };
+
+    if (db) {
+      try {
+        const batch = writeBatch(db);
+        const userRef = doc(db, 'users', firestoreDocId);
+        batch.update(userRef, updatePayload);
+
+        const logRef = doc(collection(db, 'registration_checkin_logs'));
+        batch.set(logRef, {
+          log_id: logRef.id,
+          session: 'day1_morning',
+          student_id: currentStudent.studentId || currentStudent.id || '',
+          student_doc_id: firestoreDocId,
+          student_name: `${currentStudent.firstName || ''} ${currentStudent.lastName || ''}`.trim(),
+          department: currentStudent.department || '',
+          search_method: searchMethod,
+          action: 'CHECKIN_REGISTRATION',
+          timestamp,
+          staff_line_uid: staffUid,
+          staff_username: staffUsername,
+          staff_display_name: staffName,
+          staff_picture_url: staffPic,
+          client_ip: clientIp,
+          device_model: deviceInfo.device_model,
+          user_agent: deviceInfo.user_agent,
+          platform: deviceInfo.platform
+        });
+
+        await batch.commit();
+      } catch (err) {
+        console.error('Firestore registration checkin error:', err);
+        return { success: false, error: err?.message || String(err) };
+      }
+    }
+
+    setStudents(prev => {
+      const updatedList = prev.map(s => {
+        if (s.docId === firestoreDocId || s.id === firestoreDocId) {
+          return { ...s, ...updatePayload };
+        }
+        return s;
+      });
+      localStorage.setItem(CACHE_KEY, JSON.stringify(updatedList));
+      return updatedList;
+    });
+
+    return { success: true, timestamp, clientIp, deviceModel: deviceInfo.device_model, staffName };
+  };
+
   return (
     <FirebaseDataContext.Provider value={{
       students,
@@ -877,6 +1026,7 @@ export const FirebaseDataProvider = ({ children }) => {
       confirmShirtPickup,
       revokeShirtPickup,
       approveWalkinRegistration,
+      confirmRegistrationCheckin,
       fetchStudentsFromFirestore,
       updatePhysicalInventory
     }}>
