@@ -1107,15 +1107,31 @@ export const FirebaseDataProvider = ({ children }) => {
     }
 
     const timestamp = getThaiISOString();
-    const currentStudent = studentData
+    let currentStudent = studentData
       || students.find(s => s.docId === studentDocId || s.id === studentDocId || s.studentId === studentDocId);
+
+    // ⭐️ REALTIME FIRESTORE RE-VERIFICATION: Fetch fresh student doc directly from Firestore to bypass any stale local device cache
+    const targetDocId = currentStudent?.line_uid || currentStudent?.docId || studentDocId;
+    if (db && targetDocId) {
+      try {
+        const freshSnap = await getDoc(doc(db, 'users', targetDocId));
+        if (freshSnap.exists()) {
+          const freshData = { ...freshSnap.data(), docId: freshSnap.id, line_uid: freshSnap.id };
+          currentStudent = freshData;
+          setStudents(prev => [...prev.filter(x => x.docId !== freshData.docId), freshData]);
+        }
+      } catch (err) {
+        console.warn("Realtime Firestore re-verification note:", err);
+      }
+    }
 
     if (!currentStudent) {
       return { success: false, error: 'ไม่พบข้อมูลนักศึกษาในระบบ' };
     }
 
-    // Walk-in approval check
-    if (currentStudent.walkin_status !== 'APPROVED') {
+    // Walk-in approval check (evaluated against live Firestore status)
+    const isWalkinApproved = currentStudent.walkin_status === 'APPROVED' || currentStudent.walkin_verified === true || currentStudent.status === 'APPROVED';
+    if (!isWalkinApproved) {
       return {
         success: false,
         error: 'นักศึกษายังไม่ได้รับการอนุมัติการลงทะเบียน Walk-in (Student walk-in status is not approved)'

@@ -41,6 +41,11 @@ export default function CheckinReport() {
   const PAGE_SIZE = 5;
   const [displayCount, setDisplayCount] = useState(PAGE_SIZE);
 
+  // Automatically fetch fresh student records from Firestore on mount
+  useEffect(() => {
+    fetchStudentsFromFirestore(true);
+  }, []);
+
   // Reset pagination count when search, dept, or status filter changes
   useEffect(() => {
     setDisplayCount(PAGE_SIZE);
