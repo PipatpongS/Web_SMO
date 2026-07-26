@@ -620,9 +620,6 @@ export default function StudentDetails() {
                   <h3 className="font-extrabold text-teal-800 text-sm sm:text-base leading-tight">
                     {isTH ? 'เช็คชื่อลงทะเบียนแล้ว' : 'Checked In'}
                   </h3>
-                  <p className="text-[10px] text-teal-600 font-medium">
-                    {isTH ? 'บันทึกใน Firebase แล้ว' : 'Recorded in system'}
-                  </p>
                 </div>
               </div>
               {(() => {
