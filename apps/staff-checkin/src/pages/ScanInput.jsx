@@ -81,7 +81,21 @@ export default function ScanInput() {
     };
   }, []);
 
-  const scanQR = () => {
+  // Reusable offscreen canvas for tilted/angled QR rotation (prevents GC lag)
+  const rotCanvasRef = useRef(null);
+  const barcodeDetectorRef = useRef(null);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'BarcodeDetector' in window) {
+      try {
+        barcodeDetectorRef.current = new window.BarcodeDetector({ formats: ['qr_code'] });
+      } catch (e) {
+        barcodeDetectorRef.current = null;
+      }
+    }
+  }, []);
+
+  const scanQR = async () => {
     if (videoRef.current && videoRef.current.readyState === videoRef.current.HAVE_ENOUGH_DATA && canvasRef.current) {
       const video = videoRef.current;
       const canvas = canvasRef.current;
@@ -89,26 +103,48 @@ export default function ScanInput() {
       const h = video.videoHeight;
 
       if (w > 0 && h > 0) {
-        canvas.width = w;
-        canvas.height = h;
+        // ⚡ 1. Hardware Accelerated Native Scanner (Android/iOS Safari 17+) — Super fast, handles angled/tilted QR in ~3ms
+        if (barcodeDetectorRef.current) {
+          try {
+            const barcodes = await barcodeDetectorRef.current.detect(video);
+            if (barcodes && barcodes.length > 0 && barcodes[0].rawValue) {
+              if (scanLoopRef.current) {
+                clearTimeout(scanLoopRef.current);
+                scanLoopRef.current = null;
+              }
+              executeSearch(barcodes[0].rawValue, 'QR_CODE');
+              return;
+            }
+          } catch (err) { }
+        }
+
+        // 2. High-Speed jsQR Scanner (Normal & Inverted)
+        if (canvas.width !== w || canvas.height !== h) {
+          canvas.width = w;
+          canvas.height = h;
+        }
         const ctx = canvas.getContext("2d", { willReadFrequently: true });
         ctx.drawImage(video, 0, 0, w, h);
 
-        // 1. Normal Scan (Supports light & dark background inversion)
         const imageData = ctx.getImageData(0, 0, w, h);
         let qrData = jsQR(imageData.data, imageData.width, imageData.height, {
           inversionAttempts: "attemptBoth",
         });
 
-        // 2. Multi-Angle Scan: Attempt 45-degree rotation for tilted/angled phone screens
+        // 3. Reusable Multi-Angle Scan: Attempt 45-degree rotation for tilted/angled phone screens
         if (!qrData || !qrData.data) {
           const cropSize = Math.min(w, h);
           const cropX = (w - cropSize) / 2;
           const cropY = (h - cropSize) / 2;
 
-          const rotCanvas = document.createElement('canvas');
-          rotCanvas.width = cropSize;
-          rotCanvas.height = cropSize;
+          if (!rotCanvasRef.current) {
+            rotCanvasRef.current = document.createElement('canvas');
+          }
+          const rotCanvas = rotCanvasRef.current;
+          if (rotCanvas.width !== cropSize || rotCanvas.height !== cropSize) {
+            rotCanvas.width = cropSize;
+            rotCanvas.height = cropSize;
+          }
           const rotCtx = rotCanvas.getContext('2d', { willReadFrequently: true });
 
           rotCtx.save();
@@ -133,7 +169,7 @@ export default function ScanInput() {
         }
       }
     }
-    scanLoopRef.current = setTimeout(scanQR, 100);
+    scanLoopRef.current = setTimeout(scanQR, 60);
   };
 
   const switchCamera = (e) => {

@@ -465,6 +465,8 @@ export const FirebaseDataProvider = ({ children }) => {
       const parts = rawClean.split(':');
       lineUidFromQr = parts[0].trim();
       studentIdFromQr = parts[1].trim();
+    } else if (rawClean.startsWith('U') && rawClean.length >= 25 && !rawClean.includes('-')) {
+      lineUidFromQr = rawClean;
     }
 
     const searchUpper = cleanCode.toUpperCase();
