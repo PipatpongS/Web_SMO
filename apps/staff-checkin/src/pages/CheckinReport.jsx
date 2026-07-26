@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Navigate } from 'react-router-dom';
 import { useData, ROLES, DEPT_ALIASES } from '../contexts/FirebaseDataContext';
 import { ArrowLeft, Users, CheckCircle, XCircle, Search, Building2, ChevronDown, RefreshCw, Hash, User, Clock } from 'lucide-react';
 
@@ -19,6 +19,15 @@ const formatCheckinTime = (isoString) => {
 export default function CheckinReport() {
   const navigate = useNavigate();
   const { students, staff, lang, fetchStudentsFromFirestore, isRefreshing, lastUpdatedText } = useData();
+
+  // Block: SHIRT_OPERATOR, WALKIN_OPERATOR, และ day_1_checkin (CHECKIN_OPERATOR ไม่มี dept) ไม่มีสิทธิ์ดูสถิติ
+  if (
+    staff?.role === ROLES.SHIRT_OPERATOR ||
+    staff?.role === ROLES.WALKIN_OPERATOR ||
+    (staff?.role === ROLES.CHECKIN_OPERATOR && !staff?.department)
+  ) {
+    return <Navigate to="/home" replace />;
+  }
 
   const isTH = lang === 'TH';
   const isSupervisor = staff?.role === ROLES.SUPERVISOR;
@@ -54,16 +63,18 @@ export default function CheckinReport() {
     return students.filter(s => matchDepartment(s.department, targetDept));
   }, [students, selectedDept, staff?.department]);
 
+  const isDay1CheckinAccount = (staff?.username || '').toLowerCase() === 'day_1_checkin';
+
   // Compute metrics for the filtered department
   const totalCount = deptFilteredStudents.length;
-  const checkedCount = deptFilteredStudents.filter(s => !!s.checkin_day2_morning).length;
+  const checkedCount = deptFilteredStudents.filter(s => isDay1CheckinAccount ? !!s.checkin_day1_morning : !!s.checkin_day2_morning).length;
   const pendingCount = totalCount - checkedCount;
   const checkedPercent = totalCount > 0 ? Math.round((checkedCount / totalCount) * 100) : 0;
 
   // Filter list by status & search query
   const filteredStudents = useMemo(() => {
     return deptFilteredStudents.filter(s => {
-      const isChecked = !!s.checkin_day2_morning;
+      const isChecked = isDay1CheckinAccount ? !!s.checkin_day1_morning : !!s.checkin_day2_morning;
 
       // Status Filter
       if (statusFilter === 'checked' && !isChecked) return false;
@@ -248,7 +259,17 @@ export default function CheckinReport() {
             </div>
           ) : (
             visibleStudents.map(s => {
-              const isChecked = !!s.checkin_day2_morning;
+              const isChecked = isDay1CheckinAccount ? !!s.checkin_day1_morning : !!s.checkin_day2_morning;
+              const checkinPic = isDay1CheckinAccount
+                ? (s.checkin_day1_morning_by_staff_pic || s.checkin_day2_morning_by_staff_pic)
+                : (s.checkin_day2_morning_by_staff_pic || s.checkin_day1_morning_by_staff_pic);
+              const checkinBy = isDay1CheckinAccount
+                ? (s.checkin_day1_morning_by || s.checkin_day2_morning_by)
+                : (s.checkin_day2_morning_by || s.checkin_day1_morning_by);
+              const checkinTime = isDay1CheckinAccount
+                ? (s.checkin_day1_morning || s.checkin_day2_morning)
+                : (s.checkin_day2_morning || s.checkin_day1_morning);
+
               const fullName = `${s.firstName || s.first_name || ''} ${s.lastName || s.last_name || ''}`.trim() || 'นักศึกษา';
               const studentId = s.studentId || s.id || '-';
               const shortCode = s.short_code || s.shortCode || s.walkin_temp_short_code || '';
@@ -293,9 +314,9 @@ export default function CheckinReport() {
                   {isChecked && (
                     <div className="pt-2 border-t border-emerald-200/80 flex items-center justify-between gap-2 text-[11px] text-emerald-950 font-semibold bg-emerald-100/50 p-2 rounded-xl border border-emerald-200">
                       <div className="flex items-center gap-1.5 min-w-0">
-                        {s.checkin_day2_morning_by_staff_pic ? (
+                        {checkinPic ? (
                           <img
-                            src={s.checkin_day2_morning_by_staff_pic}
+                            src={checkinPic}
                             alt="LINE Profile"
                             className="w-5 h-5 rounded-full object-cover border border-emerald-400 shrink-0 shadow-xs"
                           />
@@ -305,12 +326,12 @@ export default function CheckinReport() {
                           </div>
                         )}
                         <span className="truncate font-extrabold">
-                          {isTH ? 'เช็คชื่อโดย:' : 'By:'} {s.checkin_day2_morning_by || 'Staff Operator'}
+                          {isTH ? 'เช็คชื่อโดย:' : 'By:'} {checkinBy || 'Staff Operator'}
                         </span>
                       </div>
                       <div className="flex items-center gap-1 font-bold text-emerald-900 shrink-0 bg-emerald-200/60 px-2 py-0.5 rounded-lg border border-emerald-300">
                         <Clock size={12} className="text-emerald-700" />
-                        <span>{formatCheckinTime(s.checkin_day2_morning)}</span>
+                        <span>{formatCheckinTime(checkinTime)}</span>
                       </div>
                     </div>
                   )}

@@ -1,0 +1,152 @@
+{
+  "staff-checkin": {
+    "App.jsx": [
+      "assets/Logo.png",
+      "assets/b.png",
+      "assets/bg.jpg",
+      "contexts/FirebaseDataContext.jsx",
+      "pages/Dashboard.jsx",
+      "pages/Login.jsx",
+      "pages/ScanInput.jsx",
+      "pages/StockSummary.jsx",
+      "pages/StudentDetails.jsx",
+      "pages/StudentLookup.jsx"
+    ],
+    "assets/Logo.png": [],
+    "assets/b.png": [],
+    "assets/bg.jpg": [],
+    "config/firebase.js": [],
+    "contexts/FirebaseDataContext.jsx": [
+      "config/firebase.js"
+    ],
+    "pages/Dashboard.jsx": [
+      "contexts/FirebaseDataContext.jsx"
+    ],
+    "pages/Login.jsx": [
+      "contexts/FirebaseDataContext.jsx"
+    ],
+    "pages/ScanInput.jsx": [
+      "contexts/FirebaseDataContext.jsx"
+    ],
+    "pages/StockSummary.jsx": [
+      "contexts/FirebaseDataContext.jsx"
+    ],
+    "pages/StudentDetails.jsx": [
+      "contexts/FirebaseDataContext.jsx"
+    ],
+    "pages/StudentLookup.jsx": [
+      "contexts/FirebaseDataContext.jsx"
+    ]
+  },
+  "student-reg": {
+    "App.jsx": [
+      "components/LoadingScreen.jsx",
+      "config/firebase.js",
+      "contexts/AuthContext.jsx",
+      "contexts/RegContext.jsx",
+      "contexts/StaffRegContext.jsx",
+      "pages/ActivityDetails.jsx",
+      "pages/Home.jsx",
+      "pages/Profile.jsx",
+      "pages/Register.jsx",
+      "pages/StaffHome.jsx",
+      "pages/StaffProfile.jsx",
+      "pages/StaffRegister.jsx"
+    ],
+    "assets/Logo.png": [],
+    "assets/Size_Chart_Eng.jpg": [],
+    "assets/Size_Chart_Thai.jpg": [],
+    "assets/b.png": [],
+    "assets/text-header-eng.png": [],
+    "assets/text-header-thai.png": [],
+    "components/LoadingScreen.jsx": [],
+    "config/firebase.js": [],
+    "config/timeConfig.js": [],
+    "contexts/AuthContext.jsx": [
+      "config/firebase.js"
+    ],
+    "contexts/RegContext.jsx": [
+      "config/firebase.js",
+      "contexts/AuthContext.jsx"
+    ],
+    "contexts/StaffRegContext.jsx": [
+      "config/firebase.js",
+      "contexts/AuthContext.jsx"
+    ],
+    "pages/ActivityDetails.jsx": [
+      "assets/Logo.png",
+      "assets/b.png",
+      "components/LoadingScreen.jsx",
+      "contexts/RegContext.jsx"
+    ],
+    "pages/Home.jsx": [
+      "assets/Logo.png",
+      "assets/b.png",
+      "assets/text-header-eng.png",
+      "assets/text-header-thai.png",
+      "components/LoadingScreen.jsx",
+      "config/timeConfig.js",
+      "contexts/RegContext.jsx",
+      "contexts/StaffRegContext.jsx"
+    ],
+    "pages/Profile.jsx": [
+      "assets/Logo.png",
+      "assets/b.png",
+      "components/LoadingScreen.jsx",
+      "config/timeConfig.js",
+      "contexts/AuthContext.jsx",
+      "contexts/RegContext.jsx"
+    ],
+    "pages/Register.jsx": [
+      "assets/Logo.png",
+      "assets/Size_Chart_Eng.jpg",
+      "assets/Size_Chart_Thai.jpg",
+      "assets/b.png",
+      "components/LoadingScreen.jsx",
+      "config/timeConfig.js",
+      "contexts/RegContext.jsx"
+    ],
+    "pages/StaffHome.jsx": [
+      "assets/Logo.png",
+      "assets/b.png",
+      "assets/text-header-eng.png",
+      "assets/text-header-thai.png",
+      "config/timeConfig.js",
+      "contexts/StaffRegContext.jsx"
+    ],
+    "pages/StaffProfile.jsx": [
+      "assets/Logo.png",
+      "assets/b.png",
+      "components/LoadingScreen.jsx",
+      "config/timeConfig.js",
+      "contexts/AuthContext.jsx",
+      "contexts/StaffRegContext.jsx"
+    ],
+    "pages/StaffRegister.jsx": [
+      "assets/Logo.png",
+      "assets/Size_Chart_Eng.jpg",
+      "assets/Size_Chart_Thai.jpg",
+      "assets/b.png",
+      "components/LoadingScreen.jsx",
+      "config/timeConfig.js",
+      "contexts/StaffRegContext.jsx"
+    ]
+  },
+  "staff-reg": {
+    "App.jsx": [
+      "assets/Logo.png",
+      "assets/b.png",
+      "assets/bg.jpg",
+      "pages/StaffDashboard.jsx",
+      "pages/StaffLogin.jsx"
+    ],
+    "assets/Logo.png": [],
+    "assets/b.png": [],
+    "assets/bg.jpg": [],
+    "pages/StaffDashboard.jsx": [],
+    "pages/StaffLogin.jsx": [
+      "assets/Logo.png",
+      "assets/b.png"
+    ]
+  }
+}

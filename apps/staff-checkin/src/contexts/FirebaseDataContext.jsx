@@ -367,6 +367,10 @@ export const FirebaseDataProvider = ({ children }) => {
           proxy_name: data.proxy_name || null,
           proxy_phone: data.proxy_phone || null,
           search_method: data.search_method || null,
+          checkin_day1_morning: data.checkin_day1_morning || null,
+          checkin_day1_morning_by: data.checkin_day1_morning_by || data.checkin_day1_morning_by_staff_name || '',
+          checkin_day1_morning_by_staff_uid: data.checkin_day1_morning_by_staff_uid || '',
+          checkin_day1_morning_by_staff_pic: data.checkin_day1_morning_by_staff_pic || '',
           checkin_day2_morning: data.checkin_day2_morning || null,
           checkin_day2_morning_by: data.checkin_day2_morning_by || data.checkin_day2_morning_by_staff_name || '',
           checkin_day2_morning_by_staff_uid: data.checkin_day2_morning_by_staff_uid || '',
@@ -1086,18 +1090,20 @@ export const FirebaseDataProvider = ({ children }) => {
     }
   };
 
-  // Confirm Registration Check-in (Day 2 Morning for 10 Dept Accounts) & Write Audit Logs
+  // Confirm Registration Check-in — supports optional `day` param (1 or 2) for Admin override
   const confirmRegistrationCheckin = async (docIdOrOptions, options = {}) => {
-    let studentDocId, studentData, searchMethod;
+    let studentDocId, studentData, searchMethod, dayOverride;
 
     if (typeof docIdOrOptions === 'object' && docIdOrOptions !== null) {
       studentDocId = docIdOrOptions.studentDocId || docIdOrOptions.id;
       studentData = docIdOrOptions.studentData || null;
       searchMethod = docIdOrOptions.searchMethod || 'QR_CODE';
+      dayOverride = docIdOrOptions.day || null; // explicit day (1 or 2) from Admin
     } else {
       studentDocId = docIdOrOptions;
       studentData = options.studentData || null;
       searchMethod = options.searchMethod || 'QR_CODE';
+      dayOverride = options.day || null;
     }
 
     const timestamp = getThaiISOString();
@@ -1120,32 +1126,76 @@ export const FirebaseDataProvider = ({ children }) => {
       }
     }
 
-    if (currentStudent.checkin_day2_morning) {
-      const byText = currentStudent.checkin_day2_morning_by ? ` โดย ${currentStudent.checkin_day2_morning_by}` : '';
-      return {
-        success: false,
-        alreadyCheckedIn: true,
-        error: `เช็คชื่อ Day 2 แล้วเมื่อ ${currentStudent.checkin_day2_morning}${byText}`
-      };
+    const { user: envCheckinOperatorUser } = getCheckinOperatorEnv();
+    const staffUsername = (staff?.username || '').toLowerCase();
+    const isSupervisorAccount = staff?.role === ROLES.SUPERVISOR;
+
+    // Determine effective day:
+    // 1) Admin with explicit dayOverride param wins
+    // 2) day_1_checkin account → Day 1
+    // 3) All others → Day 2
+    let effectiveDay;
+    if (isSupervisorAccount && (dayOverride === 1 || dayOverride === '1')) {
+      effectiveDay = 1;
+    } else if (isSupervisorAccount && (dayOverride === 2 || dayOverride === '2')) {
+      effectiveDay = 2;
+    } else {
+      const isDay1CheckinAccount =
+        staffUsername === 'day_1_checkin' ||
+        (envCheckinOperatorUser.toLowerCase() === 'day_1_checkin' && staff?.role === ROLES.CHECKIN_OPERATOR && !staff?.department);
+      effectiveDay = isDay1CheckinAccount ? 1 : 2;
+    }
+    const isDay1 = effectiveDay === 1;
+
+    if (isDay1) {
+      if (currentStudent.checkin_day1_morning) {
+        const byText = currentStudent.checkin_day1_morning_by ? ` โดย ${currentStudent.checkin_day1_morning_by}` : '';
+        return {
+          success: false,
+          alreadyCheckedIn: true,
+          error: `เช็คชื่อ Day 1 แล้วเมื่อ ${currentStudent.checkin_day1_morning}${byText}`
+        };
+      }
+    } else {
+      if (currentStudent.checkin_day2_morning) {
+        const byText = currentStudent.checkin_day2_morning_by ? ` โดย ${currentStudent.checkin_day2_morning_by}` : '';
+        return {
+          success: false,
+          alreadyCheckedIn: true,
+          error: `เช็คชื่อ Day 2 แล้วเมื่อ ${currentStudent.checkin_day2_morning}${byText}`
+        };
+      }
     }
 
     const firestoreDocId = currentStudent.docId || studentDocId;
     const staffUid = liffProfile?.line_uid || staff?.line_uid || 'LINE_ANONYMOUS';
     const staffName = liffProfile?.displayName || staff?.name || staff?.displayName || 'Staff Operator';
     const staffPic = liffProfile?.pictureUrl || staff?.pictureUrl || '';
-    const staffUsername = staff?.username || '';
-    const { user: envCheckinOperatorUser } = getCheckinOperatorEnv();
+    const rawStaffUsername = staff?.username || '';
 
     const deviceInfo = getClientDeviceInfo();
     const clientIp = await fetchClientIp();
 
-    const updatePayload = {
+    const updatePayload = isDay1 ? {
+      checkin_day1_morning: timestamp,
+      checkin_day1_morning_by: staffName,
+      checkin_day1_morning_by_staff_uid: staffUid,
+      checkin_day1_morning_by_staff_pic: staffPic,
+      checkin_day1_morning_by_staff_username: rawStaffUsername,
+      checkin_day1_morning_operator_user: rawStaffUsername || envCheckinOperatorUser,
+      checkin_day1_morning_search_method: searchMethod,
+      checkin_day1_morning_ip: clientIp,
+      checkin_day1_morning_device_model: deviceInfo.device_model,
+      checkin_day1_morning_user_agent: deviceInfo.user_agent,
+      checkin_day1_morning_platform: deviceInfo.platform,
+      updatedAt: timestamp
+    } : {
       checkin_day2_morning: timestamp,
       checkin_day2_morning_by: staffName,
       checkin_day2_morning_by_staff_uid: staffUid,
       checkin_day2_morning_by_staff_pic: staffPic,
-      checkin_day2_morning_by_staff_username: staffUsername,
-      checkin_day2_morning_operator_user: staffUsername || envCheckinOperatorUser,
+      checkin_day2_morning_by_staff_username: rawStaffUsername,
+      checkin_day2_morning_operator_user: rawStaffUsername || envCheckinOperatorUser,
       checkin_day2_morning_search_method: searchMethod,
       checkin_day2_morning_ip: clientIp,
       checkin_day2_morning_device_model: deviceInfo.device_model,
@@ -1163,8 +1213,8 @@ export const FirebaseDataProvider = ({ children }) => {
         const logRef = doc(collection(db, 'registration_checkin_logs'));
         batch.set(logRef, {
           log_id: logRef.id,
-          session: 'day2_morning',
-          action: 'CHECKIN_REGISTRATION_DAY2',
+          session: isDay1 ? 'day1_morning' : 'day2_morning',
+          action: isDay1 ? 'CHECKIN_REGISTRATION_DAY1' : 'CHECKIN_REGISTRATION_DAY2',
           timestamp,
           student_doc_id: firestoreDocId,
           student_line_uid: currentStudent.line_uid || currentStudent.docId || '',
@@ -1175,11 +1225,11 @@ export const FirebaseDataProvider = ({ children }) => {
           department: currentStudent.department || '',
           search_method: searchMethod,
           staff_line_uid: staffUid,
-          staff_username: staffUsername,
+          staff_username: rawStaffUsername,
           staff_display_name: staffName,
           staff_role: staff?.role || '',
           staff_picture_url: staffPic,
-          operator_user: staffUsername || envCheckinOperatorUser,
+          operator_user: rawStaffUsername || envCheckinOperatorUser,
           client_ip: clientIp,
           device_model: deviceInfo.device_model,
           user_agent: deviceInfo.user_agent,
@@ -1204,7 +1254,7 @@ export const FirebaseDataProvider = ({ children }) => {
       return updatedList;
     });
 
-    return { success: true, timestamp, clientIp, deviceModel: deviceInfo.device_model, staffName, operatorUser: staffUsername || envCheckinOperatorUser };
+    return { success: true, timestamp, updatePayload, clientIp, deviceModel: deviceInfo.device_model, staffName, operatorUser: rawStaffUsername || envCheckinOperatorUser, isDay1 };
   };
 
   return (

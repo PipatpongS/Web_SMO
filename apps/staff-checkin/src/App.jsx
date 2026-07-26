@@ -10,6 +10,8 @@ import ScanInput from './pages/ScanInput';
 import StudentDetails from './pages/StudentDetails';
 import StudentLookup from './pages/StudentLookup';
 import CheckinReport from './pages/CheckinReport';
+import AdminStats from './pages/AdminStats';
+import AdminAttendance from './pages/AdminAttendance';
 
 // Assets
 import bgImg from './assets/bg.jpg';
@@ -58,7 +60,9 @@ const LayoutContent = ({ children }) => {
                            path.startsWith('/student') || 
                            path === '/student-lookup' || 
                            path === '/checkin-report' || 
-                           path === '/walkin-logs';
+                           path === '/walkin-logs' ||
+                           path === '/admin-stats' ||
+                           path === '/admin-attendance';
 
   const isWidePage = path === '/stock-summary';
 
@@ -164,6 +168,18 @@ function App() {
             <Route path="/checkin-report" element={
               <ProtectedRoute>
                 <CheckinReport />
+              </ProtectedRoute>
+            } />
+
+            <Route path="/admin-stats" element={
+              <ProtectedRoute requireSupervisor={true}>
+                <AdminStats />
+              </ProtectedRoute>
+            } />
+
+            <Route path="/admin-attendance" element={
+              <ProtectedRoute requireSupervisor={true}>
+                <AdminAttendance />
               </ProtectedRoute>
             } />
             

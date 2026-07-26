@@ -197,7 +197,8 @@ export default function ScanInput() {
       const student = await findStudentByCodeDirect(targetCode);
 
       if (student) {
-        navigate(`/student/${student.docId || student.id}?method=${method}&mode=${mode}`);
+        const dayQuery = dayParam ? `&day=${dayParam}` : '';
+        navigate(`/student/${student.docId || student.id}?method=${method}&mode=${mode}${dayQuery}`);
       } else {
         setError(isTH ? `ไม่พบข้อมูลนักศึกษาด้วยรหัส "${targetCode}"` : `Student not found with code "${targetCode}"`);
         if (method === 'QR_CODE') {
@@ -229,6 +230,7 @@ export default function ScanInput() {
 
   const searchParams = new URLSearchParams(window.location.search);
   const mode = searchParams.get('mode') || 'shirt';
+  const dayParam = searchParams.get('day') || ''; // Admin day override (1 or 2)
   const isWalkinMode = mode === 'walkin';
   const isCheckinMode = mode === 'checkin';
 

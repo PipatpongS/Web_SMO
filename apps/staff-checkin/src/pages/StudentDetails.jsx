@@ -11,6 +11,7 @@ export default function StudentDetails() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const method = searchParams.get('method') || 'DIRECT';
+  const dayParam = searchParams.get('day') || null; // Admin day override (1 or 2)
 
   const { students, findStudentByCodeDirect, confirmShirtPickup, revokeShirtPickup, approveWalkinRegistration, confirmRegistrationCheckin, lang, staff, matchDepartment: matchDeptContext, formatDepartment: formatDeptContext } = useData();
   const matchDepartment = matchDeptContext || matchDeptHelper;
@@ -321,14 +322,19 @@ export default function StudentDetails() {
       const res = await confirmRegistrationCheckin({
         studentDocId: student.docId || student.id,
         studentData: student,
-        searchMethod
+        searchMethod,
+        day: dayParam ? Number(dayParam) : undefined  // Admin explicit day
       });
 
       if (res?.success) {
+        const isDay1 = res.isDay1 ?? (dayParam === '1');
         setStudent(prev => ({
           ...prev,
-          checkin_day2_morning: res.timestamp,
-          checkin_day2_morning_by: res.staffName || prev?.checkin_day2_morning_by
+          ...(res.updatePayload || (
+            isDay1
+              ? { checkin_day1_morning: res.timestamp, checkin_day1_morning_by: res.staffName || prev?.checkin_day1_morning_by }
+              : { checkin_day2_morning: res.timestamp, checkin_day2_morning_by: res.staffName || prev?.checkin_day2_morning_by }
+          ))
         }));
         setShowConfirmModal(false);
         setShowSuccessModal(true);
@@ -398,7 +404,8 @@ export default function StudentDetails() {
   };
 
   const isReceived = !!student.shirt_received_at;
-  const isCheckedIn = !!student.checkin_day2_morning;
+  const isDay1CheckinAccount = (staff?.username || '').toLowerCase() === 'day_1_checkin';
+  const isCheckedIn = isDay1CheckinAccount ? !!student.checkin_day1_morning : !!student.checkin_day2_morning;
   const registeredSize = student.shirtSize || 'M';
   const isSizeChanged = selectedSize !== registeredSize;
 
