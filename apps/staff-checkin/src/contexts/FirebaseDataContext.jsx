@@ -234,10 +234,41 @@ export const FirebaseDataProvider = ({ children }) => {
     setLiffProfileState(profile);
     if (profile) {
       localStorage.setItem('liff_profile_session', JSON.stringify(profile));
+      setStaff(prev => {
+        if (!prev) return prev;
+        const updated = {
+          ...prev,
+          line_uid: profile.userId || profile.line_uid || prev.line_uid,
+          displayName: profile.displayName || prev.displayName,
+          pictureUrl: profile.pictureUrl || prev.pictureUrl
+        };
+        localStorage.setItem('staff_session', JSON.stringify(updated));
+        return updated;
+      });
     } else {
       localStorage.removeItem('liff_profile_session');
     }
   };
+
+  // Helper: Get best available Staff LINE Name, Avatar, and UID for audit logs & Firestore checkin records
+  const getStaffInfo = useCallback(() => {
+    const lineUid = liffProfile?.userId || liffProfile?.line_uid || staff?.line_uid || 'LINE_ANONYMOUS';
+    
+    let staffName = 'Staff Operator';
+    if (liffProfile?.displayName && !liffProfile.displayName.startsWith('สตาฟ ')) {
+      staffName = liffProfile.displayName;
+    } else if (staff?.displayName && !staff.displayName.startsWith('สตาฟ ')) {
+      staffName = staff.displayName;
+    } else if (liffProfile?.displayName) {
+      staffName = liffProfile.displayName;
+    } else if (staff?.name || staff?.displayName || staff?.username) {
+      staffName = staff.name || staff.displayName || staff.username;
+    }
+
+    const staffPic = liffProfile?.pictureUrl || staff?.pictureUrl || '';
+
+    return { staffUid, staffName, staffPic };
+  }, [liffProfile, staff]);
 
   const [lang, setLangState] = useState(() => localStorage.getItem('preferredLang') || 'TH');
 
@@ -794,9 +825,7 @@ export const FirebaseDataProvider = ({ children }) => {
     const registeredSize = currentStudent.shirtSize || currentStudent.shirt_size || 'M';
     const isSizeChanged = (shirtSizeReceived !== registeredSize);
 
-    const staffUid = liffProfile?.line_uid || staff?.line_uid || 'LINE_ANONYMOUS';
-    const staffName = liffProfile?.displayName || staff?.name || 'Staff Operator';
-    const staffPic = liffProfile?.pictureUrl || staff?.pictureUrl || '';
+    const { staffUid, staffName, staffPic } = getStaffInfo();
 
     const updatePayload = {
       shirt_received_at: timestamp,
@@ -964,8 +993,7 @@ export const FirebaseDataProvider = ({ children }) => {
     const firestoreDocId = targetStudent.line_uid || targetStudent.docId || studentOrDocId;
     console.log('✅ approveWalkinRegistration → firestoreDocId:', firestoreDocId, '| targetStudent.line_uid:', targetStudent.line_uid, '| targetStudent.docId:', targetStudent.docId);
 
-    const staffName = liffProfile?.displayName || staff?.displayName || staff?.name || 'Staff';
-    const staffUid = liffProfile?.line_uid || staff?.username || 'STAFF_ANONYMOUS';
+    const { staffUid, staffName, staffPic } = getStaffInfo();
     const approvedAt = getThaiISOString();
 
     // 1. Determine nationality (Foreigners strictly ONLY in Group 1: DREAM or Group 2: DESIGN)
@@ -1192,9 +1220,7 @@ export const FirebaseDataProvider = ({ children }) => {
     }
 
     const firestoreDocId = currentStudent.docId || studentDocId;
-    const staffUid = liffProfile?.line_uid || staff?.line_uid || 'LINE_ANONYMOUS';
-    const staffName = liffProfile?.displayName || staff?.name || staff?.displayName || 'Staff Operator';
-    const staffPic = liffProfile?.pictureUrl || staff?.pictureUrl || '';
+    const { staffUid, staffName, staffPic } = getStaffInfo();
     const rawStaffUsername = staff?.username || '';
 
     const deviceInfo = getClientDeviceInfo();
