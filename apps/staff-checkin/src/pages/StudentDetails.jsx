@@ -625,26 +625,54 @@ export default function StudentDetails() {
                   </p>
                 </div>
               </div>
-              <div className="grid grid-cols-1 gap-2">
-                <div className="bg-white rounded-xl px-3 py-2.5 border border-teal-100 shadow-sm">
-                  <p className="text-[9px] text-slate-400 font-semibold uppercase tracking-wide mb-0.5">
-                    {isTH ? 'เวลาเช็คชื่อ (ไทย +07:00)' : 'Check-in Time (TH +07:00)'}
-                  </p>
-                  <p className="text-sm font-black text-teal-700 font-mono">
-                    {student.checkin_day2_morning || student.checkin_day1_morning}
-                  </p>
-                </div>
-                {(student.checkin_day2_morning_by || student.checkin_day1_morning_by) && (
-                  <div className="bg-white rounded-xl px-3 py-2.5 border border-teal-100 shadow-sm">
-                    <p className="text-[9px] text-slate-400 font-semibold uppercase tracking-wide mb-0.5">
-                      {isTH ? 'สตาฟผู้เช็ค' : 'Checked by'}
-                    </p>
-                    <p className="text-sm font-bold text-slate-800">
-                      {student.checkin_day2_morning_by || student.checkin_day1_morning_by}
-                    </p>
+              {(() => {
+                const dtStr = student.checkin_day2_morning || student.checkin_day1_morning;
+                const dt = new Date(dtStr);
+                const isValid = dtStr && !isNaN(dt.getTime());
+                const dateStr = isValid
+                  ? dt.toLocaleDateString(isTH ? 'th-TH' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric', weekday: 'short' })
+                  : (dtStr?.split('T')[0] || dtStr);
+                const timeStr = isValid
+                  ? dt.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+                  : (dtStr?.split('T')[1] || '').replace(/\.\d+\+.*$/, '').replace(/\+.*$/, '');
+                const staffName = student.checkin_day2_morning_by || student.checkin_day1_morning_by;
+                const staffPic = student.checkin_day2_morning_by_staff_pic || student.checkin_day1_morning_by_staff_pic;
+
+                return (
+                  <div className="space-y-2">
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="bg-white rounded-xl px-3 py-2.5 border border-teal-100 shadow-sm">
+                        <p className="text-[9px] text-slate-400 font-semibold uppercase tracking-wide mb-0.5">
+                          {isTH ? 'วันที่เช็คชื่อ' : 'Check-in Date'}
+                        </p>
+                        <p className="text-xs font-bold text-slate-800 leading-tight">{dateStr}</p>
+                      </div>
+                      <div className="bg-white rounded-xl px-3 py-2.5 border border-teal-100 shadow-sm">
+                        <p className="text-[9px] text-slate-400 font-semibold uppercase tracking-wide mb-0.5">
+                          {isTH ? 'เวลาเช็คชื่อ' : 'Check-in Time'}
+                        </p>
+                        <p className="text-sm font-black text-teal-700 font-mono">{timeStr}</p>
+                      </div>
+                    </div>
+
+                    {staffName && (
+                      <div className="bg-white rounded-xl px-3 py-2.5 border border-teal-100 shadow-sm flex items-center justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="text-[9px] text-slate-400 font-semibold uppercase tracking-wide mb-0.5">
+                            {isTH ? 'สตาฟผู้เช็คชื่อ' : 'Checked by'}
+                          </p>
+                          <div className="flex items-center gap-2">
+                            {staffPic ? (
+                              <img src={staffPic} alt="Staff" className="w-5 h-5 rounded-full object-cover border border-teal-300 shrink-0" />
+                            ) : null}
+                            <span className="text-xs font-bold text-slate-800 truncate">{staffName}</span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
+                );
+              })()}
             </div>
           ) : (() => {
             const isSupervisor = staff?.role === 'STAFF_SUPERVISOR';
