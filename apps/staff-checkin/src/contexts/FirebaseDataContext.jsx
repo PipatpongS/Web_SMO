@@ -250,7 +250,7 @@ export const FirebaseDataProvider = ({ children }) => {
     }
   };
 
-  // Helper: Get best available Staff LINE Name, Avatar, and UID for audit logs & Firestore checkin records
+  // Helper: Get best available Staff LINE Name, Avatar, UID, and Username for audit logs & Firestore checkin records
   const getStaffInfo = useCallback(() => {
     const lineUid = liffProfile?.userId || liffProfile?.line_uid || staff?.line_uid || 'LINE_ANONYMOUS';
     
@@ -266,8 +266,9 @@ export const FirebaseDataProvider = ({ children }) => {
     }
 
     const staffPic = liffProfile?.pictureUrl || staff?.pictureUrl || '';
+    const staffUsername = staff?.username || '';
 
-    return { staffUid, staffName, staffPic };
+    return { staffUid: lineUid, staffName, staffPic, staffUsername };
   }, [liffProfile, staff]);
 
   const [lang, setLangState] = useState(() => localStorage.getItem('preferredLang') || 'TH');
@@ -995,7 +996,7 @@ export const FirebaseDataProvider = ({ children }) => {
     const firestoreDocId = targetStudent.line_uid || targetStudent.docId || studentOrDocId;
     console.log('✅ approveWalkinRegistration → firestoreDocId:', firestoreDocId, '| targetStudent.line_uid:', targetStudent.line_uid, '| targetStudent.docId:', targetStudent.docId);
 
-    const { staffUid, staffName, staffPic } = getStaffInfo();
+    const { staffUid, staffName, staffPic, staffUsername } = getStaffInfo();
     const approvedAt = getThaiISOString();
 
     // 1. Determine nationality (Foreigners strictly ONLY in Group 1: DREAM or Group 2: DESIGN)
