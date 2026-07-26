@@ -1160,13 +1160,20 @@ export const FirebaseDataProvider = ({ children }) => {
       return { success: false, error: 'ไม่พบข้อมูลนักศึกษาในระบบ' };
     }
 
-    // Walk-in approval check (evaluated against live Firestore status)
-    const isWalkinApproved = currentStudent.walkin_status === 'APPROVED' || currentStudent.walkin_verified === true || currentStudent.status === 'APPROVED';
-    if (!isWalkinApproved) {
-      return {
-        success: false,
-        error: 'นักศึกษายังไม่ได้รับการอนุมัติการลงทะเบียน Walk-in (Student walk-in status is not approved)'
-      };
+    // Walk-in approval check: Only enforce for actual Walk-in students (registered on-site). Normal pre-registered students bypass this check!
+    const isWalkinStudent = currentStudent.note === 'รอบหน้างาน' ||
+                            currentStudent.walkin_status === 'PENDING_APPROVAL' ||
+                            (currentStudent.short_code && String(currentStudent.short_code).toUpperCase().startsWith('W-')) ||
+                            (currentStudent.walkin_temp_short_code && String(currentStudent.walkin_temp_short_code).length > 0);
+
+    if (isWalkinStudent) {
+      const isApproved = currentStudent.walkin_status === 'APPROVED' || currentStudent.walkin_verified === true || currentStudent.status === 'APPROVED';
+      if (!isApproved) {
+        return {
+          success: false,
+          error: 'นักศึกษารอบหน้างาน (Walk-in) ยังไม่ได้รับการอนุมัติ กรุณาให้อนุมัติการลงทะเบียน Walk-in ก่อนเช็คชื่อ'
+        };
+      }
     }
 
     // Department Restriction: Check if student belongs to logged-in staff's department
