@@ -2,7 +2,7 @@ import crypto from 'crypto';
 
 function createFirebaseCustomToken(uid, serviceAccount) {
   const header = { alg: 'RS256', typ: 'JWT' };
-  const iat = Math.floor(Date.now() / 1000);
+  const iat = Math.floor(Date.now() / 1000) - 10; // Subtract 10s to prevent clock skew validation errors
   const exp = iat + 3600;
   
   const payload = {

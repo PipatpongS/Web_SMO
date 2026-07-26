@@ -68,8 +68,10 @@ export const AuthProvider = ({ children }) => {
               console.log("Firebase Auth Custom Sign-in Successful");
             }
           } catch (firebaseErr) {
-            console.error("Firebase Custom Auth Error:", firebaseErr);
-            setError("ระบบยืนยันตัวตนขัดข้อง กรุณาลองใหม่อีกครั้ง (" + firebaseErr.message + ")");
+            console.warn("Firebase Custom Auth Note (fallback to LINE profile):", firebaseErr);
+            // Fallback: Proceed with LINE profile so new devices/in-app browsers are never blocked by token clock-skew
+            setUserProfile(profile);
+            localStorage.setItem('line_user_profile', JSON.stringify(profile));
             setLoading(false);
             return;
           }
