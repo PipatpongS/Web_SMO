@@ -41,17 +41,9 @@ export default function Login() {
   return (
     <div className="w-full flex flex-col items-center justify-center relative z-10 my-auto animate-fadeIn">
       <div className="glass-panel p-6 sm:p-8 w-full max-w-sm sm:max-w-md shadow-2xl border border-white/20 rounded-3xl relative">
-        
+
         {/* Language Switcher */}
-        <div className="flex justify-end mb-2">
-          <button 
-            type="button"
-            onClick={() => setLang(lang === 'TH' ? 'EN' : 'TH')} 
-            className="bg-white/20 hover:bg-white/30 transition-all duration-200 active:scale-75 px-3 py-1 rounded-full text-xs font-bold backdrop-blur-sm flex items-center cursor-pointer text-white border border-white/20 shadow-sm"
-          >
-            <span className="mr-1">🌐</span> <span>{lang === 'TH' ? 'TH' : 'EN'}</span>
-          </button>
-        </div>
+
 
         <div className="text-center mb-6 space-y-1">
           <div className="inline-flex p-3 rounded-2xl bg-purple-500/20 text-purple-300 border border-purple-400/30 mb-2 shadow-inner">
@@ -102,15 +94,15 @@ export default function Login() {
             </button>
           </div>
         )}
-        
+
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
             <label className="block text-xs sm:text-sm font-bold text-white/90 mb-1.5 flex items-center gap-1.5">
               <User size={15} className="text-purple-300" />
               <span>{isTH ? 'ไอดี' : 'Username'}</span>
             </label>
-            <input 
-              type="text" 
+            <input
+              type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               onFocus={(e) => setTimeout(() => e.target.scrollIntoView({ behavior: 'smooth', block: 'center' }), 300)}
@@ -124,8 +116,8 @@ export default function Login() {
               <KeyRound size={15} className="text-purple-300" />
               <span>{isTH ? 'รหัสผ่าน' : 'Password'}</span>
             </label>
-            <input 
-              type="password" 
+            <input
+              type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               onFocus={(e) => setTimeout(() => e.target.scrollIntoView({ behavior: 'smooth', block: 'center' }), 300)}
@@ -140,14 +132,14 @@ export default function Login() {
               {error}
             </div>
           )}
-          
-          <button 
-            type="submit" 
+
+          <button
+            type="submit"
             disabled={isSubmitting}
             className="w-full glass-button mt-4 py-3 text-sm font-extrabold cursor-pointer hover:scale-[1.02] active:scale-95 transition-all shadow-lg border rounded-xl bg-purple-600/50 hover:bg-purple-600/70 text-white border-purple-400/40"
           >
-            {isSubmitting 
-              ? (isTH ? 'กำลังเข้าสู่ระบบ...' : 'Logging in...') 
+            {isSubmitting
+              ? (isTH ? 'กำลังเข้าสู่ระบบ...' : 'Logging in...')
               : (isTH ? 'เข้าสู่ระบบ' : 'Login')}
           </button>
         </form>
