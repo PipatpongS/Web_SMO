@@ -1,16 +1,16 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { 
-  collection, 
-  doc, 
+import {
+  collection,
+  doc,
   getDoc,
-  getDocs, 
+  getDocs,
   setDoc,
   updateDoc,
   query,
   where,
   limit,
-  writeBatch, 
-  addDoc 
+  writeBatch,
+  addDoc
 } from 'firebase/firestore';
 import { db, initLiff, liffLogin } from '../config/firebase';
 
@@ -240,7 +240,7 @@ export const FirebaseDataProvider = ({ children }) => {
   };
 
   const [lang, setLangState] = useState(() => localStorage.getItem('preferredLang') || 'TH');
-  
+
   // Physical inventory stock (from shirt_inventory collection)
   const [physicalInventory, setPhysicalInventory] = useState(() => {
     try {
@@ -568,7 +568,7 @@ export const FirebaseDataProvider = ({ children }) => {
     // 6️⃣ Step 6: Targeted Query by studentId (ONLY if NOT placeholder "69070500000")
     const targetStudentId = studentIdFromQr || searchUpper;
     const isPlaceholderId = targetStudentId === '69070500000' || targetStudentId.includes('ยังไม่ได้รับ');
-    
+
     if (targetStudentId && !isPlaceholderId) {
       try {
         const qId = query(collection(db, 'users'), where('studentId', '==', targetStudentId), limit(1));
@@ -600,7 +600,7 @@ export const FirebaseDataProvider = ({ children }) => {
     }
     const searchUpper = cleanCode.toUpperCase();
 
-    return students.find(s => 
+    return students.find(s =>
       (s.shortCode && s.shortCode.toUpperCase() === searchUpper) ||
       (s.short_code && s.short_code.toUpperCase() === searchUpper) ||
       (s.walkin_temp_short_code && s.walkin_temp_short_code.toUpperCase() === searchUpper) ||
@@ -674,7 +674,7 @@ export const FirebaseDataProvider = ({ children }) => {
         department = matchDept.dept;
       }
     }
-    
+
     // 2. Verify against Firestore 'staff' collection if configured
     if (!role && db && cleanUser.length > 0 && cleanPass.length > 0) {
       try {
@@ -740,9 +740,9 @@ export const FirebaseDataProvider = ({ children }) => {
       }
     }
 
-    return { 
-      success: isSuccess, 
-      reason: isSuccess ? null : 'INVALID_CREDENTIALS' 
+    return {
+      success: isSuccess,
+      reason: isSuccess ? null : 'INVALID_CREDENTIALS'
     };
   };
 
@@ -933,9 +933,9 @@ export const FirebaseDataProvider = ({ children }) => {
       targetStudent = studentOrDocId;
     } else {
       const studentDocId = studentOrDocId;
-      targetStudent = students.find(s => 
-        s.docId === studentDocId || 
-        s.id === studentDocId || 
+      targetStudent = students.find(s =>
+        s.docId === studentDocId ||
+        s.id === studentDocId ||
         s.line_uid === studentDocId ||
         s.studentId === studentDocId ||
         (s.short_code && s.short_code.toUpperCase() === String(studentDocId).toUpperCase()) ||
@@ -969,10 +969,10 @@ export const FirebaseDataProvider = ({ children }) => {
     const approvedAt = getThaiISOString();
 
     // 1. Determine nationality (Foreigners strictly ONLY in Group 1: DREAM or Group 2: DESIGN)
-    const isForeigner = (targetStudent.is_foreigner === true || targetStudent.isForeigner === true) || 
-      (targetStudent.nationality && 
-      targetStudent.nationality.trim() !== 'ไทย' && 
-      targetStudent.nationality.trim().toLowerCase() !== 'thai');
+    const isForeigner = (targetStudent.is_foreigner === true || targetStudent.isForeigner === true) ||
+      (targetStudent.nationality &&
+        targetStudent.nationality.trim() !== 'ไทย' &&
+        targetStudent.nationality.trim().toLowerCase() !== 'thai');
 
     const GROUP_NAMES_MAP = {
       '1': 'DREAM',
@@ -1071,10 +1071,10 @@ export const FirebaseDataProvider = ({ children }) => {
         return updated;
       });
 
-      return { 
-        success: true, 
-        assignedGroup, 
-        assignedGroupName 
+      return {
+        success: true,
+        assignedGroup,
+        assignedGroupName
       };
     } catch (err) {
       console.error("Failed to approve walk-in registration in Firestore:", err);
@@ -1112,6 +1112,14 @@ export const FirebaseDataProvider = ({ children }) => {
 
     if (!currentStudent) {
       return { success: false, error: 'ไม่พบข้อมูลนักศึกษาในระบบ' };
+    }
+
+    // Walk-in approval check
+    if (currentStudent.walkin_status !== 'APPROVED') {
+      return {
+        success: false,
+        error: 'นักศึกษายังไม่ได้รับการอนุมัติการลงทะเบียน Walk-in (Student walk-in status is not approved)'
+      };
     }
 
     // Department Restriction: Check if student belongs to logged-in staff's department

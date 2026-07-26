@@ -56,7 +56,8 @@ const LayoutContent = ({ children }) => {
     img.src = bgImg;
   }, []);
 
-  const isScrollablePage = path === '/stock-summary' || 
+  const isScrollablePage = path === '/home' ||
+                           path === '/stock-summary' || 
                            path.startsWith('/student') || 
                            path === '/student-lookup' || 
                            path === '/checkin-report' || 

@@ -1,10 +1,25 @@
+import dotenv from 'dotenv';
+import path from 'path';
+import fs from 'fs';
+
+// Resolve and load environment variables from .env.backend
+const envBackendPath = path.resolve(process.cwd(), 'apps/staff-reg/.env.backend');
+if (fs.existsSync(envBackendPath)) {
+  dotenv.config({ path: envBackendPath });
+} else {
+  const rootEnvBackendPath = path.resolve(process.cwd(), '.env.backend');
+  if (fs.existsSync(rootEnvBackendPath)) {
+    dotenv.config({ path: rootEnvBackendPath });
+  }
+}
+
 export default async function handler(req, res) {
   // 1. รับเฉพาะ Method POST เท่านั้น
   if (req.method !== 'POST') {
     return res.status(405).json({ message: 'Method Not Allowed' });
   }
 
-  // 2. ดึงค่า Token และ Rich Menu ID จาก Environment Variable ของ Vercel
+  // 2. ดึงค่า Token และ Rich Menu ID จาก Environment Variable
   const LINE_ACCESS_TOKEN = process.env.LINE_ACCESS_TOKEN;
   const AFTER_REGISTER_RICH_MENU_ID = process.env.AFTER_REGISTER_RICH_MENU_ID;
 

@@ -43,6 +43,17 @@ service cloud.firestore {
           'checkin_day1_morning_device_model',
           'checkin_day1_morning_user_agent',
           'checkin_day1_morning_platform',
+          'checkin_day2_morning',
+          'checkin_day2_morning_by',
+          'checkin_day2_morning_by_staff_uid',
+          'checkin_day2_morning_by_staff_pic',
+          'checkin_day2_morning_by_staff_username',
+          'checkin_day2_morning_operator_user',
+          'checkin_day2_morning_search_method',
+          'checkin_day2_morning_ip',
+          'checkin_day2_morning_device_model',
+          'checkin_day2_morning_user_agent',
+          'checkin_day2_morning_platform',
           'note',
           'updatedAt'
         ]);
@@ -56,7 +67,9 @@ service cloud.firestore {
       allow create: if true;
 
       // ✅ อนุญาตการอัปเดตข้อมูลนักศึกษาสำหรับการเช็คชื่อและการแก้ไขข้อมูล
-      allow update: if true;
+      allow update: if (!request.resource.data.diff(resource.data).affectedKeys().hasAny([
+                      'checkin_day1_morning', 'checkin_day2_morning'
+                    ]) || ('walkin_status' in resource.data && resource.data.walkin_status == 'APPROVED'));
                     
       allow delete: if false;
     }
