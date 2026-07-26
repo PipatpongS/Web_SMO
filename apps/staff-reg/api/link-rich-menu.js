@@ -21,7 +21,7 @@ export default async function handler(req, res) {
 
   // 2. ดึงค่า Token และ Rich Menu ID จาก Environment Variable
   const LINE_ACCESS_TOKEN = process.env.LINE_ACCESS_TOKEN;
-  const AFTER_REGISTER_RICH_MENU_ID = process.env.AFTER_REGISTER_RICH_MENU_ID;
+  const AFTER_REGISTER_RICH_MENU_ID = process.env.AFTER_REGISTER_RICH_MENU_ID || 'richmenu-d64276694eea7a63e3d7d0e1c50eea2f';
 
   if (!LINE_ACCESS_TOKEN || !AFTER_REGISTER_RICH_MENU_ID) {
     return res.status(500).json({ message: 'Server configuration error: Missing LINE tokens.' });
