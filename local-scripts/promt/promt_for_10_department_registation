@@ -1,0 +1,43 @@
+สร้าง 10 บัญชี สำหรับ staff-checkin (ระบุผู้ใช้/รหัสผ่านไว้ใน env ตั้งแต่บรรทัดที่ 24)
+โดยมีเมนูให้เลือกใช้งานดังนี้
+1. เช็คชื่อลงทะเบียน = scan qe / short code / student id ฟังก์ขัน เหมือนกับเช็คอินวันแรก
+2. ดูสถิติการลงทะเบียน = แสดงยอดรวมและแยกตามสถานะ และlist รายชื่อ สามารถ filter ดู หรือค้นหาเฉพาะบุคคล โดยใช้ ชื่อ-สกุล หรือ รหัสนักศึกษา หรือ short code ในการค้นห้า optimize for use less firbase read query and optimized for fast (ขึ้นโชว์แค่ 5 คน เลื่อนเพื่อโหลดเพิ่ม / ขึ้นเฉพาะภาควิชาของ staff ที่ล็อกอิน)
+3. อนุมัติการลงทะเบียน (สำหรับ walk-in) = เหมือนกับฟังก์ชัน walkin_approve แต่สำหรับภาควิชาให้หลังบ้านสุ่มกลุ่มน้องและอัพเดตตามเดิม แต่ไม่ต้องขึ้นในเว็บ staff ว่าน้องสุ่มได้กลุ่มอะไร ขึ้นเพียง อนุมัติการลงทะเบียนเรียบร้อยแล้ว
+
+
+Role & Context:
+implement a Staff Check-in System with 3 main menu features.
+
+Authentication & Setup Requirements:
+
+Create 10 hardcoded staff accounts.
+
+Store the usernames and passwords in the .env file, starting exactly from line 24. (I stored)
+
+Menu 1: Registration Check-in
+
+Inputs: Allow staff to check in students by scanning a QR code, entering a Short Code, or entering a Student ID.
+
+Logic: The underlying functionality must be exactly the same as the "First-Day Check-in" logic.
+
+Menu 2: Registration Statistics & Directory
+
+Overview Metrics: Display the total number of registered students and a breakdown by registration status.
+
+Student List & Search: Display a list of students. Include a search/filter bar to find specific students by First/Last Name, Student ID, or Short Code.
+
+Data Constraints: Only show students who belong to the logged-in staff member's department.
+
+Firebase Optimization (Crucial): Optimize the page for speed and minimize Firebase read queries. Implement pagination or infinite scrolling by fetching and displaying only 5 records at a time (load more upon scrolling).
+
+Menu 3: Walk-in Registration Approval
+
+Logic: Use the existing walkin_approve function.
+
+Backend Behavior: For department allocations, the backend must randomly assign a group to the student and update the database accordingly.
+
+UI Constraint: Do not display the randomly assigned group to the staff member on the frontend.
+
+Success State: Once approved, simply show a success message reading: "Registration successfully approved."
+
+Please continue to store all logs as before.
