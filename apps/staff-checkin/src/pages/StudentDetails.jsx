@@ -410,13 +410,14 @@ export default function StudentDetails() {
   const isReceived = !!student.shirt_received_at;
   const isDay1CheckinAccount = (staff?.username || '').toLowerCase() === 'day_1_checkin';
   const isSupervisor = staff?.role === 'STAFF_SUPERVISOR';
-  // Mirror the effectiveDay logic from FirebaseDataContext.confirmRegistrationCheckin:
-  // 1) Supervisor with explicit dayParam wins
+  // effectiveCheckinDay priority:
+  // 1) Explicit dayParam in URL wins always (set by Dashboard for supervisor Day1/Day2 buttons)
   // 2) day_1_checkin account → Day 1
-  // 3) All others (department accounts) → Day 2
-  const effectiveCheckinDay = isSupervisor
-    ? (dayParam === '1' ? 1 : dayParam === '2' ? 2 : 2)
-    : isDay1CheckinAccount ? 1 : 2;
+  // 3) All others → Day 2
+  const effectiveCheckinDay = dayParam === '1' ? 1
+    : dayParam === '2' ? 2
+    : isDay1CheckinAccount ? 1
+    : 2;
   const isCheckedIn = effectiveCheckinDay === 1 ? !!student.checkin_day1_morning : !!student.checkin_day2_morning;
   const registeredSize = student.shirtSize || 'M';
   const isSizeChanged = selectedSize !== registeredSize;
