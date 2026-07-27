@@ -632,7 +632,7 @@ export default function StudentDetails() {
                 </div>
               </div>
               {(() => {
-                const dtStr = student.checkin_day2_morning || student.checkin_day1_morning;
+                const dtStr = effectiveCheckinDay === 1 ? student.checkin_day1_morning : student.checkin_day2_morning;
                 const dt = new Date(dtStr);
                 const isValid = dtStr && !isNaN(dt.getTime());
                 const dateStr = isValid
@@ -641,8 +641,8 @@ export default function StudentDetails() {
                 const timeStr = isValid
                   ? dt.toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
                   : (dtStr?.split('T')[1] || '').replace(/\.\d+\+.*$/, '').replace(/\+.*$/, '');
-                const staffName = student.checkin_day2_morning_by || student.checkin_day1_morning_by;
-                const staffPic = student.checkin_day2_morning_by_staff_pic || student.checkin_day1_morning_by_staff_pic;
+                const staffName = effectiveCheckinDay === 1 ? student.checkin_day1_morning_by : student.checkin_day2_morning_by;
+                const staffPic = effectiveCheckinDay === 1 ? student.checkin_day1_morning_by_staff_pic : student.checkin_day2_morning_by_staff_pic;
 
                 return (
                   <div className="space-y-2">

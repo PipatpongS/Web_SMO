@@ -4,15 +4,14 @@ import { getFirestore, FieldValue } from 'firebase-admin/firestore';
 
 // Initialize Firebase Admin (same key used by other local scripts)
 const serviceAccount = JSON.parse(
-  fs.readFileSync('./smo-vidva-bangmod-firebase-adminsdk-fbsvc-247d2f79cd.json', 'utf8')
+  fs.readFileSync('./smo-vidva-bangmod-firebase-adminsdk-fbsvc-3543e8d9ee.json', 'utf8')
 );
 const app = initializeApp({ credential: cert(serviceAccount) }, 'delete-checkin');
 const db = getFirestore(app);
 
 // ─── IDs to delete ───────────────────────────────────────────────────────────
 const LOG_IDS = [
-  'MmMCN7LIYsDGlp3wPu7h',   // 2026-07-28T03:59:03.889+07:00
-  'ScI23D5c2dBxqsjK8Y1J',   // 2026-07-28T03:58:24.416+07:00
+  'W41oI0zsfRnkmkgtz4pB',   // 2026-07-28T04:11:32.476+07:00 (corrected lowercase f)
 ];
 
 // Checkin fields to erase from the users/* document (covers both Day 1 and Day 2)
