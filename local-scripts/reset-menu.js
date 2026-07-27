@@ -6,6 +6,7 @@ dotenv.config({ path: path.resolve('../apps/student-reg/.env.backend') });
 const LINE_ACCESS_TOKEN = process.env.LINE_ACCESS_TOKEN;
 
 const LINE_USER_ID = [
+    "Ucb5e5eae10d8a03c5901a9c37ca53447", // โบ
     "U639762d7e2dc60e6f184700fc9de7aa7", // พิพัฒน์พงศ์
 ];
 
