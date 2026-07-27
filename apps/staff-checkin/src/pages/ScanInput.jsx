@@ -269,6 +269,12 @@ export default function ScanInput() {
   const dayParam = searchParams.get('day') || ''; // Admin day override (1 or 2)
   const isWalkinMode = mode === 'walkin';
   const isCheckinMode = mode === 'checkin';
+  // Mirror effectiveDay logic: day_1_checkin → Day 1, supervisor uses dayParam, others → Day 2
+  const isSupervisorScan = searchParams.get('supervisor') === '1'; // reserved; default use dayParam
+  const effectiveCheckinDay = dayParam === '1' ? 1 : dayParam === '2' ? 2 : 2;
+  const checkinDateLabel = effectiveCheckinDay === 1
+    ? (isTH ? '25 ก.ค. 2569 (Day 1)' : 'Jul 25 (Day 1)')
+    : (isTH ? '26 ก.ค. 2569 (Day 2)' : 'Jul 26 (Day 2)');
 
   return (
     <div className="w-full h-full flex flex-col items-center justify-between overflow-hidden py-1 px-3 sm:px-4 min-h-0">
@@ -302,7 +308,7 @@ export default function ScanInput() {
             ) : isCheckinMode ? (
               <>
                 <ClipboardCheck size={14} className="text-teal-300" />
-                <span>{isTH ? 'โหมดเช็คชื่อลงทะเบียน' : 'Registration Check-in Mode'}</span>
+                <span>{isTH ? `โหมดเช็คชื่อ ${checkinDateLabel}` : `Check-in Mode ${checkinDateLabel}`}</span>
               </>
             ) : (
               <>
@@ -315,7 +321,7 @@ export default function ScanInput() {
             {isWalkinMode
               ? (isTH ? 'สแกน QR Code เพื่ออนุมัติการลงทะเบียน' : 'Scan QR Code for Walk-in Approval')
               : isCheckinMode
-                ? (isTH ? 'สแกน QR / Short Code / รหัสนักศึกษา เพื่อเช็คชื่อ' : 'Scan QR / Short Code / Student ID for Check-in')
+                ? (isTH ? `สแกน QR / Short Code / รหัสนักศึกษา เพื่อเช็คชื่อ (${checkinDateLabel})` : `Scan QR / Short Code / Student ID for Check-in (${checkinDateLabel})`)
                 : (isTH ? 'สแกน QR Code เพื่อเช็ครับเสื้อ' : 'Scan QR Code for Shirt Pickup')}
           </h2>
         </div>
