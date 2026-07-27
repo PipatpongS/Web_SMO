@@ -11,7 +11,7 @@ const db = getFirestore(app);
 
 // ─── IDs to delete ───────────────────────────────────────────────────────────
 const LOG_IDS = [
-  'W41oI0zsfRnkmkgtz4pB',   // 2026-07-28T04:11:32.476+07:00 (corrected lowercase f)
+  '9ihJMkn9yw8qe4rZuES0',   // 2026-07-28T04:29:50.446+07:00
 ];
 
 // Checkin fields to erase from the users/* document (covers both Day 1 and Day 2)

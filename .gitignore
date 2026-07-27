@@ -26,3 +26,4 @@ dist-ssr
 # Custom Ignored Folders
 docs/
 
+smo-vidva-bangmod-firebase-adminsdk-fbsvc-*.json

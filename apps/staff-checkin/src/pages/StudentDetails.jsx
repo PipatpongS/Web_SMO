@@ -363,7 +363,7 @@ export default function StudentDetails() {
     setIsSubmitting(false);
 
     if (res && (res === true || res.success)) {
-      navigate(`/scan?mode=${mode}`);
+      navigate(`/scan?mode=${mode}${dayParam ? `&day=${dayParam}` : ''}`);
     } else {
       setFirebaseErrorMsg(res?.error || 'ไม่สามารถยกเลิกรายการใน Firebase ได้');
     }
@@ -383,7 +383,7 @@ export default function StudentDetails() {
             </p>
           </div>
           <button
-            onClick={() => navigate(`/scan?mode=${mode}`)}
+            onClick={() => navigate(`/scan?mode=${mode}${dayParam ? `&day=${dayParam}` : ''}`)}
             className="w-full py-3 rounded-2xl bg-white/20 hover:bg-white/30 text-white font-bold text-xs border border-white/30 cursor-pointer transition-all flex items-center justify-center gap-2"
           >
             <ArrowLeft size={16} /> {isTH ? 'กลับไปหน้าสแกน/ค้นหา' : 'Back to Search/Scan'}
@@ -1039,7 +1039,7 @@ export default function StudentDetails() {
                 onClick={() => {
                   setAlertNoticeModal(null);
                   if (alertNoticeModal.type === 'success') {
-                    navigate(`/scan?mode=${mode}`);
+                    navigate(`/scan?mode=${mode}${dayParam ? `&day=${dayParam}` : ''}`);
                   }
                 }}
                 className={`w-full py-3 rounded-2xl font-extrabold text-sm shadow-md cursor-pointer transition-colors ${alertNoticeModal.type === 'success'
@@ -1186,7 +1186,7 @@ export default function StudentDetails() {
           onClick={(e) => {
             if (e.target === e.currentTarget) {
               setShowSuccessModal(false);
-              navigate(`/scan?mode=${mode}`);
+              navigate(`/scan?mode=${mode}${dayParam ? `&day=${dayParam}` : ''}`);
             }
           }}
         >
@@ -1207,7 +1207,7 @@ export default function StudentDetails() {
             </div>
             <button
               type="button"
-              onClick={() => { setShowSuccessModal(false); navigate(`/scan?mode=${mode}`); }}
+              onClick={() => { setShowSuccessModal(false); navigate(`/scan?mode=${mode}${dayParam ? `&day=${dayParam}` : ''}`); }}
               className="w-full py-3.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-sm shadow-lg cursor-pointer transition-colors flex items-center justify-center gap-2"
             >
               <QrCode size={16} /> {isTH ? 'สแกนคนถัดไป' : 'Scan Next Student'}
