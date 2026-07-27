@@ -1119,7 +1119,9 @@ export default function StudentDetails() {
                       {isTH ? 'รอบเช็คชื่อ' : 'Check-in Round'}
                     </p>
                     <p className="text-sm font-black text-teal-700">
-                      {isTH ? 'วันที่ 26 ก.ค. 2569' : 'July 26, 2026'}
+                      {effectiveCheckinDay === 1
+                        ? (isTH ? 'วันที่ 25 ก.ค. 2569 (Day 1)' : 'July 25, 2026 (Day 1)')
+                        : (isTH ? 'วันที่ 26 ก.ค. 2569 (Day 2)' : 'July 26, 2026 (Day 2)')}
                     </p>
                   </div>
                 </div>
