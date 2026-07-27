@@ -428,7 +428,7 @@ export default function StudentDetails() {
       {/* Top Navigation */}
       <div className="w-full flex items-center justify-between mb-3.5 shrink-0">
         <button
-          onClick={() => navigate(`/scan?mode=${mode}`)}
+          onClick={() => navigate(`/scan?mode=${mode}${dayParam ? `&day=${dayParam}` : ''}`)}
           className="text-white hover:bg-white/20 flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full bg-white/10 backdrop-blur-md transition-all border border-white/20 shadow-xs cursor-pointer active:scale-95"
         >
           <ArrowLeft size={14} /> {isTH ? 'กลับไปหน้าสแกน' : 'Back to Scan'}
