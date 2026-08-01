@@ -1193,13 +1193,13 @@ export const FirebaseDataProvider = ({ children }) => {
     const isSupervisorAccount = staff?.role === ROLES.SUPERVISOR;
 
     // Determine effective day:
-    // 1) Admin with explicit dayOverride param wins
+    // 1) Explicit dayOverride param (1 or 2) wins for ALL staff roles!
     // 2) day_1_checkin account → Day 1
     // 3) All others → Day 2
     let effectiveDay;
-    if (isSupervisorAccount && (dayOverride === 1 || dayOverride === '1')) {
+    if (dayOverride === 1 || dayOverride === '1') {
       effectiveDay = 1;
-    } else if (isSupervisorAccount && (dayOverride === 2 || dayOverride === '2')) {
+    } else if (dayOverride === 2 || dayOverride === '2') {
       effectiveDay = 2;
     } else {
       const isDay1CheckinAccount =

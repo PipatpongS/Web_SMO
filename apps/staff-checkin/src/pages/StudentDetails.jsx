@@ -11,7 +11,16 @@ export default function StudentDetails() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const method = searchParams.get('method') || 'DIRECT';
-  const dayParam = searchParams.get('day') || null; // Admin day override (1 or 2)
+  const urlDay = searchParams.get('day');
+  
+  useEffect(() => {
+    if (urlDay) {
+      localStorage.setItem('active_checkin_day', urlDay);
+    }
+  }, [urlDay]);
+
+  const savedDay = localStorage.getItem('active_checkin_day');
+  const dayParam = urlDay || savedDay || null; // Day override (1 or 2)
 
   const { students, findStudentByCodeDirect, confirmShirtPickup, revokeShirtPickup, approveWalkinRegistration, confirmRegistrationCheckin, lang, staff, matchDepartment: matchDeptContext, formatDepartment: formatDeptContext } = useData();
   const matchDepartment = matchDeptContext || matchDeptHelper;
@@ -411,11 +420,11 @@ export default function StudentDetails() {
   const isDay1CheckinAccount = (staff?.username || '').toLowerCase() === 'day_1_checkin';
   const isSupervisor = staff?.role === 'STAFF_SUPERVISOR';
   // effectiveCheckinDay priority:
-  // 1) Explicit dayParam in URL wins always (set by Dashboard for supervisor Day1/Day2 buttons)
+  // 1) Explicit dayParam in URL/session wins always for all staff
   // 2) day_1_checkin account → Day 1
-  // 3) All others → Day 2
-  const effectiveCheckinDay = dayParam === '1' ? 1
-    : dayParam === '2' ? 2
+  // 3) Default fallback → Day 2
+  const effectiveCheckinDay = (dayParam === '1' || dayParam === 1) ? 1
+    : (dayParam === '2' || dayParam === 2) ? 2
     : isDay1CheckinAccount ? 1
     : 2;
   const isCheckedIn = effectiveCheckinDay === 1 ? !!student.checkin_day1_morning : !!student.checkin_day2_morning;

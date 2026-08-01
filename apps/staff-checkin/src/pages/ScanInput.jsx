@@ -266,12 +266,19 @@ export default function ScanInput() {
 
   const searchParams = new URLSearchParams(window.location.search);
   const mode = searchParams.get('mode') || 'shirt';
-  const dayParam = searchParams.get('day') || ''; // Admin day override (1 or 2)
+  const urlDay = searchParams.get('day');
+  
+  useEffect(() => {
+    if (urlDay) {
+      localStorage.setItem('active_checkin_day', urlDay);
+    }
+  }, [urlDay]);
+
+  const savedDay = localStorage.getItem('active_checkin_day');
+  const dayParam = urlDay || savedDay || '';
   const isWalkinMode = mode === 'walkin';
   const isCheckinMode = mode === 'checkin';
-  // Mirror effectiveDay logic: day_1_checkin → Day 1, supervisor uses dayParam, others → Day 2
-  const isSupervisorScan = searchParams.get('supervisor') === '1'; // reserved; default use dayParam
-  const effectiveCheckinDay = dayParam === '1' ? 1 : dayParam === '2' ? 2 : 2;
+  const effectiveCheckinDay = (dayParam === '1' || dayParam === 1) ? 1 : 2;
   const checkinDateLabel = effectiveCheckinDay === 1
     ? (isTH ? '25 ก.ค. 2569 (Day 1)' : 'Jul 25 (Day 1)')
     : (isTH ? '26 ก.ค. 2569 (Day 2)' : 'Jul 26 (Day 2)');

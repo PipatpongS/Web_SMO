@@ -101,8 +101,8 @@ export default function Dashboard() {
           const num = () => ++n;
           return (<>
 
-        {/* Admin: Separate Day 1 and Day 2 check-in buttons */}
-        {isSupervisor && (() => { const no1 = num(); const no2 = num(); return (<>
+        {/* Separate Day 1 and Day 2 check-in buttons for all check-in staff */}
+        {canDoCheckin && (() => { const no1 = num(); const no2 = num(); return (<>
           <button
             onClick={() => navigate('/scan?mode=checkin&day=1')}
             className="w-full glass-panel p-4 sm:p-5 flex items-center gap-4 hover:bg-white/15 transition-all cursor-pointer group text-left shadow-2xl border border-white/20 hover:border-teal-400/50 rounded-3xl"
@@ -136,28 +136,6 @@ export default function Dashboard() {
             </div>
           </button>
         </>); })()}
-
-        {/* Non-admin: single check-in button */}
-        {!isSupervisor && canDoCheckin && (() => { const no = num(); return (
-          <button
-            onClick={() => navigate('/scan?mode=checkin')}
-            className="w-full glass-panel p-4 sm:p-5 flex items-center gap-4 hover:bg-white/15 transition-all cursor-pointer group text-left shadow-2xl border border-white/20 hover:border-teal-400/50 rounded-3xl"
-          >
-            <div className="bg-teal-500/20 p-3.5 rounded-2xl text-teal-300 group-hover:scale-110 transition-transform shrink-0 border border-teal-400/40 shadow-inner">
-              <ClipboardCheck size={30} />
-            </div>
-            <div className="space-y-0.5">
-              <span className="text-base sm:text-lg font-black block text-white group-hover:text-teal-200 transition-colors">
-                {isTH ? `${no}. เช็คชื่อลงทะเบียน` : `${no}. Registration Check-in`}
-              </span>
-              <span className="text-xs text-white/70 block font-medium leading-relaxed">
-                {isTH
-                  ? 'สแกน QR Code, Short Code หรือรหัสนักศึกษา เพื่อเช็คชื่อเข้าร่วม'
-                  : 'Scan QR Code, Short Code, or Student ID to record attendance'}
-              </span>
-            </div>
-          </button>
-        ); })()}
 
         {/* Menu: Statistics */}
         {canDoStats && (() => { const no = num(); return (
